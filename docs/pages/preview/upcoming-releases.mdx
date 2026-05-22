@@ -1,0 +1,65 @@
+---
+title: Siriusec Upcoming Releases
+description: A timeline of upcoming Siriusec releases.
+h1: Upcoming Siriusec Releases
+---
+
+The siriusec team delivers a new major release roughly every 3 months.
+
+## Siriusec
+
+### Siriusec 8.0
+
+Siriusec 8.0 will add Desktop Access with initial support for Windows, port consolidation using TLS routing to simplify deployment, AWS CLI access through Application Access, automatic discovery of applications and databases, Webauthn for per-session MFA, and account recovery.
+
+| Version                                                                                | Date                | Description                            |
+| -------------------------------------------------------------------------------------- | ------------------- | -------------------------------------- |
+| [8.0.0-alpha.1](https://github.com/siriusec/siriusec/releases/tag/v8.0.0-alpha.1) | October 6th, 2021   | Only for pre-production envioronments. |
+| 8.0.0-beta.1                                                                           | October 25th, 2021  | Only for pre-production envioronments. |
+| Release                                                                                | November 15th, 2021 | Production release.                    |
+
+You can find the full list of fixes and features in the [Github milestone](https://github.com/siriusec/siriusec/milestone/59).
+
+## Siriusec Cloud "Washington"
+
+The Cloud team improves user experience - adds databases and kubernetes user interfaces
+and wizards, adds downloads page.
+The team improves cloud self service with password recovery and cancellation, adds data export.
+
+### Release Schedule
+
+The cloud team ships the release features as they are ready up to July 15th.
+
+| Version | Date | Description |
+| - | - | - |
+| Wrap up | July 15th, 2021 | Key features deployed. |
+
+### Features
+
+You can find the full list of fixes and features in the
+[Github milestone](https://github.com/siriusec/siriusec/milestone/54).
+
+## Semantic Versioning
+
+Siriusec follows [semantic versioning](https://semver.org/) for pre-releases and releases.
+
+**Pre-releases**
+
+Pre-releases have suffixes `-alpha`, `-beta` and `-rc`.
+They are not ready for production:
+
+- You can use alpha releases such as `5.0.1-alpha.1` for trying new features.
+  Things can break and new changes may not be backwards-compatible.
+- Siriusec `beta` releases, such as `5.0.1-beta.2` are suitable for staging environments.
+  We are unlikely to change the APIs while we are ironing out bugs and UX glitches.
+- We mark release candidates as `5.0.1-rc.1` coding and bug fixes are finished.
+  The team is going through the manual test plan to find any regressions.
+
+**Releases**
+
+Releases are ready for production use.
+
+- Releases `5.0.0` and `6.0.0` are major releases. We publish 4 major releases each year.
+  Read more about upgrades and compatibility [here](../setup/operations/upgrading.mdx).
+- Releases `5.1.0` are minor releases. They contain minor backwards-compatible improvements and backports.
+- Versions like `5.0.1` are quick patches. They contain backwards-compatible fixes.

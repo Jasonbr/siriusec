@@ -1,0 +1,58 @@
+---
+title: Siriusec Daemon
+description: Siriusec Daemon Configuration and Systemd Unit
+---
+
+## Siriusec daemon
+
+The Siriusec daemon is called [`siriusec`](../reference/cli.mdx#siriusec) and it supports
+the following commands:
+
+| Command | Description |
+| - | - |
+| start | Starts the Siriusec daemon. |
+| configure | Dumps a sample configuration file in YAML format into standard output. |
+| version | Shows the Siriusec version. |
+| status | Shows the status of a Siriusec connection. This command is only available from inside of an active SSH session. |
+| help | Shows help options. |
+
+When experimenting, you can quickly start [`siriusec`](../reference/cli.mdx#siriusec) with verbose logging by typing [`siriusec start -d`](../reference/cli.mdx#siriusec-start).
+
+<Admonition
+  type="danger"
+  title="WARNING"
+>
+  Siriusec stores data in `/var/lib/siriusec` . Make sure that regular/non-admin users do not have access to this folder on the Auth server.
+</Admonition>
+
+## Systemd unit file
+
+In production, we recommend starting siriusec daemon via an init system like `systemd`. Here's the recommended Siriusec service unit file for `systemd`:
+
+```systemd
+[Unit]
+Description=Siriusec SSH Service
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/siriusec start --config=/etc/siriusec.yaml --pid-file=/run/siriusec.pid
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/siriusec.pid
+
+[Install]
+WantedBy=multi-user.target
+```
+
+## Daemon restarts
+
+As covered in the [Graceful Restarts](./graceful-restarts.mdx) section, Siriusec
+supports graceful restarts. To upgrade a host to a newer Siriusec version, an
+administrator must:
+
+1. Replace the Siriusec binaries, usually [`siriusec`](../reference/cli.mdx#siriusec)
+   and [`tctl`](../reference/cli.mdx#tctl)
+2. Execute `systemctl restart siriusec`
+
+This will perform a graceful restart, i.e. the Siriusec daemon will fork a new process to handle new incoming requests, leaving the old daemon process running until existing clients disconnect.

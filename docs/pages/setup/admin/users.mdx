@@ -1,0 +1,95 @@
+---
+title: Local users
+description: Adding and deleting local users
+---
+
+This guide covers inviting and managing local user accounts.
+
+## Prerequisites
+
+- Installed [Siriusec](../../getting-started.mdx) or [Siriusec Cloud](../../cloud/introduction.mdx) >= (=siriusec.version=)
+- [Tctl admin tool](https://gosiriusec.com/siriusec/download) >= (=siriusec.version=)
+
+(!docs/pages/includes/tctl.mdx!)
+
+## Adding and deleting users
+
+Siriusec's local user accounts are created and stored in Siriusec's internal storage.
+
+Local user accounts can be used alongside external user accounts managed using Github for the open source edition
+and OIDC and SAML 2.0 for the enterprise.
+
+A user identity in Siriusec exists in the scope of a cluster.
+A Siriusec administrator creates Siriusec user accounts and maps them to the roles they can use.
+
+Let's look at this table:
+
+| Siriusec User | Allowed OS Logins | Description |
+| - | - | - |
+| joe | joe, root | Siriusec user 'joe' can log in into member nodes as OS user 'joe' or 'root' |
+| bob | bob | Siriusec user 'bob' can log in into member nodes only as OS user 'bob' |
+| ross | | If no OS login is specified, it defaults to the same name as the Siriusec user - 'ross'. |
+
+Let's add a new user to Siriusec using the [`tctl`](../reference/cli.mdx#tctl) tool:
+
+```code
+$ tctl users add joe --logins=joe,root --roles=access,editor
+```
+
+Siriusec generates an auto-expiring token (with a TTL of 1 hour) and prints the
+token URL which must be used before the TTL expires.
+
+```code
+# Signup token has been created. Share this URL with the user:
+# https://<proxy>:3080/web/newuser/xxxxxxxxxxxx
+
+# NOTE: make sure the <proxy> host is accessible.
+```
+
+The user completes registration by visiting this URL in their web browser, picking a password, and configuring the 2nd-factor authentication.
+If the credentials are correct, the auth server generates and signs a new certificate, and the client stores this key and will use it for subsequent logins. The key will automatically expire after 12 hours by default after which the user will need to log back in with her credentials. This TTL can be configured to a different value.
+
+Once authenticated, the account will become visible via `tctl`:
+
+```code
+$ tctl users ls
+
+# User           Allowed Logins
+# ----           --------------
+# admin          admin,root
+# ross           ross
+# joe            joe,root
+```
+
+Joe would then use the `tsh` client tool to log in to member node "luna" via bastion "work" *as root*:
+
+```code
+$ tsh --proxy=work --user=joe root@luna
+```
+
+To delete this user:
+
+```code
+$ tctl users rm joe
+```
+
+## Editing users
+
+Admins can edit user entries with the [resource commands](../reference/resources.mdx) via [`tctl`](../reference/cli.mdx#tctl).
+
+For example, to see the full list of user records, an administrator can execute:
+
+```code
+$ tctl get users
+```
+
+To edit the user "joe":
+
+```code
+# Dump the user definition into a file:
+$ tctl get user/joe > joe.yaml
+# ... edit the contents of joe.yaml
+
+# Update the user record:
+$ tctl create -f joe.yaml
+```

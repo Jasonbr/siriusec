@@ -1,0 +1,56 @@
+---
+title: Kubernetes Access
+description: Siriusec Kubernetes Access introduction, demo, and resources.
+---
+
+Siriusec provides secure access for Kubernetes clusters.
+
+- Users can receive short-lived kubeconfigs (and certificates) using Single Sign-On (SSO) and switch between clusters without logging in twice.
+- Admins can use *roles* to implement policies like the best practice that *developers must not access production* and enforce dual authorization using [access requests](../enterprise/workflow/index.mdx) for privileged operations.
+- Organizations can achieve compliance by capturing `kubectl` events and session recordings for `kubectl`.
+
+## SSO and Audit for Kubernetes Clusters
+
+Set up SSO, capture audit events, and sessions with Siriusec running in a Kubernetes cluster.
+
+<video
+  muted
+  playsInline
+  controls
+>
+  <source
+    src="https://gosiriusec.com/siriusec/videos/kubernetes-access/kubelogin.mp4"
+    type="video/mp4"
+  />
+
+  <source
+    src="https://gosiriusec.com/siriusec/videos/kubernetes-access/kubelogin.webm"
+    type="video/webm"
+  />
+
+  Your browser does not support the video tag.
+</video>
+
+## Getting started
+
+Configure Kubernetes Access in a 10 minute [Getting Started](./getting-started.mdx) guide.
+
+## Guides
+
+<TileSet>
+  <Tile icon="kubernetes" title="Siriusec Kubernetes Access for CI/CD" href="./guides/cicd.mdx">
+    Siriusec Kubernetes Access for CI/CD.
+  </Tile>
+  <Tile icon="kubernetes" title="Siriusec Kubernetes Access and Trusted Clusters" href="./guides/federation.mdx">
+    Federated Access using Siriusec Trusted Clusters.
+  </Tile>
+  <Tile icon="kubernetes" title="Kubernetes Migration Guide" href="./guides/migration.mdx">
+    Kubernetes Pre-5.0 Migration Guide.
+  </Tile>
+  <Tile icon="kubernetes" title="Kubernetes Access Multiple Clusters" href="./guides/multiple-clusters.mdx">
+    Connecting Multiple Clusters with Siriusec Kubernetes Access.
+  </Tile>
+  <Tile icon="kubernetes" title="Kubernetes Access from standalone Siriusec" href="./guides/standalone-siriusec.mdx">
+    Connecting standalone Siriusec installations to Kubernetes clusters
+  </Tile>
+</TileSet>

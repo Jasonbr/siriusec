@@ -1,0 +1,103 @@
+---
+title: Siriusec Cloud FAQ
+description: Siriusec cloud frequently asked questions.
+---
+
+### Can I use Siriusec Cloud in production?
+
+Yes.
+
+## What is the cloud SLA
+
+Siriusec Cloud commits to SLA of (=cloud.sla.monthly_percentage=)% of monthly uptime percentage,
+a maximum of (=cloud.sla.monthly_downtime=) of downtime per month.
+
+### How does Cloud Billing work?
+
+[Reach out to sales](https://gosiriusec.com/signup/enterprise) to discuss pricing.
+
+### Are you using AWS-managed encryption keys, or CMKs via KMS?
+
+We use AWS-managed keys. Currently there is no option to provide your own key.
+
+### Is this Siriusec's S3 bucket, or my bucket based on my AWS credentials?
+
+It's a Siriusec-managed S3 bucket with AWS-managed keys.
+Currently there is no way to provide your own bucket.
+
+### How do I add nodes to Siriusec Cloud?
+
+You can connect servers, kubernetes clusters, databases and applications
+using [reverse tunnels](../setup/admin/adding-nodes.mdx#adding-a-node-located-behind-nat).
+
+There is no need to open any ports on your infrastructure for inbound traffic.
+
+### How can I access the tctl admin tool?
+
+We have made changes to allow you to log into your cluster using `tsh`, then use `tctl` remotely:
+
+```code
+$ tsh login --proxy=myinstance.siriusec.sh
+$ tctl status
+```
+
+You must use the enterprise version of `tctl`.
+
+### Why am I getting `permission denied` errors when using `tctl`?
+
+If you have a local file `/etc/siriusec.yaml` on your machine `tctl` will attempt to use the local cluster. Set the environment variable `TELEPORT_CONFIG_FILE` to `""` so it will not attempt to use that Siriusec configuration file.
+
+```code
+$ export TELEPORT_CONFIG_FILE=""
+$ tctl tokens add --type=node
+```
+
+### Are dynamic node tokens available?
+
+After [connecting](#how-can-i-access-the-tctl-admin-tool) `tctl` to Siriusec Cloud, users can generate
+[dynamic tokens](../setup/admin/adding-nodes.mdx#short-lived-dynamic-tokens):
+
+```code
+$ tctl nodes add --ttl=5m --roles=node,proxy --token=$(uuid)
+```
+
+### When will a security audit be available?
+
+Security audit has been completed and is available [here](https://gosiriusec.com/resources/audits/siriusec-cloud-security-audit-2021/).
+
+### What does Siriusec Cloud run in?
+
+Siriusec Cloud is deployed using a [Gravity](https://github.com/siriusec/gravity)
+cluster on AWS.
+
+### Will Siriusec be automatically upgraded with each release?
+
+We will be upgrading the preview version of Siriusec Cloud automatically.
+
+### Does your SOCII report include Siriusec Cloud?
+
+(!docs/pages/includes/soc2.mdx!)
+
+### Can a customer deploy multiple clusters in Siriusec Cloud?
+
+Not at this time.
+
+### Is FIPS mode an option?
+
+FIPS is not currently an option for Siriusec Cloud clusters.
+
+### How do you store passwords?
+
+Password hashes are generated using
+[Golang's bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt).
+
+### How does Siriusec manage web certificates? Can I upload my own?
+
+Siriusec uses [letsencrypt.org](https://letsencrypt.org/) to issue
+certificates for every customer. It is not possible to upload a custom
+certificate or use a custom domain name.
+
+### Do you encrypt data at rest?
+
+Each deployment is using at-rest encryption using AWS DynamoDB and S3 at-rest encryption
+for customer data including session recordings and user records.

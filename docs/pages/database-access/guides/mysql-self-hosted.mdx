@@ -1,0 +1,238 @@
+---
+title: Database Access with Self-Hosted MySQL
+description: How to configure Siriusec Database Access with self-hosted MySQL.
+---
+
+# Self-Hosted MySQL
+
+## Create Certificate/Key Pair
+
+(!docs/pages/includes/database-access/tctl-auth-sign.mdx!)
+
+Create the secrets:
+
+```code
+# Export Siriusec's certificate authority and generate certificate/key pair
+# for host db.example.com with a 3-month validity period.
+$ tctl auth sign --format=db --host=db.example.com --out=server --ttl=2190h
+```
+
+(!docs/pages/includes/database-access/ttl-note.mdx!)
+
+The command will create 3 files: `server.cas`, `server.crt` and `server.key`
+which you'll need to enable mutual TLS on your MySQL server.
+
+## Configure MySQL Server
+
+To configure MySQL server to accept TLS connections, add the following to
+MySQL configuration file `mysql.cnf`:
+
+```conf
+[mysqld]
+require_secure_transport=ON
+ssl-ca=/path/to/server.cas
+ssl-cert=/path/to/server.crt
+ssl-key=/path/to/server.key
+```
+
+Additionally, MySQL database user accounts must be configured to require a
+valid client certificate. If you're creating a new user:
+
+```sql
+CREATE USER 'alice'@'%' REQUIRE SUBJECT '/CN=alice';
+```
+
+If you're updating an existing user:
+
+```sql
+ALTER USER 'alice'@'%' REQUIRE SUBJECT '/CN=alice';
+```
+
+By default the created user may not have access to anything and won't be able
+to connect so let's grant it some permissions:
+
+```sql
+GRANT ALL ON `%`.* TO 'alice'@'%';
+```
+
+See [Configuring MySQL to Use Encrypted Connections](https://dev.mysql.com/doc/refman/8.0/en/using-encrypted-connections.html)
+in MySQL documentation for more details.
+
+## Setup Siriusec Auth and Proxy Services
+
+Siriusec Database Access for MySQL is available starting from `6.0` release.
+
+(!docs/pages/includes/database-access/start-auth-proxy.mdx!)
+
+(!docs/pages/includes/database-access/token.mdx!)
+
+### Create Role and User
+
+Create the role that will allow a user to connect to any database using any
+database account:
+
+```bash
+tctl --config=/path/to/siriusec-db-role.yaml create <<EOF
+kind: role
+version: v4
+metadata:
+  name: db
+spec:
+  allow:
+    db_labels:
+      '*': '*'
+    db_names:
+    - '*'
+    db_users:
+    - '*'
+EOF
+```
+
+Create the user assigned the `db` role we've just created:
+
+```code
+$ tctl --config=/path/to/siriusec-db-role.yaml users add --roles=admin,db testuser
+```
+
+### Start Database Service with CLI Flags
+
+For a quick try-out, Siriusec database service doesn't require a configuration
+file and can be launched using a single CLI command:
+
+```code
+$ siriusec db start \
+   --token=/tmp/token \
+   --auth-server=siriusec.example.com:3080 \
+   --name=test \
+   --protocol=mysql \
+   --uri=mysql.example.com:3306 \
+   --labels=env=dev
+```
+
+Note that the `--auth-server` flag must point to the Siriusec cluster's proxy endpoint
+because database service always connects back to the cluster over a reverse
+tunnel.
+
+### Start Database Service with Config File
+
+Below is an example of a database service configuration file that proxies
+a single self-hosted MySQL database:
+
+```yaml
+siriusec:
+  # The data_dir should be a different location if running on the same
+  # machine as Siriusec auth and proxy.
+  data_dir: /var/lib/siriusec-db
+  nodename: siriusec-db-instance
+  # Siriusec invitation token used to join a cluster.
+  # can also be passed on start using --token flag
+  auth_token: /tmp/token
+  # Proxy address to connect to. Note that it has to be the proxy address
+  # because database service always connects to the cluster over reverse
+  # tunnel.
+  auth_servers:
+  - siriusec.example.com:3080
+db_service:
+  enabled: "yes"
+  # This section contains definitions of all databases proxied by this
+  # service, can contain multiple items.
+  databases:
+    # Name of the database proxy instance, used to reference in CLI.
+  - name: "example"
+    # Free-form description of the database proxy instance.
+    description: "Example MySQL"
+    # Database protocol.
+    protocol: "mysql"
+    # Database address, MySQL server endpoint in this case.
+    #
+    # Note: this URI's hostname must match the host name specified via --host
+    # flag to tctl auth sign command.
+    uri: "mysql.example.com:3306"
+    # Labels to assign to the database, used in RBAC.
+    static_labels:
+      env: dev
+auth_service:
+  enabled: "no"
+ssh_service:
+  enabled: "no"
+proxy_service:
+  enabled: "no"
+```
+
+<Admonition
+  type="tip"
+  title="Tip"
+>
+  A single Siriusec process can run multiple different services, for example
+  multiple database access proxies as well as running other services such an
+  SSH service or an application access proxy.
+</Admonition>
+
+Start the database service:
+
+```code
+$ siriusec start --config=/path/to/siriusec-db.yaml --token=/tmp/token
+```
+
+## Connect
+
+Once the database service has joined the cluster, login to see the available
+databases:
+
+```code
+$ tsh login --proxy=siriusec.example.com --user=testuser
+$ tsh db ls
+# Name    Description   Labels
+# ------- ------------- --------
+# example Example MySQL env=dev
+```
+
+Note that you will only be able to see databases your role has access to. See
+[RBAC](../rbac.mdx) section for more details.
+
+To connect to a particular database server, first retrieve credentials from
+Siriusec using `tsh db login` command:
+
+```code
+$ tsh db login example
+```
+
+<Admonition
+  type="tip"
+  title="Tip"
+>
+  You can be logged into multiple databases simultaneously.
+</Admonition>
+
+You can optionally specify the database name and the user to use by default
+when connecting to the database instance:
+
+```code
+$ tsh db login --db-user=root --db-name=mysql example
+```
+
+Once logged in, connect to the database:
+
+```code
+$ tsh db connect example
+```
+
+<Admonition type="note" title="Note">
+  The `mysql` command-line client should be available in PATH in order to be
+  able to connect.
+</Admonition>
+
+If you would like to see the native `mysql` shell connect command, run:
+
+```code
+$ tsh db config --format=cmd example
+```
+
+To log out of the database and remove credentials:
+
+```code
+# Remove credentials for a particular database instance.
+$ tsh db logout example
+# Remove credentials for all database instances.
+$ tsh db logout
+```

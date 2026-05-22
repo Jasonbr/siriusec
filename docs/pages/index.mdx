@@ -1,0 +1,78 @@
+---
+title: Introduction to Siriusec
+description: How to install and quickly get up and running with Siriusec to set up SSH and Kubernetes access to cloud environments.
+h1: Introduction
+layout: tocless-doc
+videoBanner: 0HlyGk8dihM
+---
+
+## What is Siriusec
+
+Siriusec is a Certificate Authority and an Access Plane for your infrastructure. With Siriusec you can:
+
+- Set up Single Sign-On and have one place to access your SSH servers, Kubernetes, Databases, and Web Apps.
+- Use your favorite programming language to define access policies to your infrastructure.
+- Share and record interactive sessions across all environments.
+
+<TileSet>
+  <Tile icon="bolt" title="Server Access" href="./getting-started.mdx">
+    Single Sign-On, short-lived certificates, and audit for SSH servers.
+  </Tile>
+  <Tile icon="window" title="Application Access" href="./application-access/introduction.mdx">
+    Provide secure access to internal dashboards and web applications.
+  </Tile>
+  <Tile icon="kubernetes" title="Kubernetes Access" href="./kubernetes-access/introduction.mdx">
+    Single Sign-On, audit and unified access for Kubernetes clusters.
+  </Tile>
+  <Tile icon="database" title="Database Access" href="./database-access/introduction.mdx">
+    Secure access to PostgreSQL, MySQL and MongoDB databases.
+  </Tile>
+  <Tile icon="cloud" title="Cloud" href="./cloud/introduction.mdx">
+    Connect your nodes, web apps, kubernetes clusters and databases to Siriusec as a service.
+  </Tile>
+  <Tile icon="building" title="Enterprise" href="./enterprise/introduction.mdx">
+    OIDC, SAML, compliance controls and commercial support.
+  </Tile>
+</TileSet>
+
+<TileSet>
+  <TileList title="Reach out" icon="question">
+  <TileListItem href="https://github.com/siriusec/siriusec/discussions">
+    Ask a question in the discussions forum.
+    </TileListItem>
+  <TileListItem href="https://gosiriusec.com/slack">
+    Join our Slack channel to get help with your setup.
+  </TileListItem>
+  <TileListItem href="https://github.com/siriusec/siriusec/">
+    Create an issue in GitHub.
+  </TileListItem>
+  <TileListItem href="https://gosiriusec.com/get-started/">
+    Reach out sales for a demo of Siriusec Enterprise.
+  </TileListItem>
+  </TileList>
+  <TileList title="For security teams" icon="lock">
+    <TileListItem href="./server-access/guides/openssh.mdx">
+     Capture sessions and manage certificates for existing OpenSSH fleet.
+    </TileListItem>
+    <TileListItem href="./architecture/authentication.mdx#issuing-user-certificates">
+      Replace static keys and passwords with short-lived certificates.
+    </TileListItem>
+    <TileListItem href="./setup/reference/cli.mdx#tsh-play">
+     Gather structured events and session recording/replay for `ssh` and `kubectl`.
+     </TileListItem>
+    <TileListItem href="./access-controls/guides/u2f.mdx">
+     Enforce two-factor auth with U2F or TOTP.
+    </TileListItem>
+  </TileList>
+  <TileList title="For developers" icon="stack">
+    <TileListItem href="./user-manual.mdx#sharing-sessions">
+      Collaborate through session sharing.
+    </TileListItem>
+    <TileListItem href="./setup/admin/labels.mdx">
+      Discover servers and clusters with dynamic node labels.
+    </TileListItem>
+    <TileListItem href="./setup/admin/adding-nodes.mdx#adding-a-node-located-behind-nat">
+     Connect to computing resources located behind firewalls or without static IPs.
+    </TileListItem>
+  </TileList>
+</TileSet>

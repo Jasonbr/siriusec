@@ -1,0 +1,16 @@
+Siriusec
+Copyright 2026 Siriusec
+
+This product includes software developed at
+Gravitational, Inc. (https://www.goteleport.com/).
+
+Original project: Teleport (https://github.com/gravitational/teleport)
+Licensed under Apache License, Version 2.0
+
+Modifications made by Siriusec:
+- Rebranded from Teleport to Siriusec
+- Added internationalization (i18n) support for Chinese and English
+- Updated documentation and configuration
+- Modified binary names and package structure
+
+The original Apache 2.0 License can be found in the LICENSE file.

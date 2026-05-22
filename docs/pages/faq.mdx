@@ -1,0 +1,173 @@
+---
+title: Siriusec FAQ
+description: Frequently Asked Questions about using Siriusec for SSH and Kubernetes access
+h1: FAQ
+---
+
+## Community FAQ
+
+### Can I use Siriusec in production today?
+
+Siriusec has been deployed on server clusters with thousands of nodes at
+Fortune 500 companies. It has been through several security audits from
+nationally recognized technology security companies, so we are comfortable with
+the stability of Siriusec from a security perspective.
+
+### Can Siriusec be deployed in agentless mode?
+
+Yes. Siriusec can be deployed with a tiny footprint as an authentication
+gateway/proxy and you can keep your existing SSH servers on the nodes. But some
+innovating Siriusec features, such as cluster introspection, will not be
+available unless the Siriusec SSH daemon is present on all cluster nodes.
+
+### Can I use OpenSSH with a Siriusec cluster?
+
+Yes, this question comes up often and is related to the previous one. Take a
+look at [Using OpenSSH Guide](./server-access/guides/openssh.mdx).
+
+### Can I connect to nodes behind a firewall?
+
+Yes, Siriusec supports reverse SSH tunnels out of the box. To configure
+behind-firewall clusters refer to [Trusted Clusters](./setup/admin/trustedclusters.mdx)
+section of the Admin Manual.
+
+### Can individual nodes create reverse tunnels to a proxy server without creating a new cluster?
+
+This was a popular customer [request](https://github.com/siriusec/siriusec/issues/803) that was added several in 4.0. 
+Once you've upgraded your Siriusec Cluster, change the node config option `--auth-server` to point to web proxy address (this would be `public_addr` and `web_listen_addr`
+in file configuration). As defined in [Adding a node located behind NAT - Siriusec Node Tunneling](./setup/admin/adding-nodes.mdx#adding-a-node-located-behind-nat)
+
+### Can nodes use a single port for reverse tunnels?
+
+Yes, Siriusec supports tunnel multiplexing on a single port. Set the `tunnel_listen_addr` to use the same port as the `web_listen_addr` address setting in the `proxy_service` configuration. Siriusec will automatically use multiplexing with that configuration.
+
+## How is Open Source different from Enterprise?
+
+Siriusec provides three offerings:
+
+- Open Source - Apache 2 License, self-hosted.
+- Enterprise - self-hosted or cloud, commercial license.
+
+<table>
+  <thead>
+    <tr>
+      <th>Capability/Offering</th>
+      <th>Open Source</th>
+      <th>Enterprise</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>License</td>
+      <td>Apache 2</td>
+      <td>Commercial</td>
+    </tr>
+    <tr>
+      <td>Role-Based Access Control</td>
+      <td>&#10004;</td>
+      <td>&#10004;</td>
+    </tr>
+    <tr>
+      <td>Cloud-hosted</td>
+      <td>&#10006;</td>
+      <td>&#10004;</td>
+    </tr>
+    <tr>
+      <td>Self-hosted</td>
+      <td>&#10004;</td>
+      <td>&#10004;</td>
+    </tr>
+    <tr>
+      <td>Single Sign-On</td>
+      <td>Github only</td>
+      <td>Github, Google, OIDC, SAML</td>
+    </tr>
+    <tr>
+      <td>Access Requests</td>
+      <td>Limited</td>
+      <td>&#10004; [Dual authorization, mandatory requests](./access-controls/guides/dual-authz.mdx)</td>
+    </tr>
+    <tr>
+      <td>FedRamp Control</td>
+      <td>&#10006;</td>
+      <td>[Compiled with FIPS-certified crypto libraries, FedRamp control features](./enterprise/fedramp.mdx)</td>
+    </tr>
+    <tr>
+      <td>PCI DSS Features</td>
+      <td>Limited</td>
+      <td>&#10004;</td>
+    </tr>
+    <tr>
+      <td>SOC2 Features</td>
+      <td>Limited</td>
+      <td>&#10004;</td>
+    </tr>
+    <tr>
+      <td>Annual or Multi-Year contracts, Volume Discounts</td>
+      <td>&#10006;</td>
+      <td>&#10004;</td>
+    </tr>
+    <tr>
+      <td>Support</td>
+      <td>Best-effort, community</td>
+      <td>24x7 support with premium SLAs & account managers</td>
+    </tr>
+  </tbody>
+</table>
+
+## Which version of Siriusec is supported?
+
+Siriusec provides security-critical support for the current and two previous releases. With our typical release cadence, this means a release is usually supported for 9 months.
+
+| Release | Long Term Support | Release Date | Min tsh version |
+| - | - | - | - |
+| 6.2 | No | May 21th, 2021 | 3.0.0 |
+| 6.1 | No | April 9th, 2021 | 3.0.0|
+| 6 | Yes | March 4th, 2021 | 3.0.0 |
+| 5.0 | Yes | November 24th, 2020 | 3.0.0 |
+| 4.4 | Yes | October 20th, 2020 | 3.0.0 |
+| 4.3 (EOL) | Yes | July 8th, 2020 | 3.0.0 |
+| 4.2 (EOL) | Yes | December 19th, 2019 | 3.0.0 |
+| 4.1 (EOL) | Yes | October 1st, 2019 | 3.0.0 |
+| 4.0 (EOL) | Yes | June 18th, 2019 | 3.0.0 |
+
+**How should I upgrade my cluster?**
+
+Please follow our guidelines for [upgrading](./setup/admin/graceful-restarts.mdx).
+We recommend that the Auth Server should be upgraded first, and the proxy bumped thereafter.
+
+### Does Web UI support copy and paste?
+
+Yes. You can copy and paste using a mouse. If you prefer a keyboard, Siriusec employs
+`tmux`-like "prefix" mode. To enter prefix mode, use the `Ctrl`+`A` keyboard shortcut.
+
+While in prefix mode, you can press `Ctrl`+`V` to paste, or enter text selection
+mode by pressing `[`. When in text selection mode:
+
+- Move around using the keys `h`, `j`, `k`, and `l`.
+- Select text by toggling `space`.
+- And, copy it via `Ctrl`+`C`.
+
+### What TCP ports does Siriusec use?
+
+Please refer to the [Ports](./setup/reference/networking.mdx) section of the Admin Manual.
+
+### Does Siriusec support authentication via OAuth, SAML, or Active Directory?
+
+Siriusec offers this feature for the [Enterprise versions of Siriusec](enterprise/introduction.mdx).
+
+### Does Siriusec send any data back to the cloud?
+
+The Open-Source Edition of Siriusec does not send any information to
+Siriusec and can be used on servers without internet access. The
+commercial versions of Siriusec may or may not be configured to send anonymized information to Siriusec, depending on the license purchased. This information contains the following:
+
+- Anonymized user ID: SHA256 hash of a username with a randomly generated prefix.
+- Anonymized server ID: SHA256 hash of a server IP with a randomly generated prefix.
+
+This allows Siriusec Pro to print a warning if users are exceeding the usage limits
+of their license. The reporting library code is [on Github](https://github.com/siriusec/reporting).
+
+Reach out to `sales@gosiriusec.com` if you have questions about the commercial
+edition of Siriusec.

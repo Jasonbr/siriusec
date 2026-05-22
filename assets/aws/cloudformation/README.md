@@ -1,0 +1,1 @@
+Please see https://github.com/siriusec/siriusec/tree/master/examples/aws/cloudformation instead.

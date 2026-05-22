@@ -1,0 +1,313 @@
+---
+title: Access Controls Reference Documentation
+description: Access Controls reference documentation for role options and properties.
+h1: Siriusec Access Controls Reference
+---
+
+This document describes Siriusec Roles, Role Options, and Role-Based Access Control (RBAC) for Siriusec Access Controls.
+
+## Roles
+
+A Siriusec `role` works by having two lists of rules: `allow` rules and `deny` rules.
+When declaring access rules, keep in mind the following:
+
+- Everything is denied by default.
+- Deny rules get evaluated first and take priority.
+
+A rule consists of two parts: the resources and verbs. Here's an example of an
+`allow` rule describing a `list` verb applied to the SSH `sessions` resource.  It means "allow
+users of this role to see a list of active SSH sessions".
+
+```yaml
+allow:
+    - resources: [session]
+      verbs: [list]
+```
+
+If this rule was declared in the `deny` section of a role definition, it effectively 
+prohibits users from getting a list of trusted clusters and sessions. You can see
+all of the available resources and verbs under the `allow` section in the `admin` role configuration
+below.
+
+To manage cluster roles, a Siriusec administrator can use the Web UI or the command
+line using [tctl resource commands](../setup/reference/resources.mdx). To see the list of
+roles in a Siriusec cluster, an administrator can execute:
+
+```code
+$ tctl get roles
+```
+
+(!docs/pages/includes/backup-warning.mdx!)
+
+By default there is always one role called `admin` which looks like this:
+
+```yaml
+kind: role
+version: v4
+metadata:
+  name: admin
+spec:
+  # SSH options used for user sessions with default values:
+  options:
+    # max_session_ttl defines the TTL (time to live) of SSH certificates
+    # issued to the users with this role.
+    max_session_ttl: 8h
+    # forward_agent controls whether SSH agent forwarding is allowed
+    forward_agent: true
+    # port_forwarding controls whether TCP port forwarding is allowed
+    port_forwarding: true
+    # client_idle_timeout determines if SSH sessions to cluster nodes are forcefully
+    # terminated after no activity from a client (idle client). it overrides the
+    # global cluster setting. examples: "30m", "1h" or "1h30m"
+    client_idle_timeout: never
+    # Determines if the clients will be forcefully disconnected when their
+    # certificates expire in the middle of an active SSH session.
+    # It overrides the global cluster setting.
+    disconnect_expired_cert: no
+    # Optional: max_connections Per-user limit of concurrent sessions within a
+    # cluster.
+    max_connections: 2
+    # Optional: max_sessions total number of session channels that can be established
+    # across a single connection. 10 will match OpenSSH default behavior.
+    max_sessions: 10
+    # permit_x11_forwarding allows users to use X11 forwarding with openssh clients and servers through the proxy
+    permit_x11_forwarding: true
+
+  # The allow section declares a list of resource/verb combinations that are
+  # allowed for the users of this role. By default, nothing is allowed.
+  allow:
+    # The logins array defines the OS/UNIX logins a user is allowed to use.
+    # a few special variables are supported here (see below)
+    logins: [root, '{{internal.logins}}']
+    # If kubernetes integration is enabled, this setting configures which 
+    # kubernetes groups the users of this role will be assigned to.
+    # Note that you can refer to a SAML/OIDC trait via the "external" property bag.
+    # This allows you to specify Kubernetes group membership in an identity manager:
+    kubernetes_groups: ["system:masters", "{{external.trait_name}}"]]
+
+    # List of node labels a user will be allowed to connect to:
+    node_labels:
+      # A user can only connect to a node marked with 'test' label:
+      'environment': 'test'
+      # The wildcard ('*') means "any node"
+      '*': '*'
+      # Labels can be specified as a list:
+      'environment': ['test', 'staging']
+      # Regular expressions are also supported, for example, the equivalent
+      # of the list example above can be expressed as:
+      'environment': '^test|staging$'
+
+    kubernetes_labels:
+      # A user can only access prod enviroments
+      'env': 'prod'
+      # User can access any region in us-west, e.g us-west-1, us-west-2
+      'region': 'us-west-*'
+      'cluster_name': '^us.*\.example\.com$'
+
+    # Defines roles that this user can request.
+    # Needed for siriusec's access request workflow
+    # https://gosiriusec.com/siriusec/docs/enterprise/workflow/
+    request:
+      roles:
+      - dba
+
+    # List of allow-rules. See below for more information.
+    rules:
+    - resources: [role]
+      verbs: [list, create, read, update, delete]
+    - resources: [auth_connector]
+      verbs: [list, create, read, update, delete]
+    - resources: [session]
+      verbs: [list, read]
+    - resources: [trusted_cluster]
+      verbs: [list, create, read, update, delete]
+    - resources: [event]
+      verbs: [list, read]
+    - resources: [user]
+      verbs: [list,create,read,update,delete]
+    - resources: [token]
+      verbs: [list,create,read,update,delete]
+
+  # The deny section uses the identical format as the 'allow' section.
+  # The deny rules always override allow rules.
+  deny: {}
+```
+
+The following variables can be used with `logins` field:
+
+| Variable | Description |
+| - | - |
+| `{{internal.logins}}` | Substituted with "allowed logins" parameter used in `tctl users add [user] <allowed logins>` command. This applies only to users stored in Siriusec's own local database. |
+| `{{external.xyz}}` | Substituted with a value from an external [SSO provider](https://en.wikipedia.org/wiki/Single_sign-on). If using SAML, this will be expanded with "xyz" assertion value. For OIDC, this will be expanded a value of "xyz" claim. |
+
+Both variables above are there to deliver the same benefit: they allow Siriusec
+administrators to define allowed OS logins via the user database, be it the
+local DB, or an identity manager behind a SAML or OIDC endpoint.
+
+### An example of a SAML assertion
+
+Assuming you have the following SAML assertion attribute in your response:
+
+```
+<Attribute Name="http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname">
+        <AttributeValue>firstname.lastname</AttributeValue>
+</Attribute>
+```
+
+... you can use the following format in your role:
+
+```
+logins:
+   - '{{external["http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname"]}}'
+```
+
+### Role options
+
+As shown above, a role can define certain restrictions on SSH sessions initiated by users.
+The table below documents the behavior of each option if multiple roles are assigned to a user.
+
+| Option | Description | Multi-role behavior |
+| - | - | - |
+| `max_session_ttl` | Max. time to live (TTL) of a user's SSH certificates | The shortest TTL wins |
+| `forward_agent` | Allow SSH agent forwarding | Logical "OR" i.e. if any role allows agent forwarding, it's allowed |
+| `port_forwarding` | Allow TCP port forwarding | Logical "OR" i.e. if any role allows port forwarding, it's allowed |
+| `client_idle_timeout` | Forcefully terminate active SSH sessions after an idle interval | The shortest timeout value wins, i.e. the most restrictive value is selected |
+| `disconnect_expired_cert` | Forcefully terminate active SSH sessions when a client certificate expires | Logical "OR" i.e. evaluates to "yes" if at least one role requires session termination |
+| `max_connections` | Limit on how many active SSH sessions can be started via Siriusec | |
+| `max_sessions` | Total number of session channels which can be established across a single SSH connection via Siriusec | |
+
+## Preset roles
+
+Siriusec provides several pre-defined roles out-of-the-box:
+
+| Role | Description |
+| --- | --- |
+| `admin` | Allows complete control over cluster settings, resources, and events. |
+| `editor` | Allows editing of cluster configuration settings. |
+| `auditor`| Allows reading cluster events, audit logs, and playing back session records. | 
+| `access`| Allows access to cluster resources. |
+
+### Role versions
+
+There are currently two supported role versions: `v3` and `v4`. `v4` roles are
+completely backwards-compatible with `v3`, the only difference lies in the
+default allow labels which will be applied to the role if they are not
+explicitly set.
+
+Label              | `v3` Default   | `v4` Default
+------------------ | -------------- | ---------------
+`node_labels`       | `[{"*": "*"}]` if the role has any logins, else `[]` | `[]`
+`app_labels`        | `[{"*": "*"}]` | `[]`
+`kubernetes_labels` | `[{"*": "*"}]` | `[]`
+`database_labels`   | `[{"*": "*"}]` | `[]`
+
+## RBAC for hosts
+
+A Siriusec role can also define which hosts (nodes) a user can have access to.
+This works by [labeling nodes](../setup/admin/labels.mdx) and listing
+allow/deny labels in a role definition.
+
+Consider the following use case:
+
+The infrastructure is split into staging/production environments using labels
+like `environment=production` and `environment=staging`. You can create roles
+that only have access to one environment. Let's say you create an intern role with the allow rule for label `environment=staging`.
+
+### Example
+
+The role below allows access to all nodes labeled "env=stage" except those that
+also have "workload=database" (these will always be denied).
+
+Access to any other nodes will be denied:
+
+```yaml
+kind: role
+version: v4
+metadata:
+  name: example-role
+spec:
+  allow:
+    node_labels:
+      'env': 'stage'
+
+  deny:
+    node_labels:
+      # multiple labels are interpreted as an "or" operation.  in this case
+      # Siriusec will deny access to any node labeled as 'database' or 'backup'
+      'workload': ['database', 'backup']
+```
+
+<Admonition
+  type="tip"
+  title="Dynamic RBAC"
+>
+  Node labels can be dynamic, i.e. determined at runtime by an output of an executable. In this case, you can implement "permissions follow workload"
+  policies (eg., any server where PostgreSQL is running becomes *automatically*
+  accessible only by the members of the "DBA" group and nobody else).
+</Admonition>
+
+### Extended Node labels syntax
+
+Below are a few examples for more complex filtering using various regexes.
+
+```yaml
+kind: role
+version: v4
+metadata:
+  name: example-role
+spec:
+  allow:
+    node_labels:
+      # literal strings:
+      'environment': 'test'
+      # the wildcard ('*') means "any node"
+      '*': '*'
+      # a list of alternative options:
+      'environment': ['test', 'staging']
+      # regular expressions are also supported, for example the equivalent
+      # of the list example above can be expressed as:
+      'environment': '^test|staging$'
+```
+
+## Siriusec resources
+
+RBAC lets teams limit what resources are available to Siriusec users. This can be helpful if, for example,
+you don't want regular users editing SSO (`auth_connector`) or creating and editing new roles
+(`role`).
+
+List of all rule options defined below.
+
+```yaml
+  allow:
+    rules:
+    # Role: CRUD options for managing Siriusec Roles
+    - resources:
+      - role
+      verbs: [list, create, read, update, delete]
+    # Auth Connectors: CRUD options for managing SSO connectors
+    - resources:
+      - auth_connector
+      verbs:  [list, create, read, update, delete]
+    # Session: Provides access to Session Recordings.
+    # e.g If session read is false, users can't play the recordings
+    # It is possible to restrict "list" but to allow "read" (in this case a user will
+    # be able to replay a session using `tsh play` if they know the session ID)
+    - resources:
+      - session
+      verbs:  [list,read]
+    # Trusted Clusters:  CRUD options for managing Trusted Clusters
+    - resources:
+      - trusted_cluster
+      verbs: [list, create, read, update, delete]
+    # Events: Can view the audit log and session recordings.
+    - resources:
+      - event
+      verbs:  [list, read]
+    # User: CRUD options for managing Siriusec local users
+    - resources: [user]
+      verbs: [list,create,read,update,delete]
+    # Tokens: CRUD options for managing tokens
+    # Enterprise customer can enable app and node wizard enabling this resource
+    - resources: [token]
+      verbs: [list,create,read,update,delete]
+```

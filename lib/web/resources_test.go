@@ -175,7 +175,7 @@ func TestGetRoles(t *testing.T) {
 	}
 
 	// Test response is converted to ui objects.
-	roles, err := getRoles(m)
+	roles, err := getRoles(context.Background(), m)
 	require.Nil(t, err)
 	require.Len(t, roles, 1)
 	require.Contains(t, roles[0].Content, "name: test")

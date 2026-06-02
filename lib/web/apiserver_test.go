@@ -517,7 +517,7 @@ func (s *WebSuite) TestSAMLSuccess(c *C) {
 
 	csrfToken := "2ebcb768d0090ea4368e42880c970b61865c326172a4a2343b645cf5d7f20992"
 
-	baseURL, err := url.Parse(clt.Endpoint("webapi", "saml", "sso") + `?redirect_url=http://localhost/after;connector_id=` + connector.GetName())
+	baseURL, err := url.Parse(clt.Endpoint("webapi", "saml", "sso") + `?redirect_url=http://localhost/after&connector_id=` + connector.GetName())
 	c.Assert(err, IsNil)
 	req, err := http.NewRequest("GET", baseURL.String(), nil)
 	c.Assert(err, IsNil)
@@ -730,7 +730,7 @@ func (s *WebSuite) TestWebSessionsBadInput(c *C) {
 		},
 	}
 	for i, req := range reqs {
-		_, err = clt.PostJSON(context.Background(), clt.Endpoint("webapi", "sessions"), req)
+		_, err = clt.PostJSON(context.Background(), clt.Endpoint("webapi", "sessions", "web"), req)
 		c.Assert(err, NotNil, Commentf("tc %v", i))
 		c.Assert(trace.IsAccessDenied(err), Equals, true, Commentf("tc %v %T is not access denied", i, err))
 	}
@@ -1304,7 +1304,7 @@ func (s *WebSuite) TestLogin(c *C) {
 	c.Assert(err, IsNil)
 
 	clt := s.client()
-	req, err := http.NewRequest("POST", clt.Endpoint("webapi", "sessions"), bytes.NewBuffer(loginReq))
+	req, err := http.NewRequest("POST", clt.Endpoint("webapi", "sessions", "web"), bytes.NewBuffer(loginReq))
 	c.Assert(err, IsNil)
 
 	csrfToken := "2ebcb768d0090ea4368e42880c970b61865c326172a4a2343b645cf5d7f20992"
@@ -2612,7 +2612,7 @@ func (s *WebSuite) login(clt *client.WebClient, cookieToken string, reqToken str
 		if err != nil {
 			return nil, err
 		}
-		req, err := http.NewRequest("POST", clt.Endpoint("webapi", "sessions"), bytes.NewBuffer(data))
+		req, err := http.NewRequest("POST", clt.Endpoint("webapi", "sessions", "web"), bytes.NewBuffer(data))
 		if err != nil {
 			return nil, err
 		}
@@ -3092,7 +3092,7 @@ func login(t *testing.T, clt *client.WebClient, cookieToken, reqToken string, re
 		if err != nil {
 			return nil, err
 		}
-		req, err := http.NewRequest("POST", clt.Endpoint("webapi", "sessions"), bytes.NewBuffer(data))
+		req, err := http.NewRequest("POST", clt.Endpoint("webapi", "sessions", "web"), bytes.NewBuffer(data))
 		if err != nil {
 			return nil, err
 		}
@@ -3129,4 +3129,34 @@ func TestProxyMultiAddr(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, resp.Body.Close())
 	}
+}
+
+func TestMFADevices(t *testing.T) {
+	ctx := context.Background()
+	env := newWebPack(t, 1)
+
+	proxy := env.proxies[0]
+	pack := proxy.authPack(t, "alice")
+
+	t.Run("GetMFADevices", func(t *testing.T) {
+		resp, err := pack.clt.Get(ctx, pack.clt.Endpoint("webapi", "mfa", "devices"), nil)
+		require.NoError(t, err)
+		var devices MFADeviceListResponse
+		require.NoError(t, json.Unmarshal(resp.Bytes(), &devices))
+		require.Len(t, devices.Devices, 1)
+		require.Equal(t, "TOTP", devices.Devices[0].Type)
+	})
+
+	t.Run("AddTOTPDeviceRequiresMFA", func(t *testing.T) {
+		_, err := pack.clt.PostJSON(ctx, pack.clt.Endpoint("webapi", "mfa", "totp"), AddTOTPDeviceRequest{
+			Name: "second-phone",
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "MFA authentication required")
+	})
+
+	t.Run("DeleteNonExistentDevice", func(t *testing.T) {
+		_, err := pack.clt.Delete(ctx, pack.clt.Endpoint("webapi", "mfa", "devices", "non-existent-id"))
+		require.Error(t, err)
+	})
 }

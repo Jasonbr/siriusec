@@ -43,8 +43,8 @@ func (s *StaticSuite) TestLocalFS(c *check.C) {
 
 	html := string(bytes[:])
 	c.Assert(f.Close(), check.IsNil)
-	c.Assert(strings.Contains(html, `<script src="/web/config.js"></script>`), check.Equals, true)
-	c.Assert(strings.Contains(html, `content="{{ .XCSRF }}"`), check.Equals, true)
+	c.Assert(strings.Contains(html, `<div id="root"></div>`), check.Equals, true)
+	c.Assert(strings.Contains(html, `Siriusec`), check.Equals, true)
 }
 
 func (s *StaticSuite) TestZipFS(c *check.C) {

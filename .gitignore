@@ -57,6 +57,12 @@ terraform.tfstate
 # macOS
 **/.DS_Store
 
+# frontend
+node_modules
+.qoder
+.sisyphus
+*.log
+
 # ansible stuff
 ssh.config
 *.retry

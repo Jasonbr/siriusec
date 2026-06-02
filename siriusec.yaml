@@ -12,6 +12,8 @@ auth_service:
   authentication:
     type: local
     second_factor: off
+  tokens:
+    - "node,auth,proxy:admin-token"
 
 proxy_service:
   enabled: true
@@ -22,3 +24,14 @@ proxy_service:
 ssh_service:
   enabled: true
   listen_addr: 0.0.0.0:3022
+
+db_service:
+  enabled: true
+  databases:
+  - name: mysql-sample
+    protocol: mysql
+    uri: 127.0.0.1:3506
+    static_labels:
+      env: production
+      type: mysql
+      sample_user: sample

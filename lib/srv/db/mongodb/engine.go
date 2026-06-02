@@ -190,11 +190,13 @@ func (e *Engine) authorizeClientMessage(sessionCtx *common.Session, message prot
 
 func (e *Engine) checkClientMessage(sessionCtx *common.Session, message protocol.Message, database string) error {
 	// Legacy OP_KILL_CURSORS command doesn't contain database information.
+	// Use the session's default database for authorization check.
 	if _, ok := message.(*protocol.MessageOpKillCursors); ok {
 		return sessionCtx.Checker.CheckAccessToDatabase(sessionCtx.Server,
 			services.AccessMFAParams{Verified: true},
 			&services.DatabaseLabelsMatcher{Labels: sessionCtx.Server.GetAllLabels()},
-			&services.DatabaseUserMatcher{User: sessionCtx.DatabaseUser})
+			&services.DatabaseUserMatcher{User: sessionCtx.DatabaseUser},
+			&services.DatabaseNameMatcher{Name: sessionCtx.DatabaseName})
 	}
 	// Do not allow certain commands that deal with authentication.
 	command, err := message.GetCommand()

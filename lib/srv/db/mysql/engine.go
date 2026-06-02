@@ -133,14 +133,12 @@ func (e *Engine) checkAccess(ctx context.Context, sessionCtx *common.Session) er
 	// queries once they're connected, apart from granting proper privileges
 	// in MySQL itself.
 	//
-	// As such, checking db_names for MySQL is quite pointless so we only
-	// check db_users. In future, if we implement some sort of access controls
-	// on queries, we might be able to restrict db_names as well e.g. by
-	// detecting full-qualified table names like db.table, until then the
-	// proper way is to use MySQL grants system.
+	// However, we still check db_names at connection time to enforce RBAC.
+	// Cross-database query prevention should be done via MySQL grants.
 	err = sessionCtx.Checker.CheckAccessToDatabase(sessionCtx.Server, mfaParams,
 		&services.DatabaseLabelsMatcher{Labels: sessionCtx.Server.GetAllLabels()},
-		&services.DatabaseUserMatcher{User: sessionCtx.DatabaseUser})
+		&services.DatabaseUserMatcher{User: sessionCtx.DatabaseUser},
+		&services.DatabaseNameMatcher{Name: sessionCtx.DatabaseName})
 	if err != nil {
 		e.Audit.OnSessionStart(e.Context, sessionCtx, err)
 		return trace.Wrap(err)

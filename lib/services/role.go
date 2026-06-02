@@ -58,6 +58,8 @@ func getExtendedAdminUserRules(features modules.Features) []types.Rule {
 		types.NewRule(types.KindUser, RW()),
 		types.NewRule(types.KindToken, RW()),
 		types.NewRule(types.KindLock, RW()),
+		types.NewRule(types.KindClusterConfig, []string{types.VerbRead, types.VerbUpdate}),
+		types.NewRule(types.KindAccessRequest, []string{types.VerbList, types.VerbRead, types.VerbCreate, types.VerbUpdate}),
 	}
 
 	if features.Cloud {
@@ -130,6 +132,78 @@ func NewAdminRole() types.Role {
 			DatabaseNames:    []string{teleport.TraitInternalDBNamesVariable},
 			DatabaseUsers:    []string{teleport.TraitInternalDBUsersVariable},
 			Rules:            adminRules,
+		},
+	})
+	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable, teleport.Root})
+	role.SetKubeUsers(Allow, []string{teleport.TraitInternalKubeUsersVariable})
+	role.SetKubeGroups(Allow, []string{teleport.TraitInternalKubeGroupsVariable})
+	return role
+}
+
+// NewEditorRole creates a preset editor role that can modify cluster
+// configuration but cannot delete core resources.
+func NewEditorRole() types.Role {
+	role, _ := types.NewRole(teleport.PresetEditorRoleName, types.RoleSpecV4{
+		Options: types.RoleOptions{
+			CertificateFormat: constants.CertificateFormatStandard,
+			MaxSessionTTL:     types.NewDuration(defaults.MaxCertDuration),
+			PortForwarding:    types.NewBoolOption(true),
+			ForwardAgent:      types.NewBool(true),
+		},
+		Allow: types.RoleConditions{
+			Namespaces: []string{defaults.Namespace},
+			NodeLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
+			AppLabels:  types.Labels{types.Wildcard: []string{types.Wildcard}},
+			KubernetesLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
+			DatabaseLabels:   types.Labels{types.Wildcard: []string{types.Wildcard}},
+			Rules: []types.Rule{
+				types.NewRule(types.KindRole, []string{types.VerbList, types.VerbRead, types.VerbCreate, types.VerbUpdate}),
+				types.NewRule(types.KindAuthConnector, []string{types.VerbList, types.VerbRead, types.VerbCreate, types.VerbUpdate}),
+				types.NewRule(types.KindSession, RO()),
+				types.NewRule(types.KindTrustedCluster, []string{types.VerbList, types.VerbRead, types.VerbCreate, types.VerbUpdate}),
+				types.NewRule(types.KindEvent, RO()),
+				types.NewRule(types.KindUser, []string{types.VerbList, types.VerbRead, types.VerbCreate, types.VerbUpdate}),
+				types.NewRule(types.KindToken, []string{types.VerbList, types.VerbRead, types.VerbCreate}),
+				types.NewRule(types.KindClusterConfig, []string{types.VerbRead, types.VerbUpdate}),
+				types.NewRule(types.KindAccessRequest, []string{types.VerbList, types.VerbRead, types.VerbCreate, types.VerbUpdate}),
+				types.NewRule(types.KindLock, []string{types.VerbList, types.VerbRead, types.VerbCreate, types.VerbUpdate}),
+			},
+		},
+	})
+	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable, teleport.Root})
+	role.SetKubeUsers(Allow, []string{teleport.TraitInternalKubeUsersVariable})
+	role.SetKubeGroups(Allow, []string{teleport.TraitInternalKubeGroupsVariable})
+	return role
+}
+
+// NewViewerRole creates a preset viewer role with read-only access to
+// cluster resources.
+func NewViewerRole() types.Role {
+	role, _ := types.NewRole(teleport.PresetViewerRoleName, types.RoleSpecV4{
+		Options: types.RoleOptions{
+			CertificateFormat: constants.CertificateFormatStandard,
+			MaxSessionTTL:     types.NewDuration(defaults.MaxCertDuration),
+			PortForwarding:    types.NewBoolOption(false),
+			ForwardAgent:      types.NewBool(false),
+		},
+		Allow: types.RoleConditions{
+			Namespaces: []string{defaults.Namespace},
+			NodeLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
+			AppLabels:  types.Labels{types.Wildcard: []string{types.Wildcard}},
+			KubernetesLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
+			DatabaseLabels:   types.Labels{types.Wildcard: []string{types.Wildcard}},
+			Rules: []types.Rule{
+				types.NewRule(types.KindRole, RO()),
+				types.NewRule(types.KindAuthConnector, RO()),
+				types.NewRule(types.KindSession, RO()),
+				types.NewRule(types.KindTrustedCluster, RO()),
+				types.NewRule(types.KindEvent, RO()),
+				types.NewRule(types.KindUser, RO()),
+				types.NewRule(types.KindToken, RO()),
+				types.NewRule(types.KindClusterConfig, []string{types.VerbRead}),
+				types.NewRule(types.KindAccessRequest, []string{types.VerbList, types.VerbRead}),
+				types.NewRule(types.KindLock, RO()),
+			},
 		},
 	})
 	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable, teleport.Root})

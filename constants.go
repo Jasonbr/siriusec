@@ -554,6 +554,10 @@ const (
 	// PresetAuditorRoleName is a name of a preset role that allows
 	// reading cluster events and playing back session records.
 	PresetAuditorRoleName = "auditor"
+
+	// PresetViewerRoleName is a name of a preset role that allows
+	// read-only access to cluster resources.
+	PresetViewerRoleName = "viewer"
 )
 
 // OSSMigratedV6 is a label to mark migrated OSS users and resources

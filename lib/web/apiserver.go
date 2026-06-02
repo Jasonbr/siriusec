@@ -104,6 +104,9 @@ type Handler struct {
 
 	// clusterFeatures contain flags for supported and unsupported features.
 	clusterFeatures proto.Features
+
+	// mfaSessionStore stores sessions for multi-step MFA device registration
+	mfaSessionStore *mfaSessionStore
 }
 
 // HandlerOption is a functional argument - an option that can be passed
@@ -249,6 +252,9 @@ func NewHandler(cfg Config, opts ...HandlerOption) (*RewritingHandler, error) {
 	}
 	h.auth = auth
 
+	// Initialize MFA session store
+	h.mfaSessionStore = newMFASessionStore(h.log)
+
 	_, sshPort, err := net.SplitHostPort(cfg.ProxySSHAddr.String())
 	if err != nil {
 		h.log.WithError(err).Warnf("Invalid SSH proxy address %q, will use default port %v.",
@@ -273,11 +279,7 @@ func NewHandler(cfg Config, opts ...HandlerOption) (*RewritingHandler, error) {
 
 	// Unauthenticated access to the message of the day
 	h.GET("/webapi/motd", httplib.MakeHandler(h.motd))
-
-	// DELETE IN: 5.1.0
-	//
-	// Migrated this endpoint to /webapi/sessions/web below.
-	h.POST("/webapi/sessions", httplib.WithCSRFProtection(h.createWebSession))
+	h.GET("/__csrf-token", httplib.MakeHandler(h.getCsrfToken))
 
 	// Web sessions
 	h.POST("/webapi/sessions/web", httplib.WithCSRFProtection(h.createWebSession))
@@ -377,10 +379,42 @@ func NewHandler(cfg Config, opts ...HandlerOption) (*RewritingHandler, error) {
 	h.POST("/webapi/github", h.WithAuth(h.upsertGithubConnectorHandle))
 	h.DELETE("/webapi/github/:name", h.WithAuth(h.deleteGithubConnector))
 
-	h.GET("/webapi/trustedcluster", h.WithAuth(h.getTrustedClustersHandle))
-	h.PUT("/webapi/trustedcluster", h.WithAuth(h.upsertTrustedClusterHandle))
-	h.POST("/webapi/trustedcluster", h.WithAuth(h.upsertTrustedClusterHandle))
-	h.DELETE("/webapi/trustedcluster/:name", h.WithAuth(h.deleteTrustedCluster))
+	h.GET("/webapi/trustedclusters", h.WithAuth(h.getTrustedClustersHandle))
+	h.PUT("/webapi/trustedclusters", h.WithAuth(h.upsertTrustedClusterHandle))
+	h.POST("/webapi/trustedclusters", h.WithAuth(h.upsertTrustedClusterHandle))
+	h.DELETE("/webapi/trustedclusters/:name", h.WithAuth(h.deleteTrustedCluster))
+	h.POST("/webapi/trustedclusters/tokens", h.WithAuth(h.generateTrustedClusterToken))
+
+	// auth connectors (unified API for github, oidc, saml)
+	h.GET("/webapi/auth/connectors", h.WithAuth(h.getAuthConnectorsHandle))
+	h.GET("/webapi/auth/connectors/:type", h.WithAuth(h.getAuthConnectorsByTypeHandle))
+	h.GET("/webapi/auth/connectors/:type/:name", h.WithAuth(h.getAuthConnectorHandle))
+	h.POST("/webapi/auth/connectors", h.WithAuth(h.upsertAuthConnectorHandle))
+	h.PUT("/webapi/auth/connectors/:type/:name", h.WithAuth(h.upsertAuthConnectorHandle))
+	h.DELETE("/webapi/auth/connectors/:type/:name", h.WithAuth(h.deleteAuthConnectorHandle))
+	h.POST("/webapi/auth/connectors/test", h.WithAuth(h.testAuthConnectorHandle))
+
+	h.GET("/webapi/accessrequests", h.WithAuth(h.getAccessRequestsHandle))
+	h.GET("/webapi/accessrequests/pending", h.WithAuth(h.getPendingAccessRequestsHandle))
+	h.GET("/webapi/accessrequests/my", h.WithAuth(h.getMyAccessRequestsHandle))
+	h.POST("/webapi/accessrequests", h.WithAuth(h.createAccessRequestHandle))
+	h.POST("/webapi/accessrequests/review", h.WithAuth(h.reviewAccessRequestHandle))
+
+	h.GET("/v1/tokens", h.WithAuth(h.getTokensHandle))
+	h.POST("/v1/tokens", h.WithAuth(h.createTokenHandle))
+	h.GET("/v1/tokens/:name", h.WithAuth(h.getTokenHandle))
+	h.DELETE("/v1/tokens/:name", h.WithAuth(h.deleteTokenHandle))
+
+	h.GET("/webapi/config", h.WithAuth(h.getConfigHandle))
+	h.PUT("/webapi/config", h.WithAuth(h.updateConfigHandle))
+
+	// MFA device management routes
+	h.GET("/webapi/mfa/devices", h.WithAuth(h.getMFADevicesHandle))
+	h.POST("/webapi/mfa/totp", h.WithAuth(h.addTOTPDeviceHandle))
+	h.POST("/webapi/mfa/totp/verify", h.WithAuth(h.verifyTOTPDeviceHandle))
+	h.POST("/webapi/u2f/signuptokens", h.WithAuth(h.addU2FDeviceHandle))
+	h.POST("/webapi/mfa/u2f", h.WithAuth(h.registerU2FDeviceHandle))
+	h.DELETE("/webapi/mfa/devices/:deviceId", h.WithAuth(h.deleteMFADeviceHandle))
 
 	h.GET("/webapi/apps/:fqdnHint", h.WithAuth(h.getAppFQDN))
 	h.GET("/webapi/apps/:fqdnHint/:clusterName/:publicAddr", h.WithAuth(h.getAppFQDN))
@@ -426,7 +460,7 @@ func NewHandler(cfg Config, opts ...HandlerOption) (*RewritingHandler, error) {
 		}
 
 		// serve Web UI:
-		if strings.HasPrefix(r.URL.Path, "/web/app") {
+		if strings.HasPrefix(r.URL.Path, "/web/app") || strings.HasPrefix(r.URL.Path, "/web/assets") {
 			httplib.SetStaticFileHeaders(w.Header())
 			http.StripPrefix("/web", makeGzipHandler(http.FileServer(cfg.StaticFS))).ServeHTTP(w, r)
 		} else if strings.HasPrefix(r.URL.Path, "/web/") || r.URL.Path == "/web" {
@@ -508,13 +542,316 @@ func (h *Handler) Close() error {
 }
 
 func (h *Handler) getUserStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *SessionContext) (interface{}, error) {
+	return map[string]interface{}{
+		"user":   c.GetUser(),
+		"status": "active",
+	}, nil
+}
+
+func (h *Handler) getConfigHandle(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *SessionContext) (interface{}, error) {
+	clt, err := c.GetClient()
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	ctx := r.Context()
+	authType := ""
+	secondFactor := constants.SecondFactorType("")
+	cap, err := clt.GetAuthPreference(ctx)
+	if err != nil {
+		h.log.WithError(err).Warn("Failed to get auth preference.")
+	} else {
+		authType = cap.GetType()
+		secondFactor = cap.GetSecondFactor()
+	}
+
+	recordingEnabled := true
+	joinAllowed := true
+	recCfg, err := clt.GetSessionRecordingConfig(ctx)
+	if err != nil {
+		h.log.WithError(err).Warn("Failed to get session recording config.")
+	} else {
+		recordingEnabled = recCfg.GetMode() != types.RecordOff
+		joinAllowed = !services.IsRecordAtProxy(recCfg.GetMode())
+	}
+
+	proxyListenerMode := "multiplex"
+	keepAliveInterval := int64(0)
+	netCfg, err := clt.GetClusterNetworkingConfig(ctx)
+	if err != nil {
+		h.log.WithError(err).Warn("Failed to get networking config.")
+	} else {
+		keepAliveInterval = int64(netCfg.GetKeepAliveInterval().Seconds())
+	}
+
+	publicAddr := ""
+	clusterName, err := clt.GetClusterName()
+	if err != nil {
+		h.log.WithError(err).Warn("Failed to get cluster name.")
+	} else {
+		publicAddr = clusterName.GetClusterName()
+	}
+
+	return map[string]interface{}{
+		"auth": map[string]interface{}{
+			"type":           authType,
+			"secondFactor":   secondFactor,
+			"sessionTimeout": 0,
+			"idleTimeout":    0,
+		},
+		"session": map[string]interface{}{
+			"maxConcurrent":     0,
+			"recordingEnabled":  recordingEnabled,
+			"joinAllowed":       joinAllowed,
+		},
+		"network": map[string]interface{}{
+			"publicAddr":        publicAddr,
+			"proxyListenerMode": proxyListenerMode,
+			"keepAliveInterval": keepAliveInterval,
+		},
+		"audit": map[string]interface{}{
+			"enabled":       true,
+			"retentionDays": 0,
+			"events":        []string{},
+		},
+	}, nil
+}
+
+type updateConfigRequest struct {
+	Auth    *updateAuthConfig    `json:"auth,omitempty"`
+	Session *updateSessionConfig `json:"session,omitempty"`
+	Network *updateNetworkConfig `json:"network,omitempty"`
+	Audit   *updateAuditConfig   `json:"audit,omitempty"`
+}
+
+type updateAuthConfig struct {
+	Type           string `json:"type,omitempty"`
+	SecondFactor   string `json:"secondFactor,omitempty"`
+	SessionTimeout int    `json:"sessionTimeout,omitempty"`
+	IdleTimeout    int    `json:"idleTimeout,omitempty"`
+}
+
+type updateSessionConfig struct {
+	MaxConcurrent    int  `json:"maxConcurrent,omitempty"`
+	RecordingEnabled *bool `json:"recordingEnabled,omitempty"`
+	JoinAllowed      *bool `json:"joinAllowed,omitempty"`
+}
+
+type updateNetworkConfig struct {
+	PublicAddr        string `json:"publicAddr,omitempty"`
+	ProxyListenerMode string `json:"proxyListenerMode,omitempty"`
+	KeepAliveInterval int    `json:"keepAliveInterval,omitempty"`
+}
+
+type updateAuditConfig struct {
+	Enabled       bool     `json:"enabled,omitempty"`
+	RetentionDays int      `json:"retentionDays,omitempty"`
+	Events        []string `json:"events,omitempty"`
+}
+
+// validSecondFactors 定义有效的双因素认证类型
+var validSecondFactors = map[string]bool{
+	"off":      true,
+	"otp":      true,
+	"u2f":      true,
+	"on":       true,
+	"optional": true,
+}
+
+// validateUpdateConfigRequest 验证配置更新请求
+func validateUpdateConfigRequest(req *updateConfigRequest) error {
+	if req.Auth != nil {
+		if req.Auth.SecondFactor != "" && !validSecondFactors[req.Auth.SecondFactor] {
+			return trace.BadParameter("invalid secondFactor: %q, must be one of: off, otp, u2f, on, optional", req.Auth.SecondFactor)
+		}
+		if req.Auth.SessionTimeout < 0 {
+			return trace.BadParameter("sessionTimeout must be non-negative")
+		}
+		if req.Auth.IdleTimeout < 0 {
+			return trace.BadParameter("idleTimeout must be non-negative")
+		}
+	}
+
+	if req.Session != nil {
+		if req.Session.MaxConcurrent < 0 {
+			return trace.BadParameter("maxConcurrent must be non-negative")
+		}
+	}
+
+	if req.Network != nil {
+		if req.Network.KeepAliveInterval < 0 {
+			return trace.BadParameter("keepAliveInterval must be non-negative")
+		}
+	}
+
+	if req.Audit != nil {
+		if req.Audit.RetentionDays < 0 {
+			return trace.BadParameter("retentionDays must be non-negative")
+		}
+	}
+
+	return nil
+}
+
+func (h *Handler) updateConfigHandle(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *SessionContext) (interface{}, error) {
+	clt, err := c.GetClient()
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	var req updateConfigRequest
+	if err := httplib.ReadJSON(r, &req); err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	if err := validateUpdateConfigRequest(&req); err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	ctx := r.Context()
+	cap, err := clt.GetAuthPreference(ctx)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	capV2, ok := cap.(*types.AuthPreferenceV2)
+	if !ok {
+		return nil, trace.BadParameter("unexpected auth preference type %T", cap)
+	}
+	if req.Auth != nil && req.Auth.SecondFactor != "" {
+		capV2.Spec.SecondFactor = constants.SecondFactorType(req.Auth.SecondFactor)
+	}
+	if err := clt.SetAuthPreference(ctx, capV2); err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	recCfg, err := clt.GetSessionRecordingConfig(ctx)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	recV2, ok := recCfg.(*types.SessionRecordingConfigV2)
+	if !ok {
+		return nil, trace.BadParameter("unexpected session recording config type %T", recCfg)
+	}
+	if req.Session != nil && req.Session.RecordingEnabled != nil {
+		if *req.Session.RecordingEnabled {
+			recV2.Spec.Mode = types.RecordAtNode
+		} else {
+			recV2.Spec.Mode = types.RecordOff
+		}
+	}
+	if err := clt.SetSessionRecordingConfig(ctx, recV2); err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	netCfg, err := clt.GetClusterNetworkingConfig(ctx)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	netV2, ok := netCfg.(*types.ClusterNetworkingConfigV2)
+	if !ok {
+		return nil, trace.BadParameter("unexpected cluster networking config type %T", netCfg)
+	}
+	if req.Network != nil && req.Network.KeepAliveInterval > 0 {
+		netV2.Spec.KeepAliveInterval = types.Duration(req.Network.KeepAliveInterval)
+	}
+	if err := clt.SetClusterNetworkingConfig(ctx, netV2); err != nil {
+		return nil, trace.Wrap(err)
+	}
+
 	return OK(), nil
+}
+
+func (h *Handler) getTokensHandle(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *SessionContext) (interface{}, error) {
+	clt, err := c.GetClient()
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	tokens, err := clt.GetTokens(r.Context())
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	return tokens, nil
+}
+
+func (h *Handler) getTokenHandle(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *SessionContext) (interface{}, error) {
+	clt, err := c.GetClient()
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	token, err := clt.GetToken(r.Context(), p.ByName("name"))
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	return token, nil
+}
+
+func (h *Handler) deleteTokenHandle(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *SessionContext) (interface{}, error) {
+	clt, err := c.GetClient()
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	if err := clt.DeleteToken(r.Context(), p.ByName("name")); err != nil {
+		return nil, trace.Wrap(err)
+	}
+	return OK(), nil
+}
+
+type createTokenRequest struct {
+	Name  string   `json:"name"`
+	Roles []string `json:"roles"`
+	TTL   string   `json:"ttl,omitempty"`
+}
+
+func (h *Handler) createTokenHandle(w http.ResponseWriter, r *http.Request, _ httprouter.Params, c *SessionContext) (interface{}, error) {
+	clt, err := c.GetClient()
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	var req createTokenRequest
+	if err := httplib.ReadJSON(r, &req); err != nil {
+		return nil, trace.Wrap(err)
+	}
+	if req.Name == "" {
+		return nil, trace.BadParameter("missing token name")
+	}
+	if len(req.Roles) == 0 {
+		return nil, trace.BadParameter("missing token roles")
+	}
+
+	const maxTokenTTL = 48 * time.Hour
+	var expiry time.Time
+	if req.TTL != "" {
+		d, err := time.ParseDuration(req.TTL)
+		if err != nil {
+			return nil, trace.BadParameter("invalid expiry duration: %v", err)
+		}
+		if d > maxTokenTTL {
+			return nil, trace.BadParameter("token TTL exceeds maximum allowed duration of %v", maxTokenTTL)
+		}
+		if d <= 0 {
+			return nil, trace.BadParameter("token TTL must be positive")
+		}
+		expiry = time.Now().UTC().Add(d)
+	}
+
+	roles, err := types.NewTeleportRoles(req.Roles)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	token, err := types.NewProvisionToken(req.Name, roles, expiry)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	if err := clt.UpsertToken(r.Context(), token); err != nil {
+		return nil, trace.Wrap(err)
+	}
+	return token, nil
 }
 
 // getUserContext returns user context
 //
 // GET /webapi/sites/:site/context
-//
 func (h *Handler) getUserContext(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *SessionContext, site reversetunnel.RemoteSite) (interface{}, error) {
 	cn, err := h.cfg.AccessPoint.GetClusterName()
 	if err != nil {
@@ -912,6 +1249,14 @@ func (h *Handler) motd(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	return webclient.MotD{Text: authPrefs.GetMessageOfTheDay()}, nil
 }
 
+func (h *Handler) getCsrfToken(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
+	csrfToken, err := csrf.AddCSRFProtection(w, r)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	return map[string]string{"csrf": csrfToken}, nil
+}
+
 func (h *Handler) oidcLoginWeb(w http.ResponseWriter, r *http.Request, p httprouter.Params) string {
 	logger := h.log.WithField("auth", "oidc")
 	logger.Debug("Web login start.")
@@ -1302,10 +1647,9 @@ func newSessionResponse(ctx *SessionContext) (*CreateSessionResponse, error) {
 //
 // {"user": "alex", "pass": "abc123", "second_factor_token": "token", "second_factor_type": "totp"}
 //
-// Response
+// # Response
 //
 // {"type": "bearer", "token": "bearer token", "user": {"name": "alex", "allowed_logins": ["admin", "bob"]}, "expires_in": 20}
-//
 func (h *Handler) createWebSession(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	var req *CreateSessionReq
 	if err := httplib.ReadJSON(r, &req); err != nil {
@@ -1372,7 +1716,6 @@ func (h *Handler) createWebSession(w http.ResponseWriter, r *http.Request, p htt
 // Response:
 //
 // {"message": "ok"}
-//
 func (h *Handler) deleteSession(w http.ResponseWriter, r *http.Request, _ httprouter.Params, ctx *SessionContext) (interface{}, error) {
 	err := h.logout(w, ctx)
 	if err != nil {
@@ -1526,7 +1869,6 @@ func (h *Handler) getResetPasswordToken(ctx context.Context, tokenID string) (in
 // Response:
 //
 // {"version":"U2F_V2","challenge":"randombase64string","appId":"https://mycorp.com:3080"}
-//
 func (h *Handler) u2fRegisterRequest(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	token := p.ByName("token")
 	u2fRegisterRequest, err := h.auth.GetUserInviteU2FRegisterRequest(token)
@@ -1546,7 +1888,6 @@ func (h *Handler) u2fRegisterRequest(w http.ResponseWriter, r *http.Request, p h
 // Successful response:
 //
 // {"version":"U2F_V2","challenge":"randombase64string","keyHandle":"longbase64string","appId":"https://mycorp.com:3080"}
-//
 func (h *Handler) mfaChallengeRequest(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	var req *client.MFAChallengeRequest
 	if err := httplib.ReadJSON(r, &req); err != nil {
@@ -1575,7 +1916,6 @@ type u2fSignResponseReq struct {
 // Successful response:
 //
 // {"type": "bearer", "token": "bearer token", "user": {"name": "alex", "allowed_logins": ["admin", "bob"]}, "expires_in": 20}
-//
 func (h *Handler) createSessionWithU2FSignResponse(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	var req *u2fSignResponseReq
 	if err := httplib.ReadJSON(r, &req); err != nil {
@@ -1603,7 +1943,6 @@ func (h *Handler) createSessionWithU2FSignResponse(w http.ResponseWriter, r *htt
 // Successful response:
 //
 // {"sites": {"name": "localhost", "last_connected": "RFC3339 time", "status": "active"}}
-//
 func (h *Handler) getClusters(w http.ResponseWriter, r *http.Request, p httprouter.Params, c *SessionContext) (interface{}, error) {
 	// Get a client to the Auth Server with the logged in users identity. The
 	// identity of the logged in user is used to fetch the list of nodes.
@@ -1639,7 +1978,8 @@ type getSiteNamespacesResponse struct {
 	Namespaces []types.Namespace `json:"namespaces"`
 }
 
-/* getSiteNamespaces returns a list of namespaces for a given site
+/*
+	getSiteNamespaces returns a list of namespaces for a given site
 
 GET /v1/webapi/sites/:site/namespaces
 
@@ -1661,10 +2001,10 @@ func (h *Handler) getSiteNamespaces(w http.ResponseWriter, r *http.Request, _ ht
 	}, nil
 }
 
-/* siteNodesGet returns a list of nodes for a given site and namespace
+/*
+	siteNodesGet returns a list of nodes for a given site and namespace
 
 GET /v1/webapi/sites/:site/namespaces/:namespace/nodes
-
 */
 func (h *Handler) siteNodesGet(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *SessionContext, site reversetunnel.RemoteSite) (interface{}, error) {
 	namespace := p.ByName("namespace")
@@ -1696,10 +2036,9 @@ func (h *Handler) siteNodesGet(w http.ResponseWriter, r *http.Request, p httprou
 //
 // {"server_id": "uuid", "login": "admin", "term": {"h": 120, "w": 100}, "sid": "123"}
 //
-// Session id can be empty
+// # Session id can be empty
 //
 // Successful response is a websocket stream that allows read write to the server
-//
 func (h *Handler) siteNodeConnect(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -1836,19 +2175,6 @@ func (h *Handler) siteSessionsGet(w http.ResponseWriter, r *http.Request, p http
 		return nil, trace.Wrap(err)
 	}
 
-	// DELETE IN: 5.0.0
-	// Teleport Nodes < v4.3 does not set ClusterName, ServerHostname with new sessions,
-	// which 4.3 UI client relies on to create URL's and display node inform.
-	clusterName := p.ByName("site")
-	for i, session := range sessions {
-		if session.ClusterName == "" {
-			sessions[i].ClusterName = clusterName
-		}
-		if session.ServerHostname == "" {
-			sessions[i].ServerHostname = session.ServerID
-		}
-	}
-
 	return siteSessionsGetResponse{Sessions: sessions}, nil
 }
 
@@ -1859,7 +2185,6 @@ func (h *Handler) siteSessionsGet(w http.ResponseWriter, r *http.Request, p http
 // Response body:
 //
 // {"session": {"id": "sid", "terminal_params": {"w": 100, "h": 100}, "parties": [], "login": "bob"}}
-//
 func (h *Handler) siteSessionGet(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *SessionContext, site reversetunnel.RemoteSite) (interface{}, error) {
 	sessionID, err := session.ParseID(p.ByName("sid"))
 	if err != nil {
@@ -1880,16 +2205,6 @@ func (h *Handler) siteSessionGet(w http.ResponseWriter, r *http.Request, p httpr
 	sess, err := clt.GetSession(namespace, *sessionID)
 	if err != nil {
 		return nil, trace.Wrap(err)
-	}
-
-	// DELETE IN: 5.0.0
-	// Teleport Nodes < v4.3 does not set ClusterName, ServerHostname with new sessions,
-	// which 4.3 UI client relies on to create URL's and display node inform.
-	if sess.ClusterName == "" {
-		sess.ClusterName = p.ByName("site")
-	}
-	if sess.ServerHostname == "" {
-		sess.ServerHostname = sess.ServerID
 	}
 
 	return *sess, nil
@@ -1915,16 +2230,17 @@ func toFieldsSlice(rawEvents []apievents.AuditEvent) ([]events.EventFields, erro
 // GET /v1/webapi/sites/:site/events/search
 //
 // Query parameters:
-//   "from"    : date range from, encoded as RFC3339
-//   "to"      : date range to, encoded as RFC3339
-//   "limit"   : optional maximum number of events to return on each fetch
-//   "startKey": resume events search from the last event received,
-//               empty string means start search from beginning
-//   "include" : optional comma-separated list of event names to return e.g.
-//               include=session.start,session.end, all are returned if empty
-//   "order":    optional ordering of events. Can be either "asc" or "desc"
-//               for ascending and descending respectively.
-//               If no order is provided it defaults to descending.
+//
+//	"from"    : date range from, encoded as RFC3339
+//	"to"      : date range to, encoded as RFC3339
+//	"limit"   : optional maximum number of events to return on each fetch
+//	"startKey": resume events search from the last event received,
+//	            empty string means start search from beginning
+//	"include" : optional comma-separated list of event names to return e.g.
+//	            include=session.start,session.end, all are returned if empty
+//	"order":    optional ordering of events. Can be either "asc" or "desc"
+//	            for ascending and descending respectively.
+//	            If no order is provided it defaults to descending.
 func (h *Handler) clusterSearchEvents(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *SessionContext, site reversetunnel.RemoteSite) (interface{}, error) {
 	values := r.URL.Query()
 
@@ -2025,8 +2341,9 @@ func queryOrder(query url.Values, name string, def types.EventOrder) (types.Even
 // GET /v1/webapi/sites/:site/namespaces/:namespace/sessions/:sid/stream?query
 //
 // Query parameters:
-//   "offset"   : bytes from the beginning
-//   "bytes"    : number of bytes to read (it won't return more than 512Kb)
+//
+//	"offset"   : bytes from the beginning
+//	"bytes"    : number of bytes to read (it won't return more than 512Kb)
 //
 // Unlike other request handlers, this one does not return JSON.
 // It returns the binary stream unencoded, directly in the respose body,
@@ -2086,10 +2403,9 @@ func (h *Handler) siteSessionStreamGet(w http.ResponseWriter, r *http.Request, p
 
 	// look at 'offset' parameter
 	query := r.URL.Query()
-	offset, _ := strconv.Atoi(query.Get("offset"))
+	offset, err := strconv.Atoi(query.Get("offset"))
 	if err != nil {
-		onError(trace.Wrap(err))
-		return
+		offset = 0
 	}
 	max, err := strconv.Atoi(query.Get("bytes"))
 	if err != nil || max <= 0 {
@@ -2140,13 +2456,13 @@ type eventsListGetResponse struct {
 // GET /v1/webapi/sites/:site/namespaces/:namespace/sessions/:sid/events?after=N
 //
 // Query:
-//    "after" : cursor value of an event to return "newer than" events
-//              good for repeated polling
+//
+//	"after" : cursor value of an event to return "newer than" events
+//	          good for repeated polling
 //
 // Response body (each event is an arbitrary JSON structure)
 //
 // {"events": [{...}, {...}, ...}
-//
 func (h *Handler) siteSessionEventsGet(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *SessionContext, site reversetunnel.RemoteSite) (interface{}, error) {
 	sessionID, err := session.ParseID(p.ByName("sid"))
 	if err != nil {
@@ -2201,10 +2517,9 @@ func (h *Handler) hostCredentials(w http.ResponseWriter, r *http.Request, p http
 //
 // { "user": "bob", "password": "pass", "otp_token": "tok", "pub_key": "key to sign", "ttl": 1000000000 }
 //
-// Success response
+// # Success response
 //
 // { "cert": "base64 encoded signed cert", "host_signers": [{"domain_name": "example.com", "checking_keys": ["base64 encoded public signing key"]}] }
-//
 func (h *Handler) createSSHCert(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	var req *client.CreateSSHCertReq
 	if err := httplib.ReadJSON(r, &req); err != nil {
@@ -2246,10 +2561,9 @@ func (h *Handler) createSSHCert(w http.ResponseWriter, r *http.Request, p httpro
 //
 // { "user": "bob", "password": "pass", "u2f_sign_response": { "signatureData": "signatureinbase64", "clientData": "verylongbase64string", "challenge": "randombase64string" }, "pub_key": "key to sign", "ttl": 1000000000 }
 //
-// Success response
+// # Success response
 //
 // { "cert": "base64 encoded signed cert", "host_signers": [{"domain_name": "example.com", "checking_keys": ["base64 encoded public signing key"]}] }
-//
 func (h *Handler) createSSHCertWithMFAChallengeResponse(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	var req *client.CreateSSHCertWithMFAReq
 	if err := httplib.ReadJSON(r, &req); err != nil {
@@ -2269,16 +2583,16 @@ func (h *Handler) createSSHCertWithMFAChallengeResponse(w http.ResponseWriter, r
 //
 // * Request body:
 //
-// {
-//     "token": "foo",
-//     "certificate_authorities": ["AQ==", "Ag=="]
-// }
+//	{
+//	    "token": "foo",
+//	    "certificate_authorities": ["AQ==", "Ag=="]
+//	}
 //
 // * Response:
 //
-// {
-//     "certificate_authorities": ["AQ==", "Ag=="]
-// }
+//	{
+//	    "certificate_authorities": ["AQ==", "Ag=="]
+//	}
 func (h *Handler) validateTrustedCluster(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	var validateRequestRaw auth.ValidateTrustedClusterRequestRaw
 	if err := httplib.ReadJSON(r, &validateRequestRaw); err != nil {

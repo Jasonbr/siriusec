@@ -17,7 +17,8 @@ limitations under the License.
 package utils
 
 import (
-	"strings"
+	"errors"
+	"net"
 
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/gravitational/trace"
@@ -25,12 +26,15 @@ import (
 
 // IsUseOfClosedNetworkError returns true if the specified error
 // indicates the use of closed network connection
-// TODO(dmitri): replace in go1.16 with `errors.Is(err, net.ErrClosed)`
 func IsUseOfClosedNetworkError(err error) bool {
 	if err == nil {
 		return false
 	}
-	return strings.Contains(err.Error(), constants.UseOfClosedNetworkConnection)
+	if errors.Is(err, net.ErrClosed) {
+		return true
+	}
+	// Fallback for wrapped errors that don't unwrap to net.ErrClosed
+	return trace.Unwrap(err).Error() == constants.UseOfClosedNetworkConnection
 }
 
 // IsOKNetworkError returns true if the provided error received from a network

@@ -103,3 +103,27 @@ func NewTrustedClusters(clusters []types.TrustedCluster) ([]ResourceItem, error)
 
 	return items, nil
 }
+
+func NewOIDCConnectors(connectors []types.OIDCConnector) ([]ResourceItem, error) {
+	items := make([]ResourceItem, 0, len(connectors))
+	for _, connector := range connectors {
+		item, err := NewResourceItem(connector)
+		if err != nil {
+			return nil, trace.Wrap(err)
+		}
+		items = append(items, *item)
+	}
+	return items, nil
+}
+
+func NewSAMLConnectors(connectors []types.SAMLConnector) ([]ResourceItem, error) {
+	items := make([]ResourceItem, 0, len(connectors))
+	for _, connector := range connectors {
+		item, err := NewResourceItem(connector)
+		if err != nil {
+			return nil, trace.Wrap(err)
+		}
+		items = append(items, *item)
+	}
+	return items, nil
+}

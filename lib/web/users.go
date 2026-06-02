@@ -118,6 +118,11 @@ func updateUser(r *http.Request, m userAPIGetter, createdBy string) (*ui.User, e
 		return nil, trace.Wrap(err)
 	}
 	user.SetRoles(req.Roles)
+	if req.Logins != nil {
+		user.SetTraits(map[string][]string{
+			teleport.TraitLogins: req.Logins,
+		})
+	}
 
 	if err := m.UpdateUser(r.Context(), user); err != nil {
 		return nil, trace.Wrap(err)

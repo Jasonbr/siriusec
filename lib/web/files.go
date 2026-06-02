@@ -55,6 +55,12 @@ func (h *Handler) transferFile(w http.ResponseWriter, r *http.Request, p httprou
 		remoteLocation: query.Get("location"),
 		filename:       query.Get("filename"),
 	}
+	if req.remoteLocation == "" {
+		return nil, trace.BadParameter("missing location")
+	}
+	if req.filename == "" {
+		return nil, trace.BadParameter("missing filename")
+	}
 
 	clt, err := ctx.GetUserClient(site)
 	if err != nil {

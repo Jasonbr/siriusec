@@ -1951,7 +1951,11 @@ func (g *GRPCServer) GetMFADevices(ctx context.Context, req *proto.GetMFADevices
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	// TODO(awly): mfa: remove secrets from MFA devices.
+	for _, dev := range devs {
+		if totp := dev.GetTotp(); totp != nil {
+			totp.Key = ""
+		}
+	}
 	return &proto.GetMFADevicesResponse{
 		Devices: devs,
 	}, nil

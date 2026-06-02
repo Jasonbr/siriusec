@@ -20,8 +20,10 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/siriusec/siriusec/api/types"
+	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/httplib"
 	"github.com/siriusec/siriusec/lib/services"
 	"github.com/siriusec/siriusec/lib/web/ui"
@@ -38,11 +40,11 @@ func (h *Handler) getRolesHandle(w http.ResponseWriter, r *http.Request, params 
 		return nil, trace.Wrap(err)
 	}
 
-	return getRoles(clt)
+	return getRoles(r.Context(), clt)
 }
 
-func getRoles(clt resourcesAPIGetter) ([]ui.ResourceItem, error) {
-	roles, err := clt.GetRoles(context.TODO())
+func getRoles(ctx context.Context, clt resourcesAPIGetter) ([]ui.ResourceItem, error) {
+	roles, err := clt.GetRoles(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -250,6 +252,28 @@ func upsertTrustedCluster(ctx context.Context, clt resourcesAPIGetter, content, 
 	}
 
 	return ui.NewResourceItem(tc)
+}
+
+type trustedClusterTokenResponse struct {
+	Token   string `json:"token"`
+	Expires string `json:"expires,omitempty"`
+}
+
+func (h *Handler) generateTrustedClusterToken(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx *SessionContext) (interface{}, error) {
+	clt, err := ctx.GetClient()
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	token, err := clt.GenerateToken(r.Context(), auth.GenerateTokenRequest{
+		Roles: types.SystemRoles{types.RoleTrustedCluster},
+		TTL:   time.Hour,
+	})
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+
+	return trustedClusterTokenResponse{Token: token, Expires: time.Now().UTC().Add(time.Hour).Format(time.RFC3339)}, nil
 }
 
 // CheckResourceUpsertableByError checks if the resource is upsertable by the state of error with

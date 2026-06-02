@@ -17,6 +17,7 @@ limitations under the License.
 package u2f
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"crypto/x509"
@@ -234,6 +235,16 @@ func RegisterVerify(ctx context.Context, params RegisterVerifyParams) (*types.MF
 	dev, err := NewDevice(params.DevName, reg, params.Clock.Now())
 	if err != nil {
 		return nil, trace.Wrap(err)
+	}
+	existingDevs, err := params.Storage.GetMFADevices(ctx, params.RegistrationStorageKey)
+	if err != nil && !trace.IsNotFound(err) {
+		return nil, trace.Wrap(err)
+	}
+	newPubKey := dev.GetU2F().PubKey
+	for _, existing := range existingDevs {
+		if u2fDev := existing.GetU2F(); u2fDev != nil && bytes.Equal(u2fDev.PubKey, newPubKey) {
+			return nil, trace.BadParameter("U2F key is already registered under name %q", existing.Metadata.Name)
+		}
 	}
 	if err := params.Storage.UpsertMFADevice(ctx, params.RegistrationStorageKey, dev); err != nil {
 		return nil, trace.Wrap(err)

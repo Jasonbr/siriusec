@@ -47,6 +47,12 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request, p httpr
 	if err := httplib.ReadJSON(r, &req); err != nil {
 		return nil, trace.Wrap(err)
 	}
+	if len(req.OldPassword) == 0 {
+		return nil, trace.BadParameter("missing old password")
+	}
+	if len(req.NewPassword) == 0 {
+		return nil, trace.BadParameter("missing new password")
+	}
 
 	clt, err := ctx.GetClient()
 	if err != nil {

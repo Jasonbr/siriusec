@@ -680,9 +680,9 @@ func (s *sessionCache) invalidateSession(ctx *SessionContext) error {
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	// Delete just the session - leave the bearer token to linger to avoid
-	// failing a client query still using the old token.
-	err = clt.WebSessions().Delete(context.TODO(), types.DeleteWebSessionRequest{
+	deleteCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = clt.WebSessions().Delete(deleteCtx, types.DeleteWebSessionRequest{
 		User:      ctx.user,
 		SessionID: ctx.session.GetName(),
 	})

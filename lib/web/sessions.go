@@ -528,7 +528,9 @@ func (s *sessionCache) expireSessions() {
 	for {
 		select {
 		case <-ticker.Chan():
-			s.clearExpiredSessions(context.TODO())
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			s.clearExpiredSessions(ctx)
+			cancel()
 		case <-s.closer.C:
 			return
 		}

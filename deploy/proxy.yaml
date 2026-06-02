@@ -1,0 +1,22 @@
+teleport:
+  nodename: siriusec-proxy
+  auth_servers: ["auth:3025"]
+  auth_token: siriusec-join-token-2026
+  log:
+    output: stdout
+    severity: INFO
+  data_dir: /var/lib/siriusec
+  diag_addr: 0.0.0.0:3000
+
+auth_service:
+  enabled: no
+
+ssh_service:
+  enabled: no
+
+proxy_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3023
+  web_listen_addr: 0.0.0.0:3080
+  tunnel_listen_addr: 0.0.0.0:3024
+  public_addr: ['localhost:3080']

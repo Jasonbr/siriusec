@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  auth:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: siriusec-auth
+    command: ["--roles=auth", "-c", "/etc/siriusec/auth.yaml"]
+    volumes:
+      - auth-data:/var/lib/siriusec
+      - ./auth.yaml:/etc/siriusec/auth.yaml:ro
+    networks:
+      siriusec:
+        ipv4_address: 172.20.0.2
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  proxy:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: siriusec-proxy
+    command: ["--roles=proxy", "-c", "/etc/siriusec/proxy.yaml"]
+    ports:
+      - "3080:3080"
+      - "3023:3023"
+    volumes:
+      - proxy-data:/var/lib/siriusec
+      - ./proxy.yaml:/etc/siriusec/proxy.yaml:ro
+    networks:
+      siriusec:
+        ipv4_address: 172.20.0.3
+    depends_on:
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  node:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: siriusec-node
+    command: ["--roles=node", "-c", "/etc/siriusec/node.yaml"]
+    volumes:
+      - node-data:/var/lib/siriusec
+      - ./node.yaml:/etc/siriusec/node.yaml:ro
+    networks:
+      siriusec:
+        ipv4_address: 172.20.0.4
+    depends_on:
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+networks:
+  siriusec:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+volumes:
+  auth-data:
+  proxy-data:
+  node-data:

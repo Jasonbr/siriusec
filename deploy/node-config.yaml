@@ -1,0 +1,78 @@
+# ==========================================
+# Siriusec 节点配置 - 添加主机节点
+# ==========================================
+# 用途: 将本机添加为 Siriusec 集群的 SSH 节点
+# ==========================================
+
+# Siriusec 全局配置
+teleport:
+  nodename: ubuntu-node-01
+  # 使用本机内网IP或公网IP
+  advertise_ip: 0.0.0.0
+  data_dir: /var/lib/siriusec
+  log:
+    output: /var/log/siriusec/siriusec.log
+    severity: INFO
+    format:
+      output: text
+
+# SSH 服务配置 - 启用 SSH 节点
+ssh_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3022
+  # 节点标签 (用于识别和搜索)
+  labels:
+    env: production
+    os: ubuntu
+    version: "18.04"
+    role: node
+  # 动态标签 - 定期执行命令获取信息
+  commands:
+    - name: hostname
+      command: [/bin/hostname]
+      period: 1m
+    - name: uname
+      command: [/bin/uname, -r]
+      period: 5m
+    - name: uptime
+      command: [/usr/bin/uptime]
+      period: 1m
+    - name: cpu_count
+      command: [/bin/bash, -c, "nproc"]
+      period: 10m
+    - name: memory_total
+      command: [/bin/bash, -c, "free -m | awk '/^Mem:/{print $2}'"]
+      period: 10m
+    - name: disk_usage
+      command: [/bin/bash, -c, "df -h / | tail -1 | awk '{print $5}'"]
+      period: 5m
+
+# Auth 服务 - 作为单节点集群时启用
+auth_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3025
+  # 集群名称
+  cluster_name: siriusec-cluster
+  # 认证配置
+  authentication:
+    type: local
+    second_factor: "off"  # 测试环境关闭,生产环境建议开启
+  # 令牌配置 - 用于其他节点加入集群
+  tokens:
+    - "node,proxy,app:join-token-2024"
+
+# Proxy 服务 - 启用 Web UI 和代理
+proxy_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3080
+  web_listen_addr: 0.0.0.0:3080
+  # 公网访问地址 (根据实际情况修改)
+  public_addr: 123.57.11.100:3080
+  # SSH 代理监听
+  ssh_public_addr: 123.57.11.100:3023
+  # MySQL 代理监听
+  mysql_listen_addr: 0.0.0.0:3036
+  mysql_public_addr: 123.57.11.100:3036
+  # TLS 配置
+  https_key_file: /etc/siriusec/tls/server.key
+  https_cert_file: /etc/siriusec/tls/server.crt

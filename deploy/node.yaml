@@ -1,0 +1,21 @@
+teleport:
+  nodename: siriusec-node
+  auth_servers: ["auth:3025"]
+  auth_token: siriusec-join-token-2026
+  log:
+    output: stdout
+    severity: INFO
+  data_dir: /var/lib/siriusec
+  diag_addr: 0.0.0.0:3000
+
+auth_service:
+  enabled: no
+
+ssh_service:
+  enabled: yes
+  labels:
+    env: production
+    role: app-server
+
+proxy_service:
+  enabled: no

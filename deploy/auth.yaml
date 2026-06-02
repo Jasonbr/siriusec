@@ -1,0 +1,29 @@
+teleport:
+  nodename: siriusec-auth
+  log:
+    output: stdout
+    severity: INFO
+  data_dir: /var/lib/siriusec
+  diag_addr: 0.0.0.0:3000
+  storage:
+    type: dir
+    path: /var/lib/siriusec/backend
+
+auth_service:
+  enabled: yes
+  cluster_name: siriusec.local
+  listen_addr: 0.0.0.0:3025
+  tokens:
+    - "proxy,node:siriusec-join-token-2026"
+  authentication:
+    type: local
+    # For initial setup, use "off". After setting up OTP devices via the
+    # web invite flow, change to "otp" for production.
+    # Options: off, otp, optional (requires u2f.app_id)
+    second_factor: "off"
+
+ssh_service:
+  enabled: no
+
+proxy_service:
+  enabled: no

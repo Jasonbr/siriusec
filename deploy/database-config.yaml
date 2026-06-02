@@ -1,0 +1,101 @@
+# ==========================================
+# Siriusec 数据库访问配置 - 添加 MySQL 数据库
+# ==========================================
+# 用途: 配置数据库代理服务,代理 MySQL 访问
+# ==========================================
+
+# Siriusec 全局配置
+teleport:
+  nodename: db-proxy-01
+  data_dir: /var/lib/siriusec
+  log:
+    output: /var/log/siriusec/siriusec.log
+    severity: INFO
+    format:
+      output: text
+
+# Auth 服务 - 作为单节点集群时启用
+auth_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3025
+  cluster_name: siriusec-cluster
+  authentication:
+    type: local
+    second_factor: "off"
+  tokens:
+    - "node,proxy,db:join-token-2024"
+
+# Proxy 服务
+proxy_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3080
+  web_listen_addr: 0.0.0.0:3080
+  public_addr: 123.57.11.100:3080
+  # MySQL 代理监听端口
+  mysql_listen_addr: 0.0.0.0:3036
+  mysql_public_addr: 123.57.11.100:3036
+
+# SSH 服务
+ssh_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3022
+  labels:
+    env: production
+    role: db-proxy
+
+# ==========================================
+# 数据库服务配置 - 核心部分
+# ==========================================
+db_service:
+  enabled: yes
+  # 数据库列表 - 可以配置多个数据库
+  databases:
+    # 第一个数据库 - MySQL (示例数据库)
+    - name: mysql-sample
+      # 数据库描述
+      description: "Sample MySQL Database"
+      # 协议类型: mysql 或 postgres
+      protocol: mysql
+      # 数据库连接 URI (格式: 主机:端口)
+      uri: 123.57.11.100:3506
+      # 静态标签
+      static_labels:
+        env: production
+        type: mysql
+        team: backend
+      # 动态标签
+      dynamic_labels:
+        - name: db_status
+          command:
+            - /bin/bash
+            - -c
+            - "echo 'running'"
+          period: 5m
+        - name: db_version
+          command:
+            - /bin/bash
+            - -c
+            - "mysql -h 123.57.11.100 -P 3506 -u sample -p'sample' -e 'SELECT VERSION()' 2>/dev/null || echo 'unknown'"
+          period: 10m
+
+    # 第二个数据库 - 另一个 MySQL 示例
+    - name: mysql-business
+      description: "Business Database MySQL"
+      protocol: mysql
+      uri: 123.57.11.100:3506
+      static_labels:
+        env: production
+        type: mysql
+        team: business
+        region: cn-north
+
+    # 如果需要添加 PostgreSQL,取消注释:
+    # - name: postgres-main
+    #   description: "Main PostgreSQL Database"
+    #   protocol: postgres
+    #   uri: localhost:5432
+    #   static_labels:
+    #     env: production
+    #     type: postgres
+    #   # CA 证书文件路径 (如果需要 TLS)
+    #   ca_cert_file: /etc/siriusec/certs/postgres-ca.pem

@@ -90,6 +90,9 @@ type AccessRequest interface {
 	GetSuggestedReviewers() []string
 	// SetSuggestedReviewers sets the suggested reviewer list.
 	SetSuggestedReviewers([]string)
+	// GetResolveTime returns the time at which the request was resolved
+	// (approved or denied), or zero time if not yet resolved.
+	GetResolveTime() time.Time
 }
 
 // NewAccessRequest assembled an AccessRequest resource.
@@ -257,6 +260,20 @@ func (r *AccessRequestV3) GetSuggestedReviewers() []string {
 // SetSuggestedReviewers sets the suggested reviewer list.
 func (r *AccessRequestV3) SetSuggestedReviewers(reviewers []string) {
 	r.Spec.SuggestedReviewers = reviewers
+}
+
+// GetResolveTime returns the time at which the request was resolved
+// (approved or denied), or zero time if not yet resolved.
+func (r *AccessRequestV3) GetResolveTime() time.Time {
+	var resolveTime time.Time
+	for _, review := range r.Spec.Reviews {
+		if review.ProposedState == RequestState_APPROVED || review.ProposedState == RequestState_DENIED {
+			if resolveTime.IsZero() || review.Created.After(resolveTime) {
+				resolveTime = review.Created
+			}
+		}
+	}
+	return resolveTime
 }
 
 // setStaticFields sets static resource header and metadata fields.

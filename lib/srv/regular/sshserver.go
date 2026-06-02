@@ -331,7 +331,7 @@ func (s *Server) Serve(l net.Listener) error {
 
 // Wait waits until server stops
 func (s *Server) Wait() {
-	s.srv.Wait(context.TODO())
+	s.srv.Wait(context.Background())
 }
 
 // HandleConnection is called after a connection has been accepted and starts
@@ -570,7 +570,7 @@ func New(addr utils.NetAddr,
 		return nil, trace.Wrap(err)
 	}
 
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(context.Background())
 	s := &Server{
 		addr:               addr,
 		authService:        authService,

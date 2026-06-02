@@ -431,7 +431,9 @@ func (h *Heartbeat) announce() error {
 			if !ok {
 				return trace.BadParameter("expected services.Server, got %#v", h.current)
 			}
-			err := h.Announcer.UpsertKubeService(context.TODO(), kube)
+			upsertCtx, upsertCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			err := h.Announcer.UpsertKubeService(upsertCtx, kube)
+			upsertCancel()
 			if err != nil {
 				h.nextAnnounce = h.Clock.Now().UTC().Add(h.KeepAlivePeriod)
 				h.setState(HeartbeatStateAnnounceWait)

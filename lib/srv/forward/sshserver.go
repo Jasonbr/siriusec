@@ -239,7 +239,7 @@ func (s *ServerConfig) CheckDefaults() error {
 		return trace.BadParameter("missing parameter Emitter")
 	}
 	if s.ParentContext == nil {
-		s.ParentContext = context.TODO()
+		s.ParentContext = context.Background()
 	}
 	if s.LockWatcher == nil {
 		return trace.BadParameter("missing parameter LockWatcher")

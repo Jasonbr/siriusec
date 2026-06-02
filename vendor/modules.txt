@@ -37,7 +37,7 @@ github.com/Azure/go-autorest/logger
 github.com/Azure/go-autorest/tracing
 # github.com/BurntSushi/toml v0.3.1
 github.com/BurntSushi/toml
-# github.com/HdrHistogram/hdrhistogram-go v1.0.1
+# github.com/HdrHistogram/hdrhistogram-go v1.1.2
 ## explicit
 github.com/HdrHistogram/hdrhistogram-go
 # github.com/Microsoft/go-winio v0.4.16
@@ -338,7 +338,7 @@ github.com/gravitational/form
 # github.com/gravitational/kingpin v2.1.11-0.20190130013101-742f2714c145+incompatible
 ## explicit
 github.com/gravitational/kingpin
-# github.com/gravitational/oxy v0.0.0-20211213172937-a1ba0900a4c9
+# github.com/gravitational/oxy v0.0.0-20221029012416-9fbf4c444680
 ## explicit
 github.com/gravitational/oxy/connlimit
 github.com/gravitational/oxy/forward
@@ -347,25 +347,7 @@ github.com/gravitational/oxy/utils
 # github.com/gravitational/roundtrip v1.0.1
 ## explicit
 github.com/gravitational/roundtrip
-# github.com/siriusec/siriusec/api v0.0.0 => ./api
-## explicit
-github.com/siriusec/siriusec/api
-github.com/siriusec/siriusec/api/client
-github.com/siriusec/siriusec/api/client/proto
-github.com/siriusec/siriusec/api/client/webclient
-github.com/siriusec/siriusec/api/constants
-github.com/siriusec/siriusec/api/defaults
-github.com/siriusec/siriusec/api/identityfile
-github.com/siriusec/siriusec/api/metadata
-github.com/siriusec/siriusec/api/profile
-github.com/siriusec/siriusec/api/types
-github.com/siriusec/siriusec/api/types/events
-github.com/siriusec/siriusec/api/types/wrappers
-github.com/siriusec/siriusec/api/utils
-github.com/siriusec/siriusec/api/utils/keypaths
-github.com/siriusec/siriusec/api/utils/sshutils
-github.com/siriusec/siriusec/api/utils/tlsutils
-# github.com/gravitational/trace v1.1.16-0.20210617142343-5335ac7a6c19
+# github.com/gravitational/trace v1.1.16-0.20220114165159-14a9a7dd6aaf
 ## explicit
 github.com/gravitational/trace
 github.com/gravitational/trace/internal
@@ -445,7 +427,6 @@ github.com/mailgun/lemma/secret
 ## explicit
 github.com/mailgun/metrics
 # github.com/mailgun/minheap v0.0.0-20170619185613-3dbe6c6bf55f
-## explicit
 github.com/mailgun/minheap
 # github.com/mailgun/timetools v0.0.0-20170619190023-f3a7b8ffff47
 ## explicit
@@ -556,13 +537,31 @@ github.com/siddontang/go-mysql/mysql
 github.com/siddontang/go-mysql/packet
 github.com/siddontang/go-mysql/server
 github.com/siddontang/go-mysql/utils
+# github.com/siriusec/siriusec/api v0.0.0 => ./api
+## explicit
+github.com/siriusec/siriusec/api
+github.com/siriusec/siriusec/api/client
+github.com/siriusec/siriusec/api/client/proto
+github.com/siriusec/siriusec/api/client/webclient
+github.com/siriusec/siriusec/api/constants
+github.com/siriusec/siriusec/api/defaults
+github.com/siriusec/siriusec/api/identityfile
+github.com/siriusec/siriusec/api/metadata
+github.com/siriusec/siriusec/api/profile
+github.com/siriusec/siriusec/api/types
+github.com/siriusec/siriusec/api/types/events
+github.com/siriusec/siriusec/api/types/wrappers
+github.com/siriusec/siriusec/api/utils
+github.com/siriusec/siriusec/api/utils/keypaths
+github.com/siriusec/siriusec/api/utils/sshutils
+github.com/siriusec/siriusec/api/utils/tlsutils
 # github.com/sirupsen/logrus v1.8.1-0.20210219125412-f104497f2b21
 ## explicit
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/syslog
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.7.0
+# github.com/stretchr/testify v1.7.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
@@ -573,7 +572,7 @@ github.com/thales-e-security/pool
 # github.com/tstranex/u2f v0.0.0-20160508205855-eb799ce68da4
 ## explicit
 github.com/tstranex/u2f
-# github.com/vulcand/predicate v1.1.0
+# github.com/vulcand/predicate v1.2.0
 ## explicit
 github.com/vulcand/predicate
 github.com/vulcand/predicate/builder
@@ -704,7 +703,7 @@ golang.org/x/lint/golint
 # golang.org/x/mod v0.4.2
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
+# golang.org/x/net v0.0.0-20221002022538-bcab6841153b
 ## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -727,7 +726,7 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
+# golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
 ## explicit
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
@@ -735,10 +734,10 @@ golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d
+# golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 ## explicit
 golang.org/x/term
-# golang.org/x/text v0.3.6
+# golang.org/x/text v0.3.7
 ## explicit
 golang.org/x/text/cases
 golang.org/x/text/encoding
@@ -942,7 +941,6 @@ gopkg.in/inf.v0
 ## explicit
 gopkg.in/ini.v1
 # gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-## explicit
 gopkg.in/mgo.v2/bson
 gopkg.in/mgo.v2/internal/json
 # gopkg.in/square/go-jose.v2 v2.5.1
@@ -1152,8 +1150,6 @@ k8s.io/client-go/util/workqueue
 k8s.io/klog/v2
 # k8s.io/utils v0.0.0-20200729134348-d5654de09c73
 k8s.io/utils/integer
-# launchpad.net/gocheck v0.0.0-20140225173054-000000000087
-## explicit
 # sigs.k8s.io/structured-merge-diff/v4 v4.0.2
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0

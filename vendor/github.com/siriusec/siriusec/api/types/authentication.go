@@ -1,5 +1,5 @@
 /*
-Copyright 2021 Gravitational, Inc.
+Copyright 2021 Siriusec
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -222,7 +222,7 @@ func (c *AuthPreferenceV2) SetConnectorName(cn string) {
 // GetU2F gets the U2F configuration settings.
 func (c *AuthPreferenceV2) GetU2F() (*U2F, error) {
 	if c.Spec.U2F == nil {
-		return nil, trace.NotFound("U2F is not configured in this cluster, please contact your administrator and ask them to follow https://goteleport.com/docs/access-controls/guides/u2f/")
+		return nil, trace.NotFound("U2F is not configured in this cluster, please contact your administrator and ask them to follow https://siriusec.com/docs/access-controls/guides/u2f/")
 	}
 	return c.Spec.U2F, nil
 }

@@ -1,4 +1,4 @@
-module github.com/gravitational/teleport/api
+module github.com/siriusec/siriusec/api
 
 go 1.15
 

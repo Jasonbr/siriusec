@@ -3,6 +3,7 @@ package forward
 import (
 	"net"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gravitational/oxy/utils"
@@ -14,27 +15,64 @@ type HeaderRewriter struct {
 	Hostname           string
 }
 
+// NewHeaderRewriter creates a new header rewriter.
+func NewHeaderRewriter() *HeaderRewriter {
+	h, err := os.Hostname()
+	if err != nil {
+		h = "localhost"
+	}
+	return &HeaderRewriter{TrustForwardHeader: true, Hostname: h}
+}
+
+// clean up IP in case if it is ipv6 address and it has {zone} information in it, like "[fe80::d806:a55d:eb1b:49cc%vEthernet (vmxnet3 Ethernet Adapter - Virtual Switch)]:64692".
+func ipv6fix(clientIP string) string {
+	return strings.Split(clientIP, "%")[0]
+}
+
+// Rewrite rewrite request headers.
 func (rw *HeaderRewriter) Rewrite(req *http.Request) {
+	if !rw.TrustForwardHeader {
+		utils.RemoveHeaders(req.Header, XHeaders...)
+	}
+
 	if clientIP, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
-		if rw.TrustForwardHeader {
+		clientIP = ipv6fix(clientIP)
+		// If not websocket, done in http.ReverseProxy
+		if isWebsocketRequest(req) {
 			if prior, ok := req.Header[XForwardedFor]; ok {
-				clientIP = strings.Join(prior, ", ") + ", " + clientIP
+				req.Header.Set(XForwardedFor, strings.Join(prior, ", ")+", "+clientIP)
+			} else {
+				req.Header.Set(XForwardedFor, clientIP)
 			}
 		}
-		req.Header.Set(XForwardedFor, clientIP)
+
+		if req.Header.Get(XRealIp) == "" {
+			req.Header.Set(XRealIp, clientIP)
+		}
 	}
 
-	if xfp := req.Header.Get(XForwardedProto); xfp != "" && rw.TrustForwardHeader {
-		req.Header.Set(XForwardedProto, xfp)
-	} else if req.TLS != nil {
-		req.Header.Set(XForwardedProto, "https")
-	} else {
-		req.Header.Set(XForwardedProto, "http")
+	xfProto := req.Header.Get(XForwardedProto)
+	if xfProto == "" {
+		if req.TLS != nil {
+			req.Header.Set(XForwardedProto, "https")
+		} else {
+			req.Header.Set(XForwardedProto, "http")
+		}
 	}
 
-	if xfh := req.Header.Get(XForwardedHost); xfh != "" && rw.TrustForwardHeader {
-		req.Header.Set(XForwardedHost, xfh)
-	} else if req.Host != "" {
+	if isWebsocketRequest(req) {
+		if req.Header.Get(XForwardedProto) == "https" {
+			req.Header.Set(XForwardedProto, "wss")
+		} else {
+			req.Header.Set(XForwardedProto, "ws")
+		}
+	}
+
+	if xfPort := req.Header.Get(XForwardedPort); xfPort == "" {
+		req.Header.Set(XForwardedPort, forwardedPort(req))
+	}
+
+	if xfHost := req.Header.Get(XForwardedHost); xfHost == "" && req.Host != "" {
 		req.Header.Set(XForwardedHost, req.Host)
 	}
 
@@ -42,7 +80,29 @@ func (rw *HeaderRewriter) Rewrite(req *http.Request) {
 		req.Header.Set(XForwardedServer, rw.Hostname)
 	}
 
-	// Remove hop-by-hop headers to the backend.  Especially important is "Connection" because we want a persistent
-	// connection, regardless of what the client sent to us.
-	utils.RemoveHeaders(req.Header, HopHeaders...)
+	if !isWebsocketRequest(req) {
+		// Remove hop-by-hop headers to the backend.  Especially important is "Connection" because we want a persistent
+		// connection, regardless of what the client sent to us.
+		utils.RemoveHeaders(req.Header, HopHeaders...)
+	}
+}
+
+func forwardedPort(req *http.Request) string {
+	if req == nil {
+		return ""
+	}
+
+	if _, port, err := net.SplitHostPort(req.Host); err == nil && port != "" {
+		return port
+	}
+
+	if req.Header.Get(XForwardedProto) == "https" || req.Header.Get(XForwardedProto) == "wss" {
+		return "443"
+	}
+
+	if req.TLS != nil {
+		return "443"
+	}
+
+	return "80"
 }

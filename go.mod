@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/firestore v1.2.0
 	cloud.google.com/go/storage v1.10.0
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
-	github.com/HdrHistogram/hdrhistogram-go v1.0.1
+	github.com/HdrHistogram/hdrhistogram-go v1.1.2
 	github.com/Microsoft/go-winio v0.4.16
 	github.com/ThalesIgnite/crypto11 v1.2.4
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 // indirect
@@ -50,10 +50,9 @@ require (
 	github.com/gravitational/configure v0.0.0-20180808141939-c3428bd84c23
 	github.com/gravitational/form v0.0.0-20151109031454-c4048f792f70
 	github.com/gravitational/kingpin v2.1.11-0.20190130013101-742f2714c145+incompatible
-	github.com/gravitational/oxy v0.0.0-20211213172937-a1ba0900a4c9
+	github.com/gravitational/oxy v0.0.0-20221029012416-9fbf4c444680
 	github.com/gravitational/roundtrip v1.0.1
-	github.com/siriusec/siriusec/api v0.0.0
-	github.com/gravitational/trace v1.1.16-0.20210617142343-5335ac7a6c19
+	github.com/gravitational/trace v1.1.16-0.20220114165159-14a9a7dd6aaf
 	github.com/gravitational/ttlmap v0.0.0-20171116003245-91fd36b9004c
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jackc/pgconn v1.8.0
@@ -68,7 +67,6 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mailgun/lemma v0.0.0-20170619173223-4214099fb348
 	github.com/mailgun/metrics v0.0.0-20150124003306-2b3c4565aafd // indirect
-	github.com/mailgun/minheap v0.0.0-20170619185613-3dbe6c6bf55f // indirect
 	github.com/mailgun/timetools v0.0.0-20170619190023-f3a7b8ffff47
 	github.com/mailgun/ttlmap v0.0.0-20170619185759-c1c17f74874f
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
@@ -91,11 +89,12 @@ require (
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shabbyrobe/gocovmerge v0.0.0-20190829150210-3e036491d500 // indirect
 	github.com/siddontang/go-mysql v1.1.0
+	github.com/siriusec/siriusec/api v0.0.0
 	github.com/sirupsen/logrus v1.8.1-0.20210219125412-f104497f2b21
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
 	github.com/tstranex/u2f v0.0.0-20160508205855-eb799ce68da4
-	github.com/vulcand/predicate v1.1.0
+	github.com/vulcand/predicate v1.2.0
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20201125193152-8a03d2e9614b
 	go.mongodb.org/mongo-driver v1.5.3
 	go.mozilla.org/pkcs7 v0.0.0-20210826202110-33d05740a352
@@ -103,11 +102,11 @@ require (
 	go.uber.org/atomic v1.7.0
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
 	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
+	golang.org/x/net v0.0.0-20221002022538-bcab6841153b
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
-	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d
-	golang.org/x/text v0.3.6
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
+	golang.org/x/text v0.3.7
 	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/api v0.29.0
 	google.golang.org/appengine v1.6.7 // indirect
@@ -116,7 +115,6 @@ require (
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/ini.v1 v1.62.0
-	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
@@ -124,14 +122,13 @@ require (
 	k8s.io/api v0.0.0-20200821051526-051d027c14e1
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v0.0.0-20200827131824-5d33118d4742
-	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
 
 replace (
 	github.com/coreos/go-oidc => github.com/gravitational/go-oidc v0.0.5
 	github.com/gogo/protobuf => github.com/gravitational/protobuf v1.3.2-0.20201123192827-2b9fcfaffcbf
-	github.com/siriusec/siriusec/api => ./api
 	github.com/siddontang/go-mysql v1.1.0 => github.com/gravitational/go-mysql v1.1.1-0.20210212011549-886316308a77
+	github.com/siriusec/siriusec/api => ./api
 )
 
 replace github.com/modern-go/reflect2 => github.com/modern-go/reflect2 v1.0.2

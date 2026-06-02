@@ -11,7 +11,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -148,11 +147,7 @@ func New(setters ...optSetter) (*Forwarder, error) {
 		f.websocketForwarder.dial = net.Dial
 	}
 	if f.httpForwarder.rewriter == nil {
-		h, err := os.Hostname()
-		if err != nil {
-			h = "localhost"
-		}
-		f.httpForwarder.rewriter = &HeaderRewriter{TrustForwardHeader: true, Hostname: h}
+		f.httpForwarder.rewriter = NewHeaderRewriter()
 	}
 	if f.log == nil {
 		f.log = utils.NullLogger
@@ -176,7 +171,7 @@ func (f *Forwarder) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // serveHTTP forwards HTTP traffic using the configured transport
 func (f *httpForwarder) serveHTTP(w http.ResponseWriter, req *http.Request, ctx *handlerContext) {
 	start := time.Now().UTC()
-	response, err := f.roundTripper.RoundTrip(f.copyRequest(req, req.URL))
+	response, err := f.roundTripper.RoundTrip(f.copyRequest(req, req.URL, ctx))
 	if err != nil {
 		ctx.log.Errorf("Error forwarding to %v, err: %v", req.URL, err)
 		ctx.errHandler.ServeHTTP(w, req, err)
@@ -211,22 +206,39 @@ func (f *httpForwarder) serveHTTP(w http.ResponseWriter, req *http.Request, ctx 
 	}
 }
 
+func (f *httpForwarder) getURLFromRequest(req *http.Request, ctx *handlerContext) *url.URL {
+	// If the Request was created by Go via a real HTTP request,  RequestURI will
+	// contain the original query string. If the Request was created in code, RequestURI
+	// will be empty, and we will use the URL object instead
+	u := req.URL
+	if req.RequestURI != "" {
+		parsedURL, err := url.ParseRequestURI(req.RequestURI)
+		if err == nil {
+			u = parsedURL
+		} else {
+			ctx.log.Warningf("gravitational/oxy/forward: error when parsing RequestURI: %s", err)
+		}
+	}
+	return u
+}
+
 // copyRequest makes a copy of the specified request to be sent using the configured
 // transport
-func (f *httpForwarder) copyRequest(req *http.Request, u *url.URL) *http.Request {
+func (f *httpForwarder) copyRequest(req *http.Request, target *url.URL, ctx *handlerContext) *http.Request {
 	outReq := new(http.Request)
 	*outReq = *req // includes shallow copies of maps, but we handle this below
 
-	outReq.URL = utils.CopyURL(req.URL)
-	outReq.URL.Scheme = u.Scheme
-	outReq.URL.Host = u.Host
-	outReq.URL.Opaque = req.RequestURI
-	// raw query is already included in RequestURI, so ignore it to avoid dupes
-	outReq.URL.RawQuery = ""
-	// Do not pass client Host header unless optsetter PassHostHeader is set.
-	if !f.passHost {
-		outReq.Host = u.Host
-	}
+	outReq.URL = utils.CopyURL(outReq.URL)
+	outReq.URL.Scheme = target.Scheme
+	outReq.URL.Host = target.Host
+
+	u := f.getURLFromRequest(outReq, ctx)
+
+	outReq.URL.Path = u.Path
+	outReq.URL.RawPath = u.RawPath
+	outReq.URL.RawQuery = u.RawQuery
+	outReq.RequestURI = "" // Outgoing request should not have RequestURI
+
 	outReq.Proto = "HTTP/1.1"
 	outReq.ProtoMajor = 1
 	outReq.ProtoMinor = 1
@@ -239,6 +251,11 @@ func (f *httpForwarder) copyRequest(req *http.Request, u *url.URL) *http.Request
 
 	if f.rewriter != nil {
 		f.rewriter.Rewrite(outReq)
+	}
+
+	// Do not pass client Host header unless optsetter PassHostHeader is set.
+	if !f.passHost {
+		outReq.Host = target.Host
 	}
 	return outReq
 }

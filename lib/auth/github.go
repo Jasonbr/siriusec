@@ -318,7 +318,7 @@ type createUserParams struct {
 	// connectorName is the name of the connector for the identity provider.
 	connectorName string
 
-	// username is the Teleport user name .
+	// username is the Siriusec user name .
 	username string
 
 	// logins is the list of *nix logins.
@@ -576,7 +576,7 @@ func (c *githubAPIClient) getTeams() ([]teamResponse, error) {
 			warningMessage := "Truncating list of teams used to populate claims: " +
 				"hit maximum number pages that can be fetched from GitHub."
 
-			// Print warning to Teleport logs as well as the Audit Log.
+			// Print warning to Siriusec logs as well as the Audit Log.
 			log.Warnf(warningMessage)
 			if err := c.authServer.emitter.EmitAuditEvent(c.authServer.closeCtx, &apievents.UserLogin{
 				Metadata: apievents.Metadata{

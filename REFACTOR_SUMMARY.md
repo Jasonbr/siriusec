@@ -40,7 +40,7 @@
 #### 2.1 品牌名称替换
 - ✅ `Gravitational` → `Siriusec`
 - ✅ `gravitational` → `siriusec`
-- ✅ `goteleport.com` → `siriusec.com`
+- ✅ `siriusec.com` → `siriusec.com`
 - ✅ `Teleport` → `Siriusec` (用户可见文本)
 - ✅ `teleport` → `siriusec` (配置和代码)
 
@@ -293,7 +293,7 @@ Siriusec
 Copyright 2026 Siriusec
 
 This product includes software developed at
-Gravitational, Inc. (https://www.goteleport.com/).
+Gravitational, Inc. (https://www.siriusec.com/).
 
 Original project: https://github.com/gravitational/teleport
 Licensed under Apache License 2.0

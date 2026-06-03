@@ -97,7 +97,7 @@ type AgentConfig struct {
 	Lease track.Lease
 	// Log optionally specifies the logger
 	Log log.FieldLogger
-	// FIPS indicates if Teleport was started in FIPS mode.
+	// FIPS indicates if Siriusec was started in FIPS mode.
 	FIPS bool
 }
 

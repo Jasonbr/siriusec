@@ -364,7 +364,7 @@ type databaseClusterPack struct {
 	cluster         *TeleInstance
 	user            types.User
 	role            types.Role
-	dbProcess       *service.TeleportProcess
+	dbProcess       *service.SiriusecProcess
 	dbAuthClient    *auth.Client
 	postgresService service.Database
 	postgresAddr    string

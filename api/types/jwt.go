@@ -24,10 +24,10 @@ import (
 
 // GenerateAppTokenRequest are the parameters used to generate an application token.
 type GenerateAppTokenRequest struct {
-	// Username is the Teleport identity.
+	// Username is the Siriusec identity.
 	Username string
 
-	// Roles are the roles assigned to the user within Teleport.
+	// Roles are the roles assigned to the user within Siriusec.
 	Roles []string
 
 	// Expiry is time to live for the token.

@@ -89,7 +89,7 @@ func TestAddProfile(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			tc := &client.TeleportClient{
+			tc := &client.SiriusecClient{
 				Config: client.Config{
 					SiteName:          "example.com",
 					WebProxyAddr:      test.webProxyAddrIn,

@@ -300,7 +300,7 @@ func (h *Handler) ensureBucket(ctx context.Context) error {
 		return nil
 	}
 	if !trace.IsNotFound(err) {
-		h.Errorf("Failed to ensure that bucket %q exists (%v). S3 session uploads may fail. If you've set up the bucket already and gave Teleport write-only access, feel free to ignore this error.", h.Bucket, err)
+		h.Errorf("Failed to ensure that bucket %q exists (%v). S3 session uploads may fail. If you've set up the bucket already and gave Sirius write-only access, feel free to ignore this error.", h.Bucket, err)
 		return nil
 	}
 	input := &s3.CreateBucketInput{

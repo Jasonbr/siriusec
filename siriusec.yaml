@@ -1,6 +1,6 @@
 teleport:
   nodename: localhost
-  data_dir: /tmp/teleport-v739-official-data
+  data_dir: /tmp/siriusec-v739-official-data
   log:
     output: stderr
     severity: INFO

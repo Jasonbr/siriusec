@@ -29,11 +29,11 @@ import (
 	"github.com/gravitational/trace"
 )
 
-// Server represents a Node, Proxy or Auth server in a Teleport cluster
+// Server represents a Node, Proxy or Auth server in a Siriusec cluster
 type Server interface {
 	// Resource provides common resource headers
 	Resource
-	// GetTeleportVersion returns the teleport version the server is running on
+	// GetSiriusecVersion returns the teleport version the server is running on
 	GetTeleportVersion() string
 	// GetAddr return server address
 	GetAddr() string
@@ -115,7 +115,7 @@ func (s *ServerV2) GetVersion() string {
 	return s.Version
 }
 
-// GetTeleportVersion returns the teleport version the server is running on
+// GetSiriusecVersion returns the teleport version the server is running on
 func (s *ServerV2) GetTeleportVersion() string {
 	return s.Spec.Version
 }

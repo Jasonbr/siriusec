@@ -99,7 +99,7 @@ func TestMonitor(t *testing.T) {
 	cfg.Proxy.Enabled = false
 	cfg.SSH.Enabled = false
 
-	process, err := NewTeleport(cfg)
+	process, err := NewSiriusec(cfg)
 	require.NoError(t, err)
 
 	diagAddr, err := process.DiagnosticAddr()
@@ -107,7 +107,7 @@ func TestMonitor(t *testing.T) {
 	require.NotNil(t, diagAddr)
 	endpoint := fmt.Sprintf("http://%v/readyz", diagAddr.String())
 
-	// Start Teleport and make sure the status is OK.
+	// Start Siriusec and make sure the status is OK.
 	go func() {
 		require.NoError(t, process.Run())
 	}()
@@ -122,46 +122,46 @@ func TestMonitor(t *testing.T) {
 	}{
 		{
 			desc:       "degraded event causes degraded state",
-			event:      Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentAuth},
+			event:      Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentAuth},
 			wantStatus: []int{http.StatusServiceUnavailable, http.StatusBadRequest},
 		},
 		{
 			desc:       "ok event causes recovering state",
-			event:      Event{Name: TeleportOKEvent, Payload: teleport.ComponentAuth},
+			event:      Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
 			wantStatus: []int{http.StatusBadRequest},
 		},
 		{
 			desc:       "ok event remains in recovering state because not enough time passed",
-			event:      Event{Name: TeleportOKEvent, Payload: teleport.ComponentAuth},
+			event:      Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
 			wantStatus: []int{http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event after enough time causes OK state",
-			event:        Event{Name: TeleportOKEvent, Payload: teleport.ComponentAuth},
+			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
 			wantStatus:   []int{http.StatusOK},
 		},
 		{
 			desc:       "degraded event in a new component causes degraded state",
-			event:      Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentNode},
+			event:      Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentNode},
 			wantStatus: []int{http.StatusServiceUnavailable, http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event in one component keeps overall status degraded due to other component",
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
-			event:        Event{Name: TeleportOKEvent, Payload: teleport.ComponentAuth},
+			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
 			wantStatus:   []int{http.StatusServiceUnavailable, http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event in new component causes overall recovering state",
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
-			event:        Event{Name: TeleportOKEvent, Payload: teleport.ComponentNode},
+			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentNode},
 			wantStatus:   []int{http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event in new component causes overall OK state",
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
-			event:        Event{Name: TeleportOKEvent, Payload: teleport.ComponentNode},
+			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentNode},
 			wantStatus:   []int{http.StatusOK},
 		},
 	}
@@ -297,7 +297,7 @@ func (s *ServiceTestSuite) TestInitExternalLog(c *check.C) {
 }
 
 func TestGetAdditionalPrincipals(t *testing.T) {
-	p := &TeleportProcess{
+	p := &SiriusecProcess{
 		Config: &Config{
 			Hostname:    "global-hostname",
 			HostUUID:    "global-uuid",

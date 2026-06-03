@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package config provides facilities for configuring Teleport daemons
+// Package config provides facilities for configuring Siriusec daemons
 // including
 //	- parsing YAML configuration
 //	- parsing CLI flags
@@ -56,7 +56,7 @@ import (
 )
 
 // CommandLineFlags stores command line flag values, it's a much simplified subset
-// of Teleport configuration (which is fully expressed via YAML config file)
+// of Siriusec configuration (which is fully expressed via YAML config file)
 type CommandLineFlags struct {
 	// --name flag
 	NodeName string
@@ -97,11 +97,11 @@ type CommandLineFlags struct {
 	PermitUserEnvironment bool
 
 	// Insecure mode is controlled by --insecure flag and in this mode
-	// Teleport won't check certificates when connecting to trusted clusters
-	// It's useful for learning Teleport (following quick starts, etc).
+	// Siriusec won't check certificates when connecting to trusted clusters
+	// It's useful for learning Siriusec (following quick starts, etc).
 	InsecureMode bool
 
-	// FIPS mode means Teleport starts in a FedRAMP/FIPS 140-2 compliant
+	// FIPS mode means Siriusec starts in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 
@@ -181,7 +181,7 @@ func ReadResources(filePath string) ([]types.Resource, error) {
 	return resources, nil
 }
 
-// ApplyFileConfig applies configuration from a YAML file to Teleport
+// ApplyFileConfig applies configuration from a YAML file to Siriusec
 // runtime config
 func ApplyFileConfig(fc *FileConfig, cfg *service.Config) error {
 	var err error
@@ -654,7 +654,7 @@ func applyProxyConfig(fc *FileConfig, cfg *service.Config) error {
 			return trace.Errorf("https cert does not exist: %s", p.Certificate)
 		}
 
-		// Read in certificate from disk. If Teleport finds a self-signed
+		// Read in certificate from disk. If Siriusec finds a self-signed
 		// certificate chain, log a warning, and then accept whatever certificate
 		// was passed. If the certificate is not self-signed, verify the certificate
 		// chain from leaf to root with the trust store on the computer so browsers
@@ -668,9 +668,9 @@ func applyProxyConfig(fc *FileConfig, cfg *service.Config) error {
 			return trace.Wrap(err)
 		}
 		if utils.IsSelfSigned(certificateChain) {
-			warningMessage := "Starting Teleport with a self-signed TLS certificate, this is " +
+			warningMessage := "Starting Siriusec with a self-signed TLS certificate, this is " +
 				"not safe for production clusters. Using a self-signed certificate opens " +
-				"Teleport users to Man-in-the-Middle attacks."
+				"Siriusec users to Man-in-the-Middle attacks."
 			log.Warnf(warningMessage)
 		} else {
 			if err := utils.VerifyCertificateChain(certificateChain); err != nil {
@@ -827,18 +827,18 @@ func applySSHConfig(fc *FileConfig, cfg *service.Config) (err error) {
 	if fc.SSH.PAM != nil {
 		cfg.SSH.PAM = fc.SSH.PAM.Parse()
 
-		// If PAM is enabled, make sure that Teleport was built with PAM support
+		// If PAM is enabled, make sure that Siriusec was built with PAM support
 		// and the PAM library was found at runtime.
 		if cfg.SSH.PAM.Enabled {
 			if !pam.BuildHasPAM() {
-				errorMessage := "Unable to start Teleport: PAM was enabled in file configuration but this \n" +
-					"Teleport binary was built without PAM support. To continue either download a \n" +
-					"Teleport binary build with PAM support from https://siriusec.com/teleport \n" +
+				errorMessage := "Unable to start Siriusec: PAM was enabled in file configuration but this \n" +
+					"Siriusec binary was built without PAM support. To continue either download a \n" +
+					"Siriusec binary build with PAM support from https://siriusec.com/teleport \n" +
 					"or disable PAM in file configuration."
 				return trace.BadParameter(errorMessage)
 			}
 			if !pam.SystemHasPAM() {
-				errorMessage := "Unable to start Teleport: PAM was enabled in file configuration but this \n" +
+				errorMessage := "Unable to start Siriusec: PAM was enabled in file configuration but this \n" +
 					"system does not have the needed PAM library installed. To continue either \n" +
 					"install libpam or disable PAM in file configuration."
 				return trace.BadParameter(errorMessage)
@@ -1142,7 +1142,7 @@ func parseCAKey(bytes []byte, allowedLogins []string) (types.CertAuthority, type
 }
 
 // readTrustedClusters parses the content of "trusted_clusters" YAML structure
-// and modifies Teleport 'conf' by adding "authorities" and "reverse tunnels"
+// and modifies Siriusec 'conf' by adding "authorities" and "reverse tunnels"
 // to it
 func readTrustedClusters(clusters []TrustedCluster, conf *service.Config) error {
 	if len(clusters) == 0 {
@@ -1345,7 +1345,7 @@ func Configure(clf *CommandLineFlags, cfg *service.Config) error {
 		return trace.Wrap(err)
 	}
 
-	// If FIPS mode is specified, validate Teleport configuration is FedRAMP/FIPS
+	// If FIPS mode is specified, validate Siriusec configuration is FedRAMP/FIPS
 	// 140-2 compliant.
 	if clf.FIPS {
 		// Make sure all cryptographic primitives are FIPS compliant.

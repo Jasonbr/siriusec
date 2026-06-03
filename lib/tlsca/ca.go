@@ -85,7 +85,7 @@ type Identity struct {
 	Username string
 	// Impersonator is a username of a user impersonating this user
 	Impersonator string
-	// Groups is a list of groups (Teleport roles) encoded in the identity
+	// Groups is a list of groups (Siriusec roles) encoded in the identity
 	Groups []string
 	// Usage is a list of usage restrictions encoded in the identity
 	Usage []string
@@ -101,18 +101,18 @@ type Identity struct {
 	// if present in the session
 	RouteToCluster string
 	// KubernetesCluster specifies the target kubernetes cluster for TLS
-	// identities. This can be empty on older Teleport clients.
+	// identities. This can be empty on older Siriusec clients.
 	KubernetesCluster string
 	// Traits hold claim data used to populate a role at runtime.
 	Traits wrappers.Traits
 	// RouteToApp holds routing information for applications. Routing metadata
-	// allows Teleport web proxy to route HTTP requests to the appropriate
-	// cluster and Teleport application proxy within the cluster.
+	// allows Siriusec web proxy to route HTTP requests to the appropriate
+	// cluster and Siriusec application proxy within the cluster.
 	RouteToApp RouteToApp
-	// TeleportCluster is the name of the teleport cluster that this identity
+	// SiriusecCluster is the name of the teleport cluster that this identity
 	// originated from. For TLS certs this may not be the same as cert issuer,
 	// in case of multi-hop requests that originate from a remote cluster.
-	TeleportCluster string
+	SiriusecCluster string
 	// RouteToDatabase contains routing information for databases.
 	RouteToDatabase RouteToDatabase
 	// DatabaseNames is a list of allowed database names.
@@ -154,7 +154,7 @@ type RouteToApp struct {
 
 // RouteToDatabase contains routing information for databases.
 type RouteToDatabase struct {
-	// ServiceName is the name of the Teleport database proxy service
+	// ServiceName is the name of the Siriusec database proxy service
 	// to route requests to.
 	ServiceName string
 	// Protocol is the database protocol.
@@ -230,9 +230,9 @@ var (
 	// public address into a certificate.
 	AppPublicAddrASN1ExtensionOID = asn1.ObjectIdentifier{1, 3, 9999, 1, 6}
 
-	// TeleportClusterASN1ExtensionOID is an extension ID used when encoding/decoding
+	// SiriusecClusterASN1ExtensionOID is an extension ID used when encoding/decoding
 	// origin teleport cluster name into certificates.
-	TeleportClusterASN1ExtensionOID = asn1.ObjectIdentifier{1, 3, 9999, 1, 7}
+	SiriusecClusterASN1ExtensionOID = asn1.ObjectIdentifier{1, 3, 9999, 1, 7}
 
 	// MFAVerifiedASN1ExtensionOID is an extension ID used when encoding/decoding
 	// the MFAVerified flag into certificates.
@@ -375,11 +375,11 @@ func (id *Identity) Subject() (pkix.Name, error) {
 				Value: id.AWSRoleARNs[i],
 			})
 	}
-	if id.TeleportCluster != "" {
+	if id.SiriusecCluster != "" {
 		subject.ExtraNames = append(subject.ExtraNames,
 			pkix.AttributeTypeAndValue{
-				Type:  TeleportClusterASN1ExtensionOID,
-				Value: id.TeleportCluster,
+				Type:  SiriusecClusterASN1ExtensionOID,
+				Value: id.SiriusecCluster,
 			})
 	}
 	if id.MFAVerified != "" {
@@ -521,10 +521,10 @@ func FromSubject(subject pkix.Name, expires time.Time) (*Identity, error) {
 			if ok {
 				id.AWSRoleARNs = append(id.AWSRoleARNs, val)
 			}
-		case attr.Type.Equal(TeleportClusterASN1ExtensionOID):
+		case attr.Type.Equal(SiriusecClusterASN1ExtensionOID):
 			val, ok := attr.Value.(string)
 			if ok {
-				id.TeleportCluster = val
+				id.SiriusecCluster = val
 			}
 		case attr.Type.Equal(MFAVerifiedASN1ExtensionOID):
 			val, ok := attr.Value.(string)

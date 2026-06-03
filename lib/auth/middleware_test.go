@@ -61,10 +61,10 @@ func TestMiddlewareGetUser(t *testing.T) {
 		localUserIdentity = tlsca.Identity{
 			Username:        "foo",
 			Groups:          []string{"devs"},
-			TeleportCluster: localClusterName,
+			SiriusecCluster: localClusterName,
 			Expires:         now,
 		}
-		localUserIdentityNoTeleportCluster = tlsca.Identity{
+		localUserIdentityNoSiriusecCluster = tlsca.Identity{
 			Username: "foo",
 			Groups:   []string{"devs"},
 			Expires:  now,
@@ -72,16 +72,16 @@ func TestMiddlewareGetUser(t *testing.T) {
 		localSystemRole = tlsca.Identity{
 			Username:        "node",
 			Groups:          []string{string(types.RoleNode)},
-			TeleportCluster: localClusterName,
+			SiriusecCluster: localClusterName,
 			Expires:         now,
 		}
 		remoteUserIdentity = tlsca.Identity{
 			Username:        "foo",
 			Groups:          []string{"devs"},
-			TeleportCluster: remoteClusterName,
+			SiriusecCluster: remoteClusterName,
 			Expires:         now,
 		}
-		remoteUserIdentityNoTeleportCluster = tlsca.Identity{
+		remoteUserIdentityNoSiriusecCluster = tlsca.Identity{
 			Username: "foo",
 			Groups:   []string{"devs"},
 			Expires:  now,
@@ -89,7 +89,7 @@ func TestMiddlewareGetUser(t *testing.T) {
 		remoteSystemRole = tlsca.Identity{
 			Username:        "node",
 			Groups:          []string{string(types.RoleNode)},
-			TeleportCluster: remoteClusterName,
+			SiriusecCluster: remoteClusterName,
 			Expires:         now,
 		}
 	)
@@ -126,7 +126,7 @@ func TestMiddlewareGetUser(t *testing.T) {
 		{
 			desc: "local user no teleport cluster in cert subject",
 			peers: []*x509.Certificate{{
-				Subject:  subject(localUserIdentityNoTeleportCluster),
+				Subject:  subject(localUserIdentityNoSiriusecCluster),
 				NotAfter: now,
 				Issuer:   pkix.Name{Organization: []string{localClusterName}},
 			}},
@@ -169,7 +169,7 @@ func TestMiddlewareGetUser(t *testing.T) {
 		{
 			desc: "remote user no teleport cluster in cert subject",
 			peers: []*x509.Certificate{{
-				Subject:  subject(remoteUserIdentityNoTeleportCluster),
+				Subject:  subject(remoteUserIdentityNoSiriusecCluster),
 				NotAfter: now,
 				Issuer:   pkix.Name{Organization: []string{remoteClusterName}},
 			}},

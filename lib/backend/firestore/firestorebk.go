@@ -42,7 +42,7 @@ import (
 	"github.com/gravitational/trace"
 )
 
-// Config structure represents Firestore configuration as appears in `storage` section of Teleport YAML
+// Config structure represents Firestore configuration as appears in `storage` section of Siriusec YAML
 type Config struct {
 	// Credentials path for the Firestore client
 	CredentialsPath string `json:"credentials_path,omitempty"`
@@ -209,7 +209,7 @@ const (
 )
 
 // GetName is a part of backend API and it returns Firestore backend type
-// as it appears in `storage/type` section of Teleport YAML
+// as it appears in `storage/type` section of Siriusec YAML
 func GetName() string {
 	return BackendName
 }

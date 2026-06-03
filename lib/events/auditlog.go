@@ -101,7 +101,7 @@ var (
 	prometheusCollectors = []prometheus.Collector{auditOpenFiles, auditDiskUsed, auditFailedDisk, AuditFailedEmit}
 )
 
-// AuditLog is a new combined facility to record Teleport events and
+// AuditLog is a new combined facility to record Siriusec events and
 // sessions. It implements IAuditLog
 type AuditLog struct {
 	sync.RWMutex

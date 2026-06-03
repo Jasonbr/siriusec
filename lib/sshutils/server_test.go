@@ -181,7 +181,7 @@ func (s *ServerSuite) TestConfigureCiphers(c *check.C) {
 	defer clt.Close()
 }
 
-// TestHostSigner makes sure Teleport can not be started with a invalid host
+// TestHostSigner makes sure Siriusec can not be started with a invalid host
 // certificate. The main check is the certificate algorithms.
 func (s *ServerSuite) TestHostSignerFIPS(c *check.C) {
 	_, ellipticSigner, err := utils.CreateEllipticCertificate("foo", ssh.HostCert)

@@ -103,7 +103,7 @@ func onDatabaseLogin(cf *CLIConf) error {
 	return nil
 }
 
-func databaseLogin(cf *CLIConf, tc *client.TeleportClient, db tlsca.RouteToDatabase, quiet bool) error {
+func databaseLogin(cf *CLIConf, tc *client.SiriusecClient, db tlsca.RouteToDatabase, quiet bool) error {
 	log.Debugf("Fetching database access certificate for %s on cluster %v.", db, tc.SiteName)
 	// When generating certificate for MongoDB access, database username must
 	// be encoded into it. This is required to be able to tell which database
@@ -147,7 +147,7 @@ func databaseLogin(cf *CLIConf, tc *client.TeleportClient, db tlsca.RouteToDatab
 
 // fetchDatabaseCreds is called as a part of tsh login to refresh database
 // access certificates for databases the current profile is logged into.
-func fetchDatabaseCreds(cf *CLIConf, tc *client.TeleportClient) error {
+func fetchDatabaseCreds(cf *CLIConf, tc *client.SiriusecClient) error {
 	profile, err := client.StatusCurrent(cf.HomePath, cf.Proxy)
 	if err != nil && !trace.IsNotFound(err) {
 		return trace.Wrap(err)
@@ -204,7 +204,7 @@ func onDatabaseLogout(cf *CLIConf) error {
 	return nil
 }
 
-func databaseLogout(tc *client.TeleportClient, db tlsca.RouteToDatabase) error {
+func databaseLogout(tc *client.SiriusecClient, db tlsca.RouteToDatabase) error {
 	// First remove respective connection profile.
 	err := dbprofile.Delete(tc, db)
 	if err != nil {
@@ -348,7 +348,7 @@ func pickActiveDatabase(cf *CLIConf) (*tlsca.RouteToDatabase, error) {
 	return nil, trace.NotFound("Not logged into database %q", name)
 }
 
-func getConnectCommand(cf *CLIConf, tc *client.TeleportClient, profile *client.ProfileStatus, db *tlsca.RouteToDatabase) (*exec.Cmd, error) {
+func getConnectCommand(cf *CLIConf, tc *client.SiriusecClient, profile *client.ProfileStatus, db *tlsca.RouteToDatabase) (*exec.Cmd, error) {
 	switch db.Protocol {
 	case defaults.ProtocolPostgres:
 		return getPostgresCommand(db, profile.Cluster, cf.DatabaseUser, cf.DatabaseName), nil

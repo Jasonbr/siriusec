@@ -86,7 +86,7 @@ type Backend interface {
 	// without closing the backend
 	CloseWatchers()
 
-	// Migrate performs any data migration necessary between Teleport versions.
+	// Migrate performs any data migration necessary between Siriusec versions.
 	// Migrate must be called BEFORE using any other methods of the Backend.
 	Migrate(context.Context) error
 }
@@ -215,7 +215,7 @@ type Config struct {
 
 // Params type defines a flexible unified back-end configuration API.
 // It is just a map of key/value pairs which gets populated by `storage` section
-// in Teleport YAML config.
+// in Siriusec YAML config.
 type Params map[string]interface{}
 
 // GetString returns a string value stored in Params map, or an empty string

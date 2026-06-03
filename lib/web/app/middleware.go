@@ -46,7 +46,7 @@ func (h *Handler) withRouterAuth(handler routerAuthFunc) httprouter.Handle {
 // handler.
 func (h *Handler) withAuth(handler handlerAuthFunc) http.HandlerFunc {
 	return makeHandler(func(w http.ResponseWriter, r *http.Request) error {
-		// If the caller fails to authenticate, redirect the caller to Teleport.
+		// If the caller fails to authenticate, redirect the caller to Siriusec.
 		session, err := h.authenticate(r.Context(), r)
 		if err != nil {
 			if redirectErr := h.redirectToLauncher(w, r, launcherURLParams{}); redirectErr == nil {

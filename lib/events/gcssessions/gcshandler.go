@@ -308,7 +308,7 @@ func (h *Handler) ensureBucket() error {
 		return nil
 	}
 	if !trace.IsNotFound(err) {
-		h.Errorf("Failed to ensure that bucket %q exists (%v). GCS session uploads may fail. If you've set up the bucket already and gave Teleport write-only access, feel free to ignore this error.", h.Bucket, err)
+		h.Errorf("Failed to ensure that bucket %q exists (%v). GCS session uploads may fail. If you've set up the bucket already and gave Sirius write-only access, feel free to ignore this error.", h.Bucket, err)
 		return nil
 	}
 	err = h.gcsClient.Bucket(h.Config.Bucket).Create(h.clientContext, h.Config.ProjectID, &storage.BucketAttrs{

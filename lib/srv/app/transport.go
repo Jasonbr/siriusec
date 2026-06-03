@@ -125,7 +125,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	// contains a path like http://localhost:8080/app/acme, but the request comes
 	// to https://publicAddr. In that case do a 302 to the correct path instead
 	// of doing path re-writing on all requests. This is a workaround to make
-	// sure Teleport does not break SPA.
+	// sure Siriusec does not break SPA.
 	if location, ok := t.needsPathRedirect(r); ok {
 		return &http.Response{
 			Status:     http.StatusText(http.StatusFound),
@@ -187,7 +187,7 @@ func (t *transport) rewriteRequest(r *http.Request) error {
 func (t *transport) rewriteHeaders(r *http.Request) {
 	for _, header := range t.c.app.Rewrite.Headers {
 		if IsReservedHeader(header.Name) {
-			t.c.log.Debugf("Not rewriting Teleport header %q.", header.Name)
+			t.c.log.Debugf("Not rewriting Sirius header %q.", header.Name)
 			continue
 		}
 		values, err := services.ApplyValueTraits(header.Value, t.c.traits)
@@ -207,7 +207,7 @@ func (t *transport) rewriteHeaders(r *http.Request) {
 	}
 }
 
-// ReservedHeaders is a list of headers injected by Teleport.
+// ReservedHeaders is a list of headers injected by Siriusec.
 var ReservedHeaders = []string{
 	teleport.AppJWTHeader,
 	teleport.AppCFHeader,
@@ -218,7 +218,7 @@ var ReservedHeaders = []string{
 }
 
 // IsReservedHeader returns true if the provided header is one of headers
-// injected by Teleport.
+// injected by Siriusec.
 func IsReservedHeader(header string) bool {
 	for _, h := range ReservedHeaders {
 		if http.CanonicalHeaderKey(header) == http.CanonicalHeaderKey(h) {
@@ -320,7 +320,7 @@ func (t *transport) emitAuditEvent(req *http.Request, resp *http.Response) error
 func configureTLS(c *transportConfig) (*tls.Config, error) {
 	tlsConfig := utils.TLSConfig(c.cipherSuites)
 
-	// Don't verify the server's certificate if Teleport was started with
+	// Don't verify the server's certificate if Siriusec was started with
 	// the --insecure flag, or 'insecure_skip_verify' was specifically requested in
 	// the application config.
 	tlsConfig.InsecureSkipVerify = (lib.IsInsecureDevMode() || c.app.InsecureSkipVerify)

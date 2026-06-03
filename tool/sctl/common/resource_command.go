@@ -46,7 +46,7 @@ type ResourceCreateHandler func(auth.ClientI, services.UnknownResource) error
 type ResourceKind string
 
 // ResourceCommand implements `tctl get/create/list` commands for manipulating
-// Teleport resources
+// Siriusec resources
 type ResourceCommand struct {
 	config      *service.Config
 	ref         services.Ref
@@ -99,7 +99,7 @@ func (rc *ResourceCommand) Initialize(app *kingpin.Application, config *service.
 	}
 	rc.config = config
 
-	rc.createCmd = app.Command("create", "Create or update a Teleport resource from a YAML file")
+	rc.createCmd = app.Command("create", "Create or update a Sirius resource from a YAML file")
 	rc.createCmd.Arg("filename", "resource definition file, empty for stdin").StringVar(&rc.filename)
 	rc.createCmd.Flag("force", "Overwrite the resource if already exists").Short('f').BoolVar(&rc.force)
 	rc.createCmd.Flag("confirm", "Confirm an unsafe or temporary resource update").Hidden().BoolVar(&rc.confirm)
@@ -123,7 +123,7 @@ func (rc *ResourceCommand) Initialize(app *kingpin.Application, config *service.
 	$ tctl rm connector/github
 	$ tctl rm cluster/main`).SetValue(&rc.ref)
 
-	rc.getCmd = app.Command("get", "Print a YAML declaration of various Teleport resources")
+	rc.getCmd = app.Command("get", "Print a YAML declaration of various Sirius resources")
 	rc.getCmd.Arg("resources", "Resource spec: 'type/[name][,...]' or 'all'").Required().SetValue(&rc.refs)
 	rc.getCmd.Flag("format", "Output format: 'yaml', 'json' or 'text'").Default(teleport.YAML).StringVar(&rc.format)
 	rc.getCmd.Flag("namespace", "Namespace of the resources").Hidden().Default(apidefaults.Namespace).StringVar(&rc.namespace)
@@ -259,7 +259,7 @@ func (rc *ResourceCommand) Create(client auth.ClientI) (err error) {
 		if !found {
 			// if we're trying to create an OIDC/SAML connector with the OSS version of tctl, return a specific error
 			if raw.Kind == "oidc" || raw.Kind == "saml" {
-				return trace.BadParameter("creating resources of type %q is only supported in Teleport Enterprise.  If you connecting to a Teleport Enterprise Cluster you must install the enterprise version of tctl.  https://siriusec.com/teleport/docs/enterprise/", raw.Kind)
+				return trace.BadParameter("creating resources of type %q is only supported in Sirius Enterprise.  If you connecting to a Sirius Enterprise Cluster you must install the enterprise version of tctl.  https://siriusec.com/teleport/docs/enterprise/", raw.Kind)
 			}
 			return trace.BadParameter("creating resources of type %q is not supported", raw.Kind)
 		}

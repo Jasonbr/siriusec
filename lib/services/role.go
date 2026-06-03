@@ -971,7 +971,7 @@ func ExtractFromCertificate(access UserGetter, cert *ssh.Certificate) ([]string,
 }
 
 // ExtractFromIdentity will extract roles and traits from the *x509.Certificate
-// which Teleport passes along as a *tlsca.Identity. If roles and traits do not
+// which Siriusec passes along as a *tlsca.Identity. If roles and traits do not
 // exist in the certificates, they are extracted from the backend.
 func ExtractFromIdentity(access UserGetter, identity tlsca.Identity) ([]string, wrappers.Traits, error) {
 	// For legacy certificates, fetch roles and traits from the services.User

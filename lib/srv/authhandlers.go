@@ -74,7 +74,7 @@ type AuthHandlerConfig struct {
 	// AccessPoint is used to access the Auth Server.
 	AccessPoint auth.AccessPoint
 
-	// FIPS mode means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// FIPS mode means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 
@@ -109,7 +109,7 @@ func NewAuthHandlers(config *AuthHandlerConfig) (*AuthHandlers, error) {
 // about the logged in user on the connection.
 func (h *AuthHandlers) CreateIdentityContext(sconn *ssh.ServerConn) (IdentityContext, error) {
 	identity := IdentityContext{
-		TeleportUser: sconn.Permissions.Extensions[utils.CertTeleportUser],
+		SiriusecUser: sconn.Permissions.Extensions[utils.CertSiriusecUser],
 		Login:        sconn.User(),
 	}
 
@@ -118,7 +118,7 @@ func (h *AuthHandlers) CreateIdentityContext(sconn *ssh.ServerConn) (IdentityCon
 		return IdentityContext{}, trace.Wrap(err)
 	}
 
-	certRaw := []byte(sconn.Permissions.Extensions[utils.CertTeleportUserCertificate])
+	certRaw := []byte(sconn.Permissions.Extensions[utils.CertSiriusecUserCertificate])
 	certificate, err := apisshutils.ParseCertificate(certRaw)
 	if err != nil {
 		return IdentityContext{}, trace.Wrap(err)
@@ -134,7 +134,7 @@ func (h *AuthHandlers) CreateIdentityContext(sconn *ssh.ServerConn) (IdentityCon
 	}
 	identity.CertAuthority = certAuthority
 
-	roleSet, origRoles, err := h.fetchRoleSet(certificate, certAuthority, identity.TeleportUser, clusterName.GetClusterName())
+	roleSet, origRoles, err := h.fetchRoleSet(certificate, certAuthority, identity.SiriusecUser, clusterName.GetClusterName())
 	if err != nil {
 		return IdentityContext{}, trace.Wrap(err)
 	}
@@ -171,7 +171,7 @@ func (h *AuthHandlers) CheckPortForward(addr string, ctx *ServerContext) error {
 			},
 			UserMetadata: apievents.UserMetadata{
 				Login:        ctx.Identity.Login,
-				User:         ctx.Identity.TeleportUser,
+				User:         ctx.Identity.SiriusecUser,
 				Impersonator: ctx.Identity.Impersonator,
 			},
 			ConnectionMetadata: apievents.ConnectionMetadata{
@@ -253,7 +253,7 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 	}
 
 	// Check that the user certificate uses supported public key algorithms, was
-	// issued by Teleport, and check the certificate metadata (principals,
+	// issued by Siriusec, and check the certificate metadata (principals,
 	// timestamp, etc). Fallback to keys is not supported.
 	clock := time.Now
 	if h.c.Clock != nil {
@@ -281,9 +281,9 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 
 	// this is the only way we know of to pass valid additional data about the
 	// connection to the handlers
-	permissions.Extensions[utils.CertTeleportUser] = teleportUser
-	permissions.Extensions[utils.CertTeleportClusterName] = clusterName.GetClusterName()
-	permissions.Extensions[utils.CertTeleportUserCertificate] = string(ssh.MarshalAuthorizedKey(cert))
+	permissions.Extensions[utils.CertSiriusecUser] = teleportUser
+	permissions.Extensions[utils.CertSiriusecClusterName] = clusterName.GetClusterName()
+	permissions.Extensions[utils.CertSiriusecUserCertificate] = string(ssh.MarshalAuthorizedKey(cert))
 
 	switch cert.CertType {
 	case ssh.UserCert:
@@ -316,12 +316,12 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 
 // HostKeyAuth implements host key verification and is called by the client
 // to validate the certificate presented by the target server. If the target
-// server presents a SSH certificate, we validate that it was Teleport that
+// server presents a SSH certificate, we validate that it was Siriusec that
 // generated the certificate. If the target server presents a public key, if
 // we are strictly checking keys, we reject the target server. If we are not
 // we take whatever.
 func (h *AuthHandlers) HostKeyAuth(addr string, remote net.Addr, key ssh.PublicKey) error {
-	// Check if the given host key was signed by a Teleport certificate
+	// Check if the given host key was signed by a Siriusec certificate
 	// authority (CA) or fallback to host key checking if it's allowed.
 	certChecker := apisshutils.CertChecker{
 		CertChecker: ssh.CertChecker{
@@ -352,14 +352,14 @@ func (h *AuthHandlers) hostKeyCallback(hostname string, remote net.Addr, key ssh
 		return trace.AccessDenied("remote host presented a public key, expected a host certificate")
 	}
 
-	// If strict host key checking is not enabled, log that Teleport trusted an
+	// If strict host key checking is not enabled, log that Siriusec trusted an
 	// insecure key, but allow the request to go through.
 	h.log.Warnf("Insecure configuration! Strict host key checking disabled, allowing login without checking host key of type %v.", key.Type())
 	return nil
 }
 
 // IsUserAuthority is called during checking the client key, to see if the
-// key used to sign the certificate was a Teleport CA.
+// key used to sign the certificate was a Siriusec CA.
 func (h *AuthHandlers) IsUserAuthority(cert ssh.PublicKey) bool {
 	if _, err := h.authorityForCert(types.UserCA, cert); err != nil {
 		return false
@@ -370,7 +370,7 @@ func (h *AuthHandlers) IsUserAuthority(cert ssh.PublicKey) bool {
 
 // IsHostAuthority is called when checking the host certificate a server
 // presents. It make sure that the key used to sign the host certificate was a
-// Teleport CA.
+// Siriusec CA.
 func (h *AuthHandlers) IsHostAuthority(cert ssh.PublicKey, address string) bool {
 	if _, err := h.authorityForCert(types.HostCA, cert); err != nil {
 		h.log.Debugf("Unable to find SSH host CA: %v.", err)
@@ -435,7 +435,7 @@ func (h *AuthHandlers) canLoginWithRBAC(cert *ssh.Certificate, clusterName strin
 }
 
 // fetchRoleSet fetches the services.RoleSet (after role mapping) together with
-// the original roles (prior to role mapping) assigned to a Teleport user.
+// the original roles (prior to role mapping) assigned to a Siriusec user.
 func (h *AuthHandlers) fetchRoleSet(cert *ssh.Certificate, ca types.CertAuthority, teleportUser string, clusterName string) (mapped services.RoleSet, unmapped []string, err error) {
 	// For local users, go and check their individual permissions.
 	if clusterName == ca.GetClusterName() {
@@ -469,7 +469,7 @@ func (h *AuthHandlers) fetchRoleSet(cert *ssh.Certificate, ca types.CertAuthorit
 	if traits == nil {
 		traits = make(map[string][]string)
 	}
-	// Prior to Teleport 6.2 the only trait passed to the remote cluster
+	// Prior to Siriusec 6.2 the only trait passed to the remote cluster
 	// was the "logins" trait set to the SSH certificate principals.
 	//
 	// Keep backwards-compatible behavior and set it in addition to the
@@ -482,7 +482,7 @@ func (h *AuthHandlers) fetchRoleSet(cert *ssh.Certificate, ca types.CertAuthorit
 	return mappedRoleSet, origRoles, nil
 }
 
-// authorityForCert checks if the certificate was signed by a Teleport
+// authorityForCert checks if the certificate was signed by a Siriusec
 // Certificate Authority and returns it.
 func (h *AuthHandlers) authorityForCert(caType types.CertAuthType, key ssh.PublicKey) (types.CertAuthority, error) {
 	// get all certificate authorities for given type

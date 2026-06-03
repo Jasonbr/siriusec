@@ -41,7 +41,7 @@ func TestWrite(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(out), "cert")
 
-	// test standard Teleport identity file creation:
+	// test standard Siriusec identity file creation:
 	cfg.OutputPath = filepath.Join(outputDir, "file")
 	cfg.Format = FormatFile
 	_, err = Write(cfg)

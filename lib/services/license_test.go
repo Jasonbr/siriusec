@@ -40,8 +40,8 @@ func (l *LicenseSuite) TestUnmarshal(c *check.C) {
 	testCases := []testCase{
 		{
 			description: "simple case",
-			input:       `{"kind": "license", "version": "v3", "metadata": {"name": "Teleport Commercial"}, "spec": {"account_id": "accountID", "usage": true, "k8s": true, "app": true, "db": true, "aws_account": "123", "aws_pid": "4"}}`,
-			expected: MustNew("Teleport Commercial", types.LicenseSpecV3{
+			input:       `{"kind": "license", "version": "v3", "metadata": {"name": "Sirius Commercial"}, "spec": {"account_id": "accountID", "usage": true, "k8s": true, "app": true, "db": true, "aws_account": "123", "aws_pid": "4"}}`,
+			expected: MustNew("Sirius Commercial", types.LicenseSpecV3{
 				ReportsUsage:              types.NewBool(true),
 				SupportsKubernetes:        types.NewBool(true),
 				SupportsApplicationAccess: types.NewBoolP(true),

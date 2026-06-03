@@ -51,7 +51,7 @@ type DialParams struct {
 	// certificate.
 	Principals []string
 
-	// ServerID the hostUUID.clusterName of a Teleport node. Used with nodes
+	// ServerID the hostUUID.clusterName of a Siriusec node. Used with nodes
 	// that are connected over a reverse tunnel.
 	ServerID string
 

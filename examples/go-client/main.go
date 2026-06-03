@@ -29,7 +29,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	log.Printf("Starting Teleport client...")
+	log.Printf("Starting Siriusec client...")
 
 	cfg := client.Config{
 		Credentials: []client.Credentials{

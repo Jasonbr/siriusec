@@ -72,7 +72,7 @@ const (
 	Host     = "localhost"
 )
 
-// SetTestTimeouts affects global timeouts inside Teleport, making connections
+// SetTestTimeouts affects global timeouts inside Siriusec, making connections
 // work faster but consuming more CPU (useful for integration testing).
 // NOTE: This function modifies global values for timeouts, etc. If your tests
 // call this function, they MUST NOT BE RUN IN PARALLEL, as they may stomp on
@@ -95,21 +95,21 @@ type TeleInstance struct {
 	// Secrets holds the keys (pub, priv and derived cert) of i instance
 	Secrets InstanceSecrets
 
-	// Slice of TCP ports used by Teleport services
+	// Slice of TCP ports used by Siriusec services
 	Ports []int
 
 	// Hostname is the name of the host where instance is running
 	Hostname string
 
 	// Internal stuff...
-	Process              *service.TeleportProcess
+	Process              *service.SiriusecProcess
 	Config               *service.Config
 	Tunnel               reversetunnel.Server
 	RemoteClusterWatcher *reversetunnel.RemoteClusterTunnelManager
 
 	// Nodes is a list of additional nodes
 	// started with this instance
-	Nodes []*service.TeleportProcess
+	Nodes []*service.SiriusecProcess
 
 	// UploadEventsC is a channel for upload events
 	UploadEventsC chan events.UploadEvent
@@ -181,7 +181,7 @@ type InstanceConfig struct {
 	log utils.Logger
 }
 
-// NewInstance creates a new Teleport process instance.
+// NewInstance creates a new Siriusec process instance.
 //
 // The caller is responsible for calling StopAll on the returned instance to
 // clean up spawned processes.
@@ -412,7 +412,7 @@ func (i *TeleInstance) GetSiteAPI(siteName string) auth.ClientI {
 	return siteAPI
 }
 
-// Create creates a new instance of Teleport which trusts a list of other clusters (other
+// Create creates a new instance of Siriusec which trusts a list of other clusters (other
 // instances)
 func (i *TeleInstance) Create(t *testing.T, trustedSecrets []*InstanceSecrets, enableSSH bool, console io.Writer) error {
 	tconf := service.MakeDefaultConfig()
@@ -433,7 +433,7 @@ type UserCreds struct {
 }
 
 // SetupUserCreds sets up user credentials for client
-func SetupUserCreds(tc *client.TeleportClient, proxyHost string, creds UserCreds) error {
+func SetupUserCreds(tc *client.SiriusecClient, proxyHost string, creds UserCreds) error {
 	_, err := tc.AddKey(&creds.Key)
 	if err != nil {
 		return trace.Wrap(err)
@@ -446,7 +446,7 @@ func SetupUserCreds(tc *client.TeleportClient, proxyHost string, creds UserCreds
 }
 
 // SetupUser sets up user in the cluster
-func SetupUser(process *service.TeleportProcess, username string, roles []types.Role) error {
+func SetupUser(process *service.SiriusecProcess, username string, roles []types.Role) error {
 	ctx := context.TODO()
 	auth := process.GetAuthServer()
 	teleUser, err := types.NewUser(username)
@@ -486,7 +486,7 @@ func SetupUser(process *service.TeleportProcess, username string, roles []types.
 // UserCredsRequest is a request to generate user creds
 type UserCredsRequest struct {
 	// Process is a teleport process
-	Process *service.TeleportProcess
+	Process *service.SiriusecProcess
 	// Username is a user to generate certs for
 	Username string
 	// RouteToCluster is an optional cluster to route creds to
@@ -634,11 +634,11 @@ func nullImpersonationCheck(context.Context, string, authztypes.SelfSubjectAcces
 	return nil
 }
 
-// CreateEx creates a new instance of Teleport which trusts a list of other clusters (other
+// CreateEx creates a new instance of Siriusec which trusts a list of other clusters (other
 // instances)
 //
 // Unlike Create() it allows for greater customization because it accepts
-// a full Teleport config structure
+// a full Siriusec config structure
 func (i *TeleInstance) CreateEx(t *testing.T, trustedSecrets []*InstanceSecrets, tconf *service.Config) error {
 	ctx := context.TODO()
 	tconf, err := i.GenerateConfig(t, trustedSecrets, tconf)
@@ -646,7 +646,7 @@ func (i *TeleInstance) CreateEx(t *testing.T, trustedSecrets []*InstanceSecrets,
 		return trace.Wrap(err)
 	}
 	i.Config = tconf
-	i.Process, err = service.NewTeleport(tconf)
+	i.Process, err = service.NewSiriusec(tconf)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -714,17 +714,17 @@ func (i *TeleInstance) CreateEx(t *testing.T, trustedSecrets []*InstanceSecrets,
 }
 
 // StartNode starts a SSH node and connects it to the cluster.
-func (i *TeleInstance) StartNode(tconf *service.Config) (*service.TeleportProcess, error) {
+func (i *TeleInstance) StartNode(tconf *service.Config) (*service.SiriusecProcess, error) {
 	return i.startNode(tconf, i.GetPortAuth())
 }
 
 // StartReverseTunnelNode starts a SSH node and connects it to the cluster via reverse tunnel.
-func (i *TeleInstance) StartReverseTunnelNode(tconf *service.Config) (*service.TeleportProcess, error) {
+func (i *TeleInstance) StartReverseTunnelNode(tconf *service.Config) (*service.SiriusecProcess, error) {
 	return i.startNode(tconf, i.GetPortWeb())
 }
 
 // startNode starts a node and connects it to the cluster.
-func (i *TeleInstance) startNode(tconf *service.Config, authPort string) (*service.TeleportProcess, error) {
+func (i *TeleInstance) startNode(tconf *service.Config, authPort string) (*service.SiriusecProcess, error) {
 	dataDir, err := ioutil.TempDir("", "cluster-"+i.Secrets.SiteName)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -753,9 +753,9 @@ func (i *TeleInstance) startNode(tconf *service.Config, authPort string) (*servi
 	tconf.Auth.Enabled = false
 	tconf.Proxy.Enabled = false
 
-	// Create a new Teleport process and add it to the list of nodes that
+	// Create a new Siriusec process and add it to the list of nodes that
 	// compose this "cluster".
-	process, err := service.NewTeleport(tconf)
+	process, err := service.NewSiriusec(tconf)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -773,12 +773,12 @@ func (i *TeleInstance) startNode(tconf *service.Config, authPort string) (*servi
 		return nil, trace.Wrap(err)
 	}
 
-	log.Debugf("Teleport node (in instance %v) started: %v/%v events received.",
+	log.Debugf("Siriusec node (in instance %v) started: %v/%v events received.",
 		i.Secrets.SiteName, len(expectedEvents), len(receivedEvents))
 	return process, nil
 }
 
-func (i *TeleInstance) StartApp(conf *service.Config) (*service.TeleportProcess, error) {
+func (i *TeleInstance) StartApp(conf *service.Config) (*service.SiriusecProcess, error) {
 	dataDir, err := ioutil.TempDir("", "cluster-"+i.Secrets.SiteName)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -797,9 +797,9 @@ func (i *TeleInstance) StartApp(conf *service.Config) (*service.TeleportProcess,
 	conf.Auth.Enabled = false
 	conf.Proxy.Enabled = false
 
-	// Create a new Teleport process and add it to the list of nodes that
+	// Create a new Siriusec process and add it to the list of nodes that
 	// compose this "cluster".
-	process, err := service.NewTeleport(conf)
+	process, err := service.NewSiriusec(conf)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -817,13 +817,13 @@ func (i *TeleInstance) StartApp(conf *service.Config) (*service.TeleportProcess,
 		return nil, trace.Wrap(err)
 	}
 
-	log.Debugf("Teleport Application Server (in instance %v) started: %v/%v events received.",
+	log.Debugf("Siriusec Application Server (in instance %v) started: %v/%v events received.",
 		i.Secrets.SiteName, len(expectedEvents), len(receivedEvents))
 	return process, nil
 }
 
 // StartDatabase starts the database access service with the provided config.
-func (i *TeleInstance) StartDatabase(conf *service.Config) (*service.TeleportProcess, *auth.Client, error) {
+func (i *TeleInstance) StartDatabase(conf *service.Config) (*service.SiriusecProcess, *auth.Client, error) {
 	dataDir, err := ioutil.TempDir("", "cluster-"+i.Secrets.SiteName)
 	if err != nil {
 		return nil, nil, trace.Wrap(err)
@@ -842,9 +842,9 @@ func (i *TeleInstance) StartDatabase(conf *service.Config) (*service.TeleportPro
 	conf.Auth.Enabled = false
 	conf.Proxy.Enabled = false
 
-	// Create a new Teleport process and add it to the list of nodes that
+	// Create a new Siriusec process and add it to the list of nodes that
 	// compose this "cluster".
-	process, err := service.NewTeleport(conf)
+	process, err := service.NewSiriusec(conf)
 	if err != nil {
 		return nil, nil, trace.Wrap(err)
 	}
@@ -878,7 +878,7 @@ func (i *TeleInstance) StartDatabase(conf *service.Config) (*service.TeleportPro
 		return nil, nil, trace.BadParameter("failed to retrieve auth client")
 	}
 
-	log.Debugf("Teleport Database Server (in instance %v) started: %v/%v events received.",
+	log.Debugf("Siriusec Database Server (in instance %v) started: %v/%v events received.",
 		i.Secrets.SiteName, len(expectedEvents), len(receivedEvents))
 	return process, client, nil
 }
@@ -927,9 +927,9 @@ func (i *TeleInstance) StartNodeAndProxy(name string, sshPort, proxyWebPort, pro
 		},
 	}
 
-	// Create a new Teleport process and add it to the list of nodes that
+	// Create a new Siriusec process and add it to the list of nodes that
 	// compose this "cluster".
-	process, err := service.NewTeleport(tconf)
+	process, err := service.NewSiriusec(tconf)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -948,7 +948,7 @@ func (i *TeleInstance) StartNodeAndProxy(name string, sshPort, proxyWebPort, pro
 		return trace.Wrap(err)
 	}
 
-	log.Debugf("Teleport node and proxy (in instance %v) started: %v/%v events received.",
+	log.Debugf("Siriusec node and proxy (in instance %v) started: %v/%v events received.",
 		i.Secrets.SiteName, len(expectedEvents), len(receivedEvents))
 	return nil
 }
@@ -1006,9 +1006,9 @@ func (i *TeleInstance) StartProxy(cfg ProxyConfig) (reversetunnel.Server, error)
 	tconf.Proxy.DisableReverseTunnel = false
 	tconf.Proxy.DisableWebService = true
 
-	// Create a new Teleport process and add it to the list of nodes that
+	// Create a new Siriusec process and add it to the list of nodes that
 	// compose this "cluster".
-	process, err := service.NewTeleport(tconf)
+	process, err := service.NewSiriusec(tconf)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1041,7 +1041,7 @@ func (i *TeleInstance) StartProxy(cfg ProxyConfig) (reversetunnel.Server, error)
 		}
 	}
 
-	log.Debugf("Teleport proxy (in instance %v) started: %v/%v events received.",
+	log.Debugf("Siriusec proxy (in instance %v) started: %v/%v events received.",
 		i.Secrets.SiteName, len(expectedEvents), len(receivedEvents))
 	return tunnel, nil
 }
@@ -1054,7 +1054,7 @@ func (i *TeleInstance) Reset() (err error) {
 			return trace.Wrap(err)
 		}
 	}
-	i.Process, err = service.NewTeleport(i.Config)
+	i.Process, err = service.NewSiriusec(i.Config)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -1072,7 +1072,7 @@ func (i *TeleInstance) AddUserWithRole(username string, roles ...types.Role) *Us
 	return user
 }
 
-// Adds a new user into i Teleport instance. 'mappings' is a comma-separated
+// Adds a new user into i Siriusec instance. 'mappings' is a comma-separated
 // list of OS users
 func (i *TeleInstance) AddUser(username string, mappings []string) *User {
 	log.Infof("teleInstance.AddUser(%v) mapped to %v", username, mappings)
@@ -1134,7 +1134,7 @@ func (i *TeleInstance) Start() error {
 		}
 	}
 
-	log.Debugf("Teleport instance %v started: %v/%v events received.",
+	log.Debugf("Siriusec instance %v started: %v/%v events received.",
 		i.Secrets.SiteName, len(receivedEvents), len(expectedEvents))
 	return nil
 }
@@ -1163,7 +1163,7 @@ type ClientConfig struct {
 }
 
 // NewClientWithCreds creates client with credentials
-func (i *TeleInstance) NewClientWithCreds(cfg ClientConfig, creds UserCreds) (tc *client.TeleportClient, err error) {
+func (i *TeleInstance) NewClientWithCreds(cfg ClientConfig, creds UserCreds) (tc *client.SiriusecClient, err error) {
 	clt, err := i.NewUnauthenticatedClient(cfg)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1177,7 +1177,7 @@ func (i *TeleInstance) NewClientWithCreds(cfg ClientConfig, creds UserCreds) (tc
 
 // NewUnauthenticatedClient returns a fully configured and pre-authenticated client
 // (pre-authenticated with server CAs and signed session key)
-func (i *TeleInstance) NewUnauthenticatedClient(cfg ClientConfig) (tc *client.TeleportClient, err error) {
+func (i *TeleInstance) NewUnauthenticatedClient(cfg ClientConfig) (tc *client.SiriusecClient, err error) {
 	keyDir, err := ioutil.TempDir(i.Config.DataDir, "tsh")
 	if err != nil {
 		return nil, err
@@ -1233,7 +1233,7 @@ func (i *TeleInstance) NewUnauthenticatedClient(cfg ClientConfig) (tc *client.Te
 
 // NewClient returns a fully configured and pre-authenticated client
 // (pre-authenticated with server CAs and signed session key)
-func (i *TeleInstance) NewClient(t *testing.T, cfg ClientConfig) (*client.TeleportClient, error) {
+func (i *TeleInstance) NewClient(t *testing.T, cfg ClientConfig) (*client.SiriusecClient, error) {
 	tc, err := i.NewUnauthenticatedClient(cfg)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1306,20 +1306,20 @@ func (i *TeleInstance) StopAuth(removeData bool) error {
 	if i.Config != nil && removeData {
 		err := os.RemoveAll(i.Config.DataDir)
 		if err != nil {
-			i.log.WithError(err).Error("Failed removing temporary local Teleport directory.")
+			i.log.WithError(err).Error("Failed removing temporary local Siriusec directory.")
 		}
 	}
 	if i.Process == nil {
 		return nil
 	}
-	i.log.Infof("Asking Teleport to stop")
+	i.log.Infof("Asking Siriusec to stop")
 	err := i.Process.Close()
 	if err != nil {
 		i.log.WithError(err).Error("Failed closing the teleport process.")
 		return trace.Wrap(err)
 	}
 	defer func() {
-		i.log.Infof("Teleport instance %q stopped!", i.Secrets.SiteName)
+		i.log.Infof("Siriusec instance %q stopped!", i.Secrets.SiteName)
 	}()
 	return i.Process.Wait()
 }
@@ -1343,7 +1343,7 @@ func (i *TeleInstance) StopAll() error {
 	return trace.NewAggregate(errors...)
 }
 
-func startAndWait(process *service.TeleportProcess, expectedEvents []string) ([]service.Event, error) {
+func startAndWait(process *service.SiriusecProcess, expectedEvents []string) ([]service.Event, error) {
 	// register to listen for all ready events on the broadcast channel
 	broadcastCh := make(chan service.Event)
 	for _, eventName := range expectedEvents {
@@ -1570,7 +1570,7 @@ func externalSSHCommand(o commandOptions) (*exec.Cmd, error) {
 	proxyCommand = append(proxyCommand, fmt.Sprintf("-p %v", o.proxyPort))
 	proxyCommand = append(proxyCommand, `%r@localhost -s proxy:%h:%p`)
 
-	// Add in ProxyCommand option, needed for all Teleport connections.
+	// Add in ProxyCommand option, needed for all Siriusec connections.
 	execArgs = append(execArgs, fmt.Sprintf("-oProxyCommand=%v", strings.Join(proxyCommand, " ")))
 
 	// Add in the host to connect to and the command to run when connected.

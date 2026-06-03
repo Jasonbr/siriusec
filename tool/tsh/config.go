@@ -86,7 +86,7 @@ func onConfig(cf *CLIConf) error {
 		return trace.Wrap(err)
 	}
 
-	// Note: TeleportClient.connectToProxy() overrides the proxy address when
+	// Note: SiriusecClient.connectToProxy() overrides the proxy address when
 	// JumpHosts are in use, which this does not currently implement.
 	proxyHost, proxyPort, err := net.SplitHostPort(tc.Config.SSHProxyAddr)
 	if err != nil {
@@ -119,7 +119,7 @@ func onConfig(cf *CLIConf) error {
 	// Start with a newline in case an existing config file does not end with
 	// one.
 	fmt.Fprintln(&sb)
-	fmt.Fprintf(&sb, "#\n# Begin generated Teleport configuration for %s from `tsh config`\n#\n", tc.Config.WebProxyAddr)
+	fmt.Fprintf(&sb, "#\n# Begin generated Sirius configuration for %s from `tsh config`\n#\n", tc.Config.WebProxyAddr)
 
 	err = writeSSHConfig(&sb, hostConfigParameters{
 		ClusterName:         rootClusterName,
@@ -149,7 +149,7 @@ func onConfig(cf *CLIConf) error {
 		}
 	}
 
-	fmt.Fprintf(&sb, "\n# End generated Teleport configuration\n")
+	fmt.Fprintf(&sb, "\n# End generated Sirius configuration\n")
 	fmt.Print(sb.String())
 	return nil
 }

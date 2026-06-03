@@ -75,15 +75,15 @@ type Supervisor interface {
 	RegisterEventMapping(EventMapping)
 
 	// ExitContext returns context that will be closed when
-	// a hard TeleportExitEvent is broadcasted.
+	// a hard SiriusecExitEvent is broadcasted.
 	ExitContext() context.Context
 
 	// GracefulExitContext returns context that will be closed when
-	// a graceful or hard TeleportExitEvent is broadcast.
+	// a graceful or hard SiriusecExitEvent is broadcast.
 	GracefulExitContext() context.Context
 
 	// ReloadContext returns context that will be closed when
-	// TeleportReloadEvent is broadcasted.
+	// SiriusecReloadEvent is broadcasted.
 	ReloadContext() context.Context
 }
 
@@ -117,7 +117,7 @@ func (e EventMapping) matches(currentEvent string, m map[string]Event) bool {
 	return false
 }
 
-// LocalSupervisor is a Teleport's implementation of the Supervisor interface.
+// LocalSupervisor is a Siriusec's implementation of the Supervisor interface.
 type LocalSupervisor struct {
 	state int
 	sync.Mutex
@@ -263,9 +263,9 @@ func (s *LocalSupervisor) serve(srv Service) {
 		err := srv.Serve()
 		if err != nil {
 			if err == ErrTeleportExited {
-				l.Info("Teleport process has shut down.")
+				l.Info("Siriusec process has shut down.")
 			} else {
-				l.WithError(err).Warning("Teleport process has exited with error.")
+				l.WithError(err).Warning("Siriusec process has exited with error.")
 				s.BroadcastEvent(Event{
 					Name:    ServiceExitedWithErrorEvent,
 					Payload: ExitEventPayload{Service: srv, Error: err},
@@ -318,19 +318,19 @@ func (s *LocalSupervisor) Run() error {
 }
 
 // ExitContext returns context that will be closed when
-// a hard TeleportExitEvent is broadcasted.
+// a hard SiriusecExitEvent is broadcasted.
 func (s *LocalSupervisor) ExitContext() context.Context {
 	return s.exitContext
 }
 
 // GracefulExitContext returns context that will be closed when
-// a hard or graceful TeleportExitEvent is broadcasted.
+// a hard or graceful SiriusecExitEvent is broadcasted.
 func (s *LocalSupervisor) GracefulExitContext() context.Context {
 	return s.gracefulExitContext
 }
 
 // ReloadContext returns context that will be closed when
-// TeleportReloadEvent is broadcasted.
+// SiriusecReloadEvent is broadcasted.
 func (s *LocalSupervisor) ReloadContext() context.Context {
 	return s.reloadContext
 }
@@ -342,7 +342,7 @@ func (s *LocalSupervisor) BroadcastEvent(event Event) {
 	defer s.Unlock()
 
 	switch event.Name {
-	case TeleportExitEvent:
+	case SiriusecExitEvent:
 		// if exit event includes a context payload, it is a "graceful" exit, and
 		// we need to hold off closing the supervisor's exit context until after
 		// the graceful context has closed.  If not, it is an immediate exit.
@@ -358,7 +358,7 @@ func (s *LocalSupervisor) BroadcastEvent(event Event) {
 		} else {
 			s.signalExit()
 		}
-	case TeleportReloadEvent:
+	case SiriusecReloadEvent:
 		s.signalReload()
 	}
 
@@ -366,7 +366,7 @@ func (s *LocalSupervisor) BroadcastEvent(event Event) {
 
 	// Log all events other than recovered events to prevent the logs from
 	// being flooded.
-	if event.String() != TeleportOKEvent {
+	if event.String() != SiriusecOKEvent {
 		s.log.WithField("event", event.String()).Debug("Broadcasting event.")
 	}
 

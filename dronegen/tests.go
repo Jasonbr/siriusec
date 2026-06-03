@@ -7,7 +7,7 @@ func testPipelines() []pipeline {
 	}
 }
 
-// testCheckoutCommands returns a set of commands for checking out Teleport's code
+// testCheckoutCommands returns a set of commands for checking out Siriusec's code
 // Setting enterprise to true will also add a check against the Github API to determine whether
 // the pull request comes from a code fork (and will only check out Enterprise code if it does not)
 func testCheckoutCommands(enterprise bool) []string {
@@ -39,7 +39,7 @@ fi
 	}
 	if enterprise {
 		commands = append(commands,
-			// this is allowed to fail because pre-4.3 Teleport versions
+			// this is allowed to fail because pre-4.3 Siriusec versions
 			// don't use the webassets submodule.
 			`git submodule update --init webassets || true`,
 			// use the Github API to check whether this PR comes from a forked repo or not.
@@ -133,7 +133,7 @@ func testCodePipeline() pipeline {
 			// this step looks at the output of git diff --raw to determine
 			// whether any files which don't match the pattern '^docs/',
 			// '.mdx$' or '.md$' were changed. if there are no changes to
-			// non-docs code, we skip the Teleport tests and exit early with a
+			// non-docs code, we skip the Siriusec tests and exit early with a
 			// special Drone exit code to speed up iteration on docs (as milv
 			// is much quicker to run)
 			Name:  "Optionally skip tests",
@@ -149,9 +149,9 @@ git diff --raw ${DRONE_COMMIT}..origin/${DRONE_COMMIT_BRANCH:-master} | awk '{pr
 export CHANGE_COUNT=$(cat /tmp/.change_count.txt | tr -d '\n')
 echo -e "\n---> Non-docs changes detected: $$CHANGE_COUNT"
 if [ $$CHANGE_COUNT -gt 0 ]; then
-  echo "---> Teleport tests will run normally"
+  echo "---> Siriusec tests will run normally"
 else
-  echo "---> Skipping Teleport tests and exiting early"
+  echo "---> Skipping Siriusec tests and exiting early"
   exit 78
 fi
 echo ""

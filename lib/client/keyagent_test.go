@@ -123,7 +123,7 @@ func (s *KeyAgentTestSuite) TestAddKey(c *check.C) {
 	expectedFiles := []string{
 		keypaths.UserKeyPath(s.keyDir, s.hostname, s.username),                    // private key
 		keypaths.SSHCAsPath(s.keyDir, s.hostname, s.username),                     // public key
-		keypaths.TLSCertPath(s.keyDir, s.hostname, s.username),                    // Teleport TLS certificate
+		keypaths.TLSCertPath(s.keyDir, s.hostname, s.username),                    // Siriusec TLS certificate
 		keypaths.SSHCertPath(s.keyDir, s.hostname, s.username, s.key.ClusterName), // SSH certificate
 	}
 	for _, file := range expectedFiles {

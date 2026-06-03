@@ -66,9 +66,9 @@ func (p *cliModules) BuildType() string {
 	return "CLI"
 }
 
-// PrintVersion prints the Teleport version.
+// PrintVersion prints the Siriusec version.
 func (p *cliModules) PrintVersion() {
-	fmt.Printf("Teleport CLI\n")
+	fmt.Printf("Sirius CLI\n")
 }
 
 // Features returns supported features
@@ -646,7 +646,7 @@ func TestIdentityRead(t *testing.T) {
 	require.NotNil(t, k.TLSCert)
 
 	// generate a TLS client config
-	conf, err := k.TeleportClientTLSConfig(nil)
+	conf, err := k.SiriusecClientTLSConfig(nil)
 	require.NoError(t, err)
 	require.NotNil(t, conf)
 
@@ -969,7 +969,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			expectedValues: &kubeconfig.Values{
 				Credentials:         creds,
 				ClusterAddr:         "https://a.example.com:3026",
-				TeleportClusterName: "a.example.com",
+				SiriusecClusterName: "a.example.com",
 				Exec: &kubeconfig.ExecValues{
 					TshBinaryPath: "/bin/tsh",
 					KubeClusters:  []string{"dev", "prod"},
@@ -993,7 +993,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			expectedValues: &kubeconfig.Values{
 				Credentials:         creds,
 				ClusterAddr:         "https://a.example.com:3026",
-				TeleportClusterName: "a.example.com",
+				SiriusecClusterName: "a.example.com",
 				Exec: &kubeconfig.ExecValues{
 					TshBinaryPath: "/bin/tsh",
 					KubeClusters:  []string{"dev", "prod"},
@@ -1034,7 +1034,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			expectedValues: &kubeconfig.Values{
 				Credentials:         creds,
 				ClusterAddr:         "https://a.example.com:3026",
-				TeleportClusterName: "a.example.com",
+				SiriusecClusterName: "a.example.com",
 				Exec:                nil,
 			},
 		},
@@ -1054,7 +1054,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			expectedValues: &kubeconfig.Values{
 				Credentials:         creds,
 				ClusterAddr:         "https://a.example.com:3026",
-				TeleportClusterName: "a.example.com",
+				SiriusecClusterName: "a.example.com",
 				Exec:                nil,
 			},
 		},
@@ -1068,11 +1068,11 @@ func TestKubeConfigUpdate(t *testing.T) {
 	}
 }
 
-func makeTestServers(t *testing.T, bootstrap ...types.Resource) (auth *service.TeleportProcess, proxy *service.TeleportProcess) {
+func makeTestServers(t *testing.T, bootstrap ...types.Resource) (auth *service.SiriusecProcess, proxy *service.SiriusecProcess) {
 	return makeTestServersWithName(t, "", bootstrap...)
 }
 
-func makeTestServersWithName(t *testing.T, name string, bootstrap ...types.Resource) (auth *service.TeleportProcess, proxy *service.TeleportProcess) {
+func makeTestServersWithName(t *testing.T, name string, bootstrap ...types.Resource) (auth *service.SiriusecProcess, proxy *service.SiriusecProcess) {
 	var err error
 	// Set up a test auth server.
 	//
@@ -1107,7 +1107,7 @@ func makeTestServersWithName(t *testing.T, name string, bootstrap ...types.Resou
 	cfg.Proxy.Enabled = false
 	cfg.Log = utils.NewLoggerForTests()
 
-	auth, err = service.NewTeleport(cfg)
+	auth, err = service.NewSiriusec(cfg)
 	require.NoError(t, err)
 	require.NoError(t, auth.Start())
 
@@ -1145,7 +1145,7 @@ func makeTestServersWithName(t *testing.T, name string, bootstrap ...types.Resou
 	cfg.Proxy.DisableWebInterface = true
 	cfg.Log = utils.NewLoggerForTests()
 
-	proxy, err = service.NewTeleport(cfg)
+	proxy, err = service.NewSiriusec(cfg)
 	require.NoError(t, err)
 	require.NoError(t, proxy.Start())
 

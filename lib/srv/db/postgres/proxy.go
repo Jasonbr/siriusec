@@ -31,7 +31,7 @@ import (
 )
 
 // Proxy proxies connections from Postgres clients to database services
-// over reverse tunnel. It runs inside Teleport proxy service.
+// over reverse tunnel. It runs inside Siriusec proxy service.
 //
 // Implements common.Proxy.
 type Proxy struct {
@@ -70,7 +70,7 @@ func (p *Proxy) HandleConnection(ctx context.Context, clientConn net.Conn) (err 
 	defer serviceConn.Close()
 	// Frontend acts as a client for the Postgres wire protocol.
 	frontend := pgproto3.NewFrontend(pgproto3.NewChunkReader(serviceConn), serviceConn)
-	// Pass the startup message along to the Teleport database server.
+	// Pass the startup message along to the Siriusec database server.
 	err = frontend.Send(startupMessage)
 	if err != nil {
 		return trace.Wrap(err)

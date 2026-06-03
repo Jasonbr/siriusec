@@ -24,7 +24,7 @@ import (
 	"github.com/gravitational/trace"
 )
 
-// Config holds the configuration used by Teleport when creating a PAM context
+// Config holds the configuration used by Siriusec when creating a PAM context
 // and executing PAM transactions.
 type Config struct {
 	// Enabled controls if PAM checks will occur or not.

@@ -666,7 +666,7 @@ collect:
 			warningMessage := "Truncating list of teams used to populate claims: " +
 				"hit maximum number pages that can be fetched from Google Workspace."
 
-			// Print warning to Teleport logs as well as the Audit Log.
+			// Print warning to Siriusec logs as well as the Audit Log.
 			log.Warnf(warningMessage)
 			if err := g.emitter.EmitAuditEvent(g.ctx, &apievents.UserLogin{
 				Metadata: apievents.Metadata{

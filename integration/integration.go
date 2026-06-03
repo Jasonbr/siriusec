@@ -14,6 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// integration package tests Teleport on a high level creating clusters
+// integration package tests Siriusec on a high level creating clusters
 // of servers in memory, connecting them together and connecting to them
 package integration

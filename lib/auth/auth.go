@@ -587,7 +587,7 @@ type certRequest struct {
 	// route the requests to in case of kubernetes
 	routeToCluster string
 	// kubernetesCluster specifies the target kubernetes cluster for TLS
-	// identities. This can be empty on older Teleport clients.
+	// identities. This can be empty on older Siriusec clients.
 	kubernetesCluster string
 	// traits hold claim data used to populate a role at runtime.
 	traits wrappers.Traits
@@ -682,7 +682,7 @@ func (a *Server) GenerateUserTestCerts(key []byte, username string, ttl time.Dur
 type AppTestCertRequest struct {
 	// PublicKey is the public key to sign.
 	PublicKey []byte
-	// Username is the Teleport user name to sign certificate for.
+	// Username is the Siriusec user name to sign certificate for.
 	Username string
 	// TTL is the test certificate validity period.
 	TTL time.Duration
@@ -741,9 +741,9 @@ func (a *Server) GenerateUserAppTestCert(req AppTestCertRequest) ([]byte, error)
 type DatabaseTestCertRequest struct {
 	// PublicKey is the public key to sign.
 	PublicKey []byte
-	// Cluster is the Teleport cluster name.
+	// Cluster is the Siriusec cluster name.
 	Cluster string
-	// Username is the Teleport username.
+	// Username is the Siriusec username.
 	Username string
 	// RouteToDatabase contains database routing information.
 	RouteToDatabase tlsca.RouteToDatabase
@@ -960,7 +960,7 @@ func (a *Server) generateUserCert(req certRequest) (*certs, error) {
 			Name:        req.appName,
 			AWSRoleARN:  req.awsRoleARN,
 		},
-		TeleportCluster: clusterName,
+		SiriusecCluster: clusterName,
 		RouteToDatabase: tlsca.RouteToDatabase{
 			ServiceName: req.dbService,
 			Protocol:    req.dbProtocol,
@@ -1571,7 +1571,7 @@ func (a *Server) GenerateServerKeys(req GenerateServerKeysRequest) (*PackedKeys,
 	identity := tlsca.Identity{
 		Username:        HostFQDN(req.HostID, clusterName.GetClusterName()),
 		Groups:          req.Roles.StringSlice(),
-		TeleportCluster: clusterName.GetClusterName(),
+		SiriusecCluster: clusterName.GetClusterName(),
 	}
 	subject, err := identity.Subject()
 	if err != nil {
@@ -1700,7 +1700,7 @@ func (r *RegisterUsingTokenRequest) CheckAndSetDefaults() error {
 	return nil
 }
 
-// RegisterUsingToken adds a new node to the Teleport cluster using previously issued token.
+// RegisterUsingToken adds a new node to the Siriusec cluster using previously issued token.
 // A node must also request a specific role (and the role must match one of the roles
 // the token was generated for).
 //

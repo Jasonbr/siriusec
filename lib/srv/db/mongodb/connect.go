@@ -137,7 +137,7 @@ func (e *Engine) getConnectionOptions(ctx context.Context, sessionCtx *common.Se
 				// Wrap the driver's auth handshaker with our custom no-op
 				// handshaker to prevent the driver from sending client metadata
 				// to the server as a first message. Otherwise, the actual
-				// client connecting to Teleport will get an error when they try
+				// client connecting to Siriusec will get an error when they try
 				// to send its own metadata since client metadata is immutable.
 				&handshaker{},
 				&auth.HandshakeOptions{Authenticator: authenticator})
@@ -183,7 +183,7 @@ type handshaker struct{}
 
 // GetHandshakeInformation overrides default auth handshaker's logic which
 // would otherwise have sent client metadata request to the server which
-// would break the actual client connecting to Teleport.
+// would break the actual client connecting to Siriusec.
 func (h *handshaker) GetHandshakeInformation(context.Context, address.Address, driver.Connection) (driver.HandshakeInformation, error) {
 	return driver.HandshakeInformation{}, nil
 }

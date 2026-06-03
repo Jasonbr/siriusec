@@ -28,7 +28,7 @@ limitations under the License.
 // to the server determined by the "readPreference" setting from the config's
 // connection string.
 //
-// For example, this configuration will make Teleport to connect to a secondary:
+// For example, this configuration will make Siriusec to connect to a secondary:
 //
 //  - name: "mongo-rs"
 //    protocol: "mongodb"

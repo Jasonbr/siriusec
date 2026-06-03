@@ -51,7 +51,7 @@ func CreateCertificate(principal string, certType uint32) (*ssh.Certificate, ssh
 }
 
 // CreateEllipticCertificate creates a valid, but not supported, ECDSA
-// SSH certificate. This certificate is used to make sure Teleport rejects
+// SSH certificate. This certificate is used to make sure Siriusec rejects
 // such certificates.
 func CreateEllipticCertificate(principal string, certType uint32) (*ssh.Certificate, ssh.Signer, error) {
 	// Create ECDSA key for CA and certificate to be signed by CA.

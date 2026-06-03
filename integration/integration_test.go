@@ -139,29 +139,29 @@ func (s *integrationTestSuite) bind(test integrationTest) func(t *testing.T) {
 	}
 }
 
-// newTeleportWithConfig is a helper function that will create a running
-// Teleport instance with the passed in user, instance secrets, and Teleport
+// newSiriusecWithConfig is a helper function that will create a running
+// Teleport instance with the passed in user, instance secrets, and Siriusec
 // configuration.
 func (s *integrationTestSuite) newTeleportWithConfig(t *testing.T, logins []string, instanceSecrets []*InstanceSecrets, teleportConfig *service.Config) *TeleInstance {
-	teleport := s.newTeleportInstance()
+	siriusec := s.newTeleportInstance()
 
 	// use passed logins, but use suite's default login if nothing was passed
 	if len(logins) == 0 {
 		logins = []string{s.me.Username}
 	}
 	for _, login := range logins {
-		teleport.AddUser(login, []string{login})
+		siriusec.AddUser(login, []string{login})
 	}
 
-	// create a new teleport instance with passed in configuration
-	if err := teleport.CreateEx(t, instanceSecrets, teleportConfig); err != nil {
+	// create a new siriusec instance with passed in configuration
+	if err := siriusec.CreateEx(t, instanceSecrets, teleportConfig); err != nil {
 		t.Fatalf("Unexpected response from CreateEx: %v", trace.DebugReport(err))
 	}
-	if err := teleport.Start(); err != nil {
+	if err := siriusec.Start(); err != nil {
 		t.Fatalf("Unexpected response from Start: %v", trace.DebugReport(err))
 	}
 
-	return teleport
+	return siriusec
 }
 
 // TestIntegrations acts as the master test suite for all integration tests
@@ -230,7 +230,7 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 		auditSessionsURI string
 	}{
 		{
-			comment:          "normal teleport",
+			comment:          "normal siriusec",
 			inRecordLocation: types.RecordAtNode,
 			inForwardAgent:   false,
 		}, {
@@ -238,7 +238,7 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 			inRecordLocation: types.RecordAtProxy,
 			inForwardAgent:   true,
 		}, {
-			comment:          "normal teleport with upload to file server",
+			comment:          "normal siriusec with upload to file server",
 			inRecordLocation: types.RecordAtNode,
 			inForwardAgent:   false,
 			auditSessionsURI: t.TempDir(),
@@ -247,7 +247,7 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 			inForwardAgent:   false,
 			auditSessionsURI: t.TempDir(),
 		}, {
-			comment:          "normal teleport, sync recording",
+			comment:          "normal siriusec, sync recording",
 			inRecordLocation: types.RecordAtNodeSync,
 			inForwardAgent:   false,
 		}, {
@@ -280,8 +280,8 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 				tconf.SSH.Enabled = true
 				return t, nil, nil, tconf
 			}
-			teleport := suite.newTeleportWithConfig(makeConfig())
-			defer teleport.StopAll()
+			siriusec := suite.newTeleportWithConfig(makeConfig())
+			defer siriusec.StopAll()
 
 			// Start a node.
 			nodeSSHPort := ports.PopInt()
@@ -292,15 +292,15 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 				tconf.Hostname = "node"
 
 				tconf.SSH.Enabled = true
-				tconf.SSH.Addr.Addr = net.JoinHostPort(teleport.Hostname, fmt.Sprintf("%v", nodeSSHPort))
+				tconf.SSH.Addr.Addr = net.JoinHostPort(siriusec.Hostname, fmt.Sprintf("%v", nodeSSHPort))
 
 				return tconf
 			}
-			nodeProcess, err := teleport.StartNode(nodeConfig())
+			nodeProcess, err := siriusec.StartNode(nodeConfig())
 			require.NoError(t, err)
 
 			// get access to a authClient for the cluster
-			site := teleport.GetSiteAPI(Site)
+			site := siriusec.GetSiteAPI(Site)
 			require.NotNil(t, site)
 
 			// wait 10 seconds for both nodes to show up, otherwise
@@ -335,7 +335,7 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 			endC := make(chan error)
 			myTerm := NewTerminal(250)
 			go func() {
-				cl, err := teleport.NewClient(t, ClientConfig{
+				cl, err := siriusec.NewClient(t, ClientConfig{
 					Login:        suite.me.Username,
 					Cluster:      Site,
 					Host:         Host,
@@ -389,7 +389,7 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 		loop:
 			for {
 				select {
-				case event := <-teleport.UploadEventsC:
+				case event := <-siriusec.UploadEventsC:
 					if event.SessionID != string(session.ID) {
 						t.Logf("Skipping mismatching session %v, expecting upload of %v.", event.SessionID, session.ID)
 						continue
@@ -505,7 +505,7 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 			// SessionServerID should be that of the proxy.
 			expectedServerID := nodeProcess.Config.HostUUID
 			if services.IsRecordAtProxy(tt.inRecordLocation) {
-				expectedServerID = teleport.Process.Config.HostUUID
+				expectedServerID = siriusec.Process.Config.HostUUID
 			}
 			require.Equal(t, expectedServerID, start.GetString(events.SessionServerID))
 
@@ -538,7 +538,7 @@ func testAuditOn(t *testing.T, suite *integrationTestSuite) {
 	}
 }
 
-// testInteroperability checks if Teleport and OpenSSH behave in the same way
+// testInteroperability checks if Siriusec and OpenSSH behave in the same way
 // when executing commands.
 func testInteroperability(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
@@ -547,9 +547,9 @@ func testInteroperability(t *testing.T, suite *integrationTestSuite) {
 	tempdir := t.TempDir()
 	tempfile := filepath.Join(tempdir, "file.txt")
 
-	// create new teleport server that will be used by all tests
-	teleport := suite.newTeleport(t, nil, true)
-	defer teleport.StopAll()
+	// create new siriusec server that will be used by all tests
+	siriusec := suite.newTeleport(t, nil, true)
+	defer siriusec.StopAll()
 
 	var tests = []struct {
 		inCommand   string
@@ -585,8 +585,8 @@ func testInteroperability(t *testing.T, suite *integrationTestSuite) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			// create new teleport client
-			cl, err := teleport.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: Site, Host: Host, Port: teleport.GetPortSSHInt()})
+			// create new siriusec client
+			cl, err := siriusec.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: Site, Host: Host, Port: siriusec.GetPortSSHInt()})
 			require.NoError(t, err)
 
 			// hook up stdin and stdout to a buffer for reading and writing
@@ -620,7 +620,7 @@ func testInteroperability(t *testing.T, suite *integrationTestSuite) {
 	}
 }
 
-// TestMain will re-execute Teleport to run a command if "exec" is passed to
+// TestMain will re-execute Siriusec to run a command if "exec" is passed to
 // it as an argument. Otherwise it will run tests as normal.
 func TestMain(m *testing.M) {
 	utils.InitLoggerForTests()
@@ -637,33 +637,33 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// newUnstartedTeleport helper returns a created but not started Teleport instance pre-configured
+// newUnstartedTeleport helper returns a created but not started Siriusec instance pre-configured
 // with the current user os.user.Current().
 func (s *integrationTestSuite) newUnstartedTeleport(t *testing.T, logins []string, enableSSH bool) *TeleInstance {
-	teleport := s.newTeleportInstance()
+	siriusec := s.newTeleportInstance()
 	// use passed logins, but use suite's default login if nothing was passed
 	if len(logins) == 0 {
 		logins = []string{s.me.Username}
 	}
 	for _, login := range logins {
-		teleport.AddUser(login, []string{login})
+		siriusec.AddUser(login, []string{login})
 	}
-	require.NoError(t, teleport.Create(t, nil, enableSSH, nil))
-	return teleport
+	require.NoError(t, siriusec.Create(t, nil, enableSSH, nil))
+	return siriusec
 }
 
-// newTeleport helper returns a running Teleport instance pre-configured
+// newTeleport helper returns a running Siriusec instance pre-configured
 // with the current user os.user.Current().
 func (s *integrationTestSuite) newTeleport(t *testing.T, logins []string, enableSSH bool) *TeleInstance {
-	teleport := s.newUnstartedTeleport(t, logins, enableSSH)
-	require.NoError(t, teleport.Start())
-	return teleport
+	siriusec := s.newUnstartedTeleport(t, logins, enableSSH)
+	require.NoError(t, siriusec.Start())
+	return siriusec
 }
 
-// newTeleportIoT helper returns a running Teleport instance with Host as a
+// newTeleportIoT helper returns a running Siriusec instance with Host as a
 // reversetunnel node.
 func (s *integrationTestSuite) newTeleportIoT(t *testing.T, logins []string) *TeleInstance {
-	// Create a Teleport instance with Auth/Proxy.
+	// Create a Siriusec instance with Auth/Proxy.
 	mainConfig := func() *service.Config {
 		tconf := s.defaultServiceConfig()
 		tconf.Auth.Enabled = true
@@ -678,7 +678,7 @@ func (s *integrationTestSuite) newTeleportIoT(t *testing.T, logins []string) *Te
 	}
 	main := s.newTeleportWithConfig(t, logins, nil, mainConfig())
 
-	// Create a Teleport instance with a Node.
+	// Create a Siriusec instance with a Node.
 	nodeConfig := func() *service.Config {
 		tconf := s.defaultServiceConfig()
 		tconf.Hostname = Host
@@ -721,7 +721,7 @@ func testUUIDBasedProxy(t *testing.T, suite *integrationTestSuite) {
 
 	site := teleportSvr.GetSiteAPI(Site)
 
-	// addNode adds a node to the teleport instance, returning its uuid.
+	// addNode adds a node to the siriusec instance, returning its uuid.
 	// All nodes added this way have the same hostname.
 	addNode := func() (string, error) {
 		nodeSSHPort := ports.PopInt()
@@ -793,15 +793,15 @@ func testUUIDBasedProxy(t *testing.T, suite *integrationTestSuite) {
 }
 
 // testInteractive covers SSH into shell and joining the same session from another client
-// against a standard teleport node.
+// against a standard siriusec node.
 func testInteractiveRegular(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
 	defer tr.Stop()
 
-	teleport := suite.newTeleport(t, nil, true)
-	defer teleport.StopAll()
+	siriusec := suite.newTeleport(t, nil, true)
+	defer siriusec.StopAll()
 
-	verifySessionJoin(t, suite.me.Username, teleport)
+	verifySessionJoin(t, suite.me.Username, siriusec)
 }
 
 // TestInteractiveReverseTunnel covers SSH into shell and joining the same session from another client
@@ -814,10 +814,10 @@ func testInteractiveReverseTunnel(t *testing.T, suite *integrationTestSuite) {
 	lib.SetInsecureDevMode(true)
 	defer lib.SetInsecureDevMode(false)
 
-	teleport := suite.newTeleportIoT(t, nil)
-	defer teleport.StopAll()
+	siriusec := suite.newTeleportIoT(t, nil)
+	defer siriusec.StopAll()
 
-	verifySessionJoin(t, suite.me.Username, teleport)
+	verifySessionJoin(t, suite.me.Username, siriusec)
 }
 
 // TestCustomReverseTunnel tests that the SSH node falls back to configured
@@ -838,7 +838,7 @@ func testCustomReverseTunnel(t *testing.T, suite *integrationTestSuite) {
 	failingAddr := failingListener.Addr().String()
 	failingListener.Close()
 
-	// Create a Teleport instance with Auth/Proxy.
+	// Create a Siriusec instance with Auth/Proxy.
 	conf := suite.defaultServiceConfig()
 	conf.Auth.Enabled = true
 	conf.Proxy.Enabled = true
@@ -863,7 +863,7 @@ func testCustomReverseTunnel(t *testing.T, suite *integrationTestSuite) {
 	require.NoError(t, main.Start())
 	defer main.StopAll()
 
-	// Create a Teleport instance with a Node.
+	// Create a Siriusec instance with a Node.
 	nodeConf := suite.defaultServiceConfig()
 	nodeConf.Hostname = Host
 	nodeConf.Token = "token"
@@ -879,9 +879,9 @@ func testCustomReverseTunnel(t *testing.T, suite *integrationTestSuite) {
 }
 
 // verifySessionJoin covers SSH into shell and joining the same session from another client
-func verifySessionJoin(t *testing.T, username string, teleport *TeleInstance) {
+func verifySessionJoin(t *testing.T, username string, siriusec *TeleInstance) {
 	// get a reference to site obj:
-	site := teleport.GetSiteAPI(Site)
+	site := siriusec.GetSiteAPI(Site)
 	require.NotNil(t, site)
 
 	personA := NewTerminal(250)
@@ -890,7 +890,7 @@ func verifySessionJoin(t *testing.T, username string, teleport *TeleInstance) {
 	// PersonA: SSH into the server, wait one second, then type some commands on stdin:
 	sessionA := make(chan error)
 	openSession := func() {
-		cl, err := teleport.NewClient(t, ClientConfig{Login: username, Cluster: Site, Host: Host})
+		cl, err := siriusec.NewClient(t, ClientConfig{Login: username, Cluster: Site, Host: Host})
 		if err != nil {
 			sessionA <- trace.Wrap(err)
 			return
@@ -914,7 +914,7 @@ func verifySessionJoin(t *testing.T, username string, teleport *TeleInstance) {
 		}
 
 		sessionID := string(sessions[0].ID)
-		cl, err := teleport.NewClient(t, ClientConfig{Login: username, Cluster: Site, Host: Host})
+		cl, err := siriusec.NewClient(t, ClientConfig{Login: username, Cluster: Site, Host: Host})
 		if err != nil {
 			sessionB <- trace.Wrap(err)
 			return
@@ -963,10 +963,10 @@ func testShutdown(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
 	defer tr.Stop()
 
-	teleport := suite.newTeleport(t, nil, true)
+	siriusec := suite.newTeleport(t, nil, true)
 
 	// get a reference to site obj:
-	site := teleport.GetSiteAPI(Site)
+	site := siriusec.GetSiteAPI(Site)
 	require.NotNil(t, site)
 
 	person := NewTerminal(250)
@@ -976,7 +976,7 @@ func testShutdown(t *testing.T, suite *integrationTestSuite) {
 
 	// PersonA: SSH into the server, wait one second, then type some commands on stdin:
 	openSession := func() {
-		cl, err := teleport.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: Site, Host: Host, Port: teleport.GetPortSSHInt()})
+		cl, err := siriusec.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: Site, Host: Host, Port: siriusec.GetPortSSHInt()})
 		require.NoError(t, err)
 		cl.Stdout = person
 		cl.Stdin = person
@@ -1019,7 +1019,7 @@ func testShutdown(t *testing.T, suite *integrationTestSuite) {
 
 	// initiate shutdown
 	ctx := context.TODO()
-	shutdownContext := teleport.Process.StartShutdown(ctx)
+	shutdownContext := siriusec.Process.StartShutdown(ctx)
 
 	// make sure that terminal still works
 	retry("echo howdy \r\n", ".*howdy.*")
@@ -1128,8 +1128,8 @@ func testDisconnectScenarios(t *testing.T, suite *integrationTestSuite) {
 			sessCtlTimeout:    500 * time.Millisecond,
 			// use postFunc to wait for the semaphore to be acquired and a session
 			// to be started, then shut down the auth server.
-			postFunc: func(ctx context.Context, t *testing.T, teleport *TeleInstance) {
-				site := teleport.GetSiteAPI(Site)
+			postFunc: func(ctx context.Context, t *testing.T, siriusec *TeleInstance) {
+				site := siriusec.GetSiteAPI(Site)
 				var sems []types.Semaphore
 				var err error
 				for i := 0; i < 6; i++ {
@@ -1154,7 +1154,7 @@ func testDisconnectScenarios(t *testing.T, suite *integrationTestSuite) {
 				ss, err := waitForSessionToBeEstablished(timeoutCtx, apidefaults.Namespace, site)
 				require.NoError(t, err)
 				require.Len(t, ss, 1)
-				require.Nil(t, teleport.StopAuth(false))
+				require.Nil(t, siriusec.StopAuth(false))
 			},
 		},
 	}
@@ -1167,7 +1167,7 @@ func testDisconnectScenarios(t *testing.T, suite *integrationTestSuite) {
 }
 
 func runDisconnectTest(t *testing.T, suite *integrationTestSuite, tc disconnectTestCase) {
-	teleport := suite.newTeleportInstance()
+	siriusec := suite.newTeleportInstance()
 
 	username := suite.me.Username
 	role, err := types.NewRole("devs", types.RoleSpecV4{
@@ -1177,7 +1177,7 @@ func runDisconnectTest(t *testing.T, suite *integrationTestSuite, tc disconnectT
 		},
 	})
 	require.NoError(t, err)
-	teleport.AddUserWithRole(username, role)
+	siriusec.AddUserWithRole(username, role)
 
 	netConfig, err := types.NewClusterNetworkingConfigFromConfigFile(types.ClusterNetworkingConfigSpecV2{
 		SessionControlTimeout: types.Duration(tc.sessCtlTimeout),
@@ -1198,12 +1198,12 @@ func runDisconnectTest(t *testing.T, suite *integrationTestSuite, tc disconnectT
 	cfg.Proxy.Enabled = true
 	cfg.SSH.Enabled = true
 
-	require.NoError(t, teleport.CreateEx(t, nil, cfg))
-	require.NoError(t, teleport.Start())
-	defer teleport.StopAll()
+	require.NoError(t, siriusec.CreateEx(t, nil, cfg))
+	require.NoError(t, siriusec.Start())
+	defer siriusec.StopAll()
 
 	// get a reference to site obj:
-	site := teleport.GetSiteAPI(Site)
+	site := siriusec.GetSiteAPI(Site)
 	require.NotNil(t, site)
 
 	ctx, cancel := context.WithCancel(context.TODO())
@@ -1221,7 +1221,7 @@ func runDisconnectTest(t *testing.T, suite *integrationTestSuite, tc disconnectT
 
 		openSession := func() {
 			defer cancel()
-			cl, err := teleport.NewClient(t, ClientConfig{Login: username, Cluster: Site, Host: Host, Port: teleport.GetPortSSHInt()})
+			cl, err := siriusec.NewClient(t, ClientConfig{Login: username, Cluster: Site, Host: Host, Port: siriusec.GetPortSSHInt()})
 			require.NoError(t, err)
 			cl.Stdout = person
 			cl.Stdin = person
@@ -1256,8 +1256,8 @@ func runDisconnectTest(t *testing.T, suite *integrationTestSuite, tc disconnectT
 	}
 
 	if tc.postFunc != nil {
-		// test case modifies the teleport instance after session start
-		tc.postFunc(ctx, t, teleport)
+		// test case modifies the siriusec instance after session start
+		tc.postFunc(ctx, t, siriusec)
 	}
 
 	select {
@@ -1320,14 +1320,14 @@ func testEnvironmentVariables(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
 	defer tr.Stop()
 
-	teleport := suite.newTeleport(t, nil, true)
-	defer teleport.StopAll()
+	siriusec := suite.newTeleport(t, nil, true)
+	defer siriusec.StopAll()
 
 	testKey, testVal := "TELEPORT_TEST_ENV", "howdy"
 	cmd := []string{"printenv", testKey}
 
 	// make sure sessions set run command
-	tc, err := teleport.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: Site, Host: Host, Port: teleport.GetPortSSHInt()})
+	tc, err := siriusec.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: Site, Host: Host, Port: siriusec.GetPortSSHInt()})
 	require.NoError(t, err)
 
 	tc.Env = map[string]string{testKey: testVal}
@@ -1346,19 +1346,19 @@ func testInvalidLogins(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
 	defer tr.Stop()
 
-	teleport := suite.newTeleport(t, nil, true)
-	defer teleport.StopAll()
+	siriusec := suite.newTeleport(t, nil, true)
+	defer siriusec.StopAll()
 
 	cmd := []string{"echo", "success"}
 
 	// try the wrong site:
-	tc, err := teleport.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: "wrong-site", Host: Host, Port: teleport.GetPortSSHInt()})
+	tc, err := siriusec.NewClient(t, ClientConfig{Login: suite.me.Username, Cluster: "wrong-site", Host: Host, Port: siriusec.GetPortSSHInt()})
 	require.NoError(t, err)
 	err = tc.SSH(context.TODO(), cmd, false)
 	require.Regexp(t, "cluster wrong-site not found", err.Error())
 }
 
-// TestTwoClustersTunnel creates two teleport clusters: "a" and "b" and creates a
+// TestTwoClustersTunnel creates two siriusec clusters: "a" and "b" and creates a
 // tunnel from A to B.
 //
 // Two tests are run, first is when both A and B record sessions at nodes. It
@@ -1366,7 +1366,7 @@ func testInvalidLogins(t *testing.T, suite *integrationTestSuite) {
 // to B via B<->A tunnel. All sessions should end up in A.
 //
 // In the second test, sessions are recorded at B. All sessions still show up on
-// A (they are Teleport nodes) but in addition, two show up on B when connecting
+// A (they are Siriusec nodes) but in addition, two show up on B when connecting
 // over the B<->A tunnel because sessions are recorded at the proxy.
 func testTwoClustersTunnel(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
@@ -1379,7 +1379,7 @@ func testTwoClustersTunnel(t *testing.T, suite *integrationTestSuite) {
 		outExecCountSiteA int
 		outExecCountSiteB int
 	}{
-		// normal teleport. since all events are recorded at the node, all events
+		// normal siriusec. since all events are recorded at the node, all events
 		// end up on site-a and none on site-b.
 		{
 			types.RecordAtNode,
@@ -1387,7 +1387,7 @@ func testTwoClustersTunnel(t *testing.T, suite *integrationTestSuite) {
 			0,
 		},
 		// recording proxy. since events are recorded at the proxy, 3 events end up
-		// on site-a (because it's a teleport node so it still records at the node)
+		// on site-a (because it's a siriusec node so it still records at the node)
 		// and 2 events end up on site-b because it's recording.
 		{
 			types.RecordAtProxy,
@@ -2307,7 +2307,7 @@ func testTrustedTunnelNode(t *testing.T, suite *integrationTestSuite) {
 	tryCreateTrustedCluster(t, aux.Process.GetAuthServer(), trustedCluster)
 	waitForTunnelConnections(t, main.Process.GetAuthServer(), clusterAux, 1)
 
-	// Create a Teleport instance with a node that dials back to the aux cluster.
+	// Create a Siriusec instance with a node that dials back to the aux cluster.
 	tunnelNodeHostname := "cluster-aux-node"
 	nodeConfig := func() *service.Config {
 		tconf := suite.defaultServiceConfig()
@@ -2664,7 +2664,7 @@ func testDiscoveryNode(t *testing.T, suite *integrationTestSuite) {
 	go lb.Serve()
 	defer lb.Close()
 
-	// Create a Teleport instance with Auth/Proxy.
+	// Create a Siriusec instance with Auth/Proxy.
 	mainConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 		tconf := suite.defaultServiceConfig()
 
@@ -2687,7 +2687,7 @@ func testDiscoveryNode(t *testing.T, suite *integrationTestSuite) {
 	main := suite.newTeleportWithConfig(mainConfig())
 	defer main.StopAll()
 
-	// Create a Teleport instance with a Proxy.
+	// Create a Siriusec instance with a Proxy.
 	nodePorts := ports.PopIntSlice(3)
 	proxyReverseTunnelPort, proxyWebPort, proxySSHPort := nodePorts[0], nodePorts[1], nodePorts[2]
 	proxyConfig := ProxyConfig{
@@ -2704,7 +2704,7 @@ func testDiscoveryNode(t *testing.T, suite *integrationTestSuite) {
 	proxyTwoBackend := utils.MustParseAddr(net.JoinHostPort(Loopback, strconv.Itoa(proxyReverseTunnelPort)))
 	lb.AddBackend(*proxyTwoBackend)
 
-	// Create a Teleport instance with a Node.
+	// Create a Siriusec instance with a Node.
 	nodeConfig := func() *service.Config {
 		tconf := suite.defaultServiceConfig()
 		tconf.Hostname = "cluster-main-node"
@@ -2862,7 +2862,7 @@ func waitForTunnelConnections(t *testing.T, authServer *auth.Server, clusterName
 	require.Len(t, conns, expectedCount)
 }
 
-// TestExternalClient tests if we can connect to a node in a Teleport
+// TestExternalClient tests if we can connect to a node in a Siriusec
 // cluster. Both normal and recording proxies are tested.
 func testExternalClient(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
@@ -2895,7 +2895,7 @@ func testExternalClient(t *testing.T, suite *integrationTestSuite) {
 			outExecOutput:    "hello",
 		},
 		// Record at the node, don't forward agent, will work. This is the normal
-		// Teleport mode of operation.
+		// Siriusec mode of operation.
 		{
 			desc:             "Record at Node without Agent Forwarding",
 			inRecordLocation: types.RecordAtNode,
@@ -2927,7 +2927,7 @@ func testExternalClient(t *testing.T, suite *integrationTestSuite) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			// Create a Teleport instance with auth, proxy, and node.
+			// Create a Siriusec instance with auth, proxy, and node.
 			makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 				recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 					Mode: tt.inRecordLocation,
@@ -2946,14 +2946,14 @@ func testExternalClient(t *testing.T, suite *integrationTestSuite) {
 
 				return t, nil, nil, tconf
 			}
-			teleport := suite.newTeleportWithConfig(makeConfig())
-			defer teleport.StopAll()
+			siriusec := suite.newTeleportWithConfig(makeConfig())
+			defer siriusec.StopAll()
 
 			// Start (and defer close) a agent that runs during this integration test.
 			teleAgent, socketDirPath, socketPath, err := createAgent(
 				suite.me,
-				teleport.Secrets.Users[suite.me.Username].Key.Priv,
-				teleport.Secrets.Users[suite.me.Username].Key.Cert)
+				siriusec.Secrets.Users[suite.me.Username].Key.Priv,
+				siriusec.Secrets.Users[suite.me.Username].Key.Cert)
 			require.NoError(t, err)
 			defer closeAgent(teleAgent, socketDirPath)
 
@@ -2961,8 +2961,8 @@ func testExternalClient(t *testing.T, suite *integrationTestSuite) {
 			execCmd, err := externalSSHCommand(commandOptions{
 				forwardAgent: tt.inForwardAgent,
 				socketPath:   socketPath,
-				proxyPort:    teleport.GetPortProxy(),
-				nodePort:     teleport.GetPortSSH(),
+				proxyPort:    siriusec.GetPortProxy(),
+				nodePort:     siriusec.GetPortSSH(),
 				command:      tt.inCommand,
 			})
 			require.NoError(t, err)
@@ -3003,23 +3003,23 @@ func testControlMaster(t *testing.T, suite *integrationTestSuite) {
 	var tests = []struct {
 		inRecordLocation string
 	}{
-		// Run tests when Teleport is recording sessions at the node.
+		// Run tests when Siriusec is recording sessions at the node.
 		{
 			inRecordLocation: types.RecordAtNode,
 		},
-		// Run tests when Teleport is recording sessions at the proxy.
+		// Run tests when Siriusec is recording sessions at the proxy.
 		{
 			inRecordLocation: types.RecordAtProxy,
 		},
 	}
 
 	for _, tt := range tests {
-		controlDir, err := ioutil.TempDir("", "teleport-")
+		controlDir, err := ioutil.TempDir("", "siriusec-")
 		require.NoError(t, err)
 		defer os.RemoveAll(controlDir)
 		controlPath := filepath.Join(controlDir, "control-path")
 
-		// Create a Teleport instance with auth, proxy, and node.
+		// Create a Siriusec instance with auth, proxy, and node.
 		makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 			recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 				Mode: tt.inRecordLocation,
@@ -3038,14 +3038,14 @@ func testControlMaster(t *testing.T, suite *integrationTestSuite) {
 
 			return t, nil, nil, tconf
 		}
-		teleport := suite.newTeleportWithConfig(makeConfig())
-		defer teleport.StopAll()
+		siriusec := suite.newTeleportWithConfig(makeConfig())
+		defer siriusec.StopAll()
 
 		// Start (and defer close) a agent that runs during this integration test.
 		teleAgent, socketDirPath, socketPath, err := createAgent(
 			suite.me,
-			teleport.Secrets.Users[suite.me.Username].Key.Priv,
-			teleport.Secrets.Users[suite.me.Username].Key.Cert)
+			siriusec.Secrets.Users[suite.me.Username].Key.Priv,
+			siriusec.Secrets.Users[suite.me.Username].Key.Cert)
 		require.NoError(t, err)
 		defer closeAgent(teleAgent, socketDirPath)
 
@@ -3058,8 +3058,8 @@ func testControlMaster(t *testing.T, suite *integrationTestSuite) {
 				forwardAgent: true,
 				controlPath:  controlPath,
 				socketPath:   socketPath,
-				proxyPort:    teleport.GetPortProxy(),
-				nodePort:     teleport.GetPortSSH(),
+				proxyPort:    siriusec.GetPortProxy(),
+				nodePort:     siriusec.GetPortSSH(),
 				command:      "echo hello",
 			})
 			require.NoError(t, err)
@@ -3119,7 +3119,7 @@ func testProxyHostKeyCheck(t *testing.T, suite *integrationTestSuite) {
 			require.NoError(t, err)
 			defer sshNode.Stop()
 
-			// create a teleport instance with auth, proxy, and node
+			// create a siriusec instance with auth, proxy, and node
 			makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 				recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 					Mode:                types.RecordAtProxy,
@@ -3137,10 +3137,10 @@ func testProxyHostKeyCheck(t *testing.T, suite *integrationTestSuite) {
 
 				return t, nil, nil, tconf
 			}
-			teleport := suite.newTeleportWithConfig(makeConfig())
-			defer teleport.StopAll()
+			siriusec := suite.newTeleportWithConfig(makeConfig())
+			defer siriusec.StopAll()
 
-			// create a teleport client and exec a command
+			// create a siriusec client and exec a command
 			clientConfig := ClientConfig{
 				Login:        suite.me.Username,
 				Cluster:      Site,
@@ -3148,7 +3148,7 @@ func testProxyHostKeyCheck(t *testing.T, suite *integrationTestSuite) {
 				Port:         nodePort,
 				ForwardAgent: true,
 			}
-			_, err = runCommand(t, teleport, []string{"echo hello"}, clientConfig, 1)
+			_, err = runCommand(t, siriusec, []string{"echo hello"}, clientConfig, 1)
 
 			// check if we were able to exec the command or not
 			if tt.outError {
@@ -3168,7 +3168,7 @@ func testAuditOff(t *testing.T, suite *integrationTestSuite) {
 
 	var err error
 
-	// create a teleport instance with auth, proxy, and node
+	// create a siriusec instance with auth, proxy, and node
 	makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 		recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 			Mode: types.RecordOff,
@@ -3187,11 +3187,11 @@ func testAuditOff(t *testing.T, suite *integrationTestSuite) {
 
 		return t, nil, nil, tconf
 	}
-	teleport := suite.newTeleportWithConfig(makeConfig())
-	defer teleport.StopAll()
+	siriusec := suite.newTeleportWithConfig(makeConfig())
+	defer siriusec.StopAll()
 
 	// get access to a authClient for the cluster
-	site := teleport.GetSiteAPI(Site)
+	site := siriusec.GetSiteAPI(Site)
 	require.NotNil(t, site)
 
 	// should have no sessions in it to start with
@@ -3203,11 +3203,11 @@ func testAuditOff(t *testing.T, suite *integrationTestSuite) {
 
 	myTerm := NewTerminal(250)
 	go func() {
-		cl, err := teleport.NewClient(t, ClientConfig{
+		cl, err := siriusec.NewClient(t, ClientConfig{
 			Login:   suite.me.Username,
 			Cluster: Site,
 			Host:    Host,
-			Port:    teleport.GetPortSSHInt(),
+			Port:    siriusec.GetPortSSHInt(),
 		})
 		require.NoError(t, err)
 		cl.Stdout = myTerm
@@ -3253,7 +3253,7 @@ func testAuditOff(t *testing.T, suite *integrationTestSuite) {
 	require.Error(t, err)
 }
 
-// testPAM checks that Teleport PAM integration works correctly. In this case
+// testPAM checks that Siriusec PAM integration works correctly. In this case
 // that means if the account and session modules return success, the user
 // should be allowed to log in. If either the account or session module does
 // not return success, the user should not be able to log in.
@@ -3266,7 +3266,7 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 	// been built with PAM support and the system running the tests must have
 	// libpam installed, and have the policy files installed. This test is
 	// always run in a container as part of the CI/CD pipeline. To run this
-	// test locally, install the pam_teleport.so module by running 'sudo make
+	// test locally, install the pam_siriusec.so module by running 'sudo make
 	// install' from the build.assets/pam/ directory. This will install the PAM
 	// module as well as the policy files.
 	if !pam.BuildHasPAM() || !pam.SystemHasPAM() || !hasPAMPolicy() {
@@ -3295,7 +3295,7 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 		{
 			desc:          "Enabled with Module Account & Session functions succeeding",
 			inEnabled:     true,
-			inServiceName: "teleport-success",
+			inServiceName: "siriusec-success",
 			inUsePAMAuth:  true,
 			outContains: []string{
 				"pam_sm_acct_mgmt OK",
@@ -3308,7 +3308,7 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 		{
 			desc:          "Enabled with Module & Session functions succeeding",
 			inEnabled:     true,
-			inServiceName: "teleport-success",
+			inServiceName: "siriusec-success",
 			inUsePAMAuth:  false,
 			outContains: []string{
 				"pam_sm_acct_mgmt OK",
@@ -3320,7 +3320,7 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 		{
 			desc:          "Enabled with all functions failing",
 			inEnabled:     true,
-			inServiceName: "teleport-acct-failure",
+			inServiceName: "siriusec-acct-failure",
 			inUsePAMAuth:  true,
 			outContains:   []string{},
 		},
@@ -3328,7 +3328,7 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 		{
 			desc:          "Enabled with Module & Session functions failing",
 			inEnabled:     true,
-			inServiceName: "teleport-session-failure",
+			inServiceName: "siriusec-session-failure",
 			inUsePAMAuth:  true,
 			outContains:   []string{},
 		},
@@ -3336,7 +3336,7 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 		{
 			desc:          "Enabled with custom environment",
 			inEnabled:     true,
-			inServiceName: "teleport-custom-env",
+			inServiceName: "siriusec-custom-env",
 			inUsePAMAuth:  false,
 			outContains: []string{
 				"pam_sm_acct_mgmt OK",
@@ -3354,7 +3354,7 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			// Create a teleport instance with auth, proxy, and node.
+			// Create a siriusec instance with auth, proxy, and node.
 			makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 				tconf := suite.defaultServiceConfig()
 				tconf.Auth.Enabled = true
@@ -3371,19 +3371,19 @@ func testPAM(t *testing.T, suite *integrationTestSuite) {
 
 				return t, nil, nil, tconf
 			}
-			teleport := suite.newTeleportWithConfig(makeConfig())
-			defer teleport.StopAll()
+			siriusec := suite.newTeleportWithConfig(makeConfig())
+			defer siriusec.StopAll()
 
 			termSession := NewTerminal(250)
 
 			// Create an interactive session and write something to the terminal.
 			ctx, cancel := context.WithCancel(context.Background())
 			go func() {
-				cl, err := teleport.NewClient(t, ClientConfig{
+				cl, err := siriusec.NewClient(t, ClientConfig{
 					Login:   suite.me.Username,
 					Cluster: Site,
 					Host:    Host,
-					Port:    teleport.GetPortSSHInt(),
+					Port:    siriusec.GetPortSSHInt(),
 				})
 				require.NoError(t, err)
 
@@ -3427,24 +3427,24 @@ func testRotateSuccess(t *testing.T, suite *integrationTestSuite) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	teleport := suite.newTeleportInstance()
-	defer teleport.StopAll()
+	siriusec := suite.newTeleportInstance()
+	defer siriusec.StopAll()
 
 	logins := []string{suite.me.Username}
 	for _, login := range logins {
-		teleport.AddUser(login, []string{login})
+		siriusec.AddUser(login, []string{login})
 	}
 
 	tconf := suite.rotationConfig(true)
-	config, err := teleport.GenerateConfig(t, nil, tconf)
+	config, err := siriusec.GenerateConfig(t, nil, tconf)
 	require.NoError(t, err)
 
-	serviceC := make(chan *service.TeleportProcess, 20)
+	serviceC := make(chan *service.SiriusecProcess, 20)
 
 	runErrCh := make(chan error, 1)
 	go func() {
 		runErrCh <- service.Run(ctx, *config, func(cfg *service.Config) (service.Process, error) {
-			svc, err := service.NewTeleport(cfg)
+			svc, err := service.NewSiriusec(cfg)
 			if err == nil {
 				serviceC <- svc
 			}
@@ -3478,7 +3478,7 @@ func testRotateSuccess(t *testing.T, suite *integrationTestSuite) {
 	t.Logf("Cert authority: %v", auth.CertAuthorityInfo(hostCA))
 
 	// wait until service phase update to be broadcasted (init phase does not trigger reload)
-	err = waitForProcessEvent(svc, service.TeleportPhaseChangeEvent, 10*time.Second)
+	err = waitForProcessEvent(svc, service.SiriusecPhaseChangeEvent, 10*time.Second)
 	require.NoError(t, err)
 
 	// update clients
@@ -3497,9 +3497,9 @@ func testRotateSuccess(t *testing.T, suite *integrationTestSuite) {
 		Login:   suite.me.Username,
 		Cluster: Site,
 		Host:    Loopback,
-		Port:    teleport.GetPortSSHInt(),
+		Port:    siriusec.GetPortSSHInt(),
 	}
-	clt, err := teleport.NewClientWithCreds(cfg, *initialCreds)
+	clt, err := siriusec.NewClientWithCreds(cfg, *initialCreds)
 	require.NoError(t, err)
 
 	// client works as is before servers have been rotated
@@ -3528,7 +3528,7 @@ func testRotateSuccess(t *testing.T, suite *integrationTestSuite) {
 	newCreds, err := GenerateUserCreds(UserCredsRequest{Process: svc, Username: suite.me.Username})
 	require.NoError(t, err)
 
-	clt, err = teleport.NewClientWithCreds(cfg, *newCreds)
+	clt, err = siriusec.NewClientWithCreds(cfg, *newCreds)
 	require.NoError(t, err)
 
 	// new client works
@@ -3581,20 +3581,20 @@ func testRotateRollback(t *testing.T, s *integrationTestSuite) {
 	defer cancel()
 
 	tconf := s.rotationConfig(true)
-	teleport := s.newTeleportInstance()
+	siriusec := s.newTeleportInstance()
 	logins := []string{s.me.Username}
 	for _, login := range logins {
-		teleport.AddUser(login, []string{login})
+		siriusec.AddUser(login, []string{login})
 	}
-	config, err := teleport.GenerateConfig(t, nil, tconf)
+	config, err := siriusec.GenerateConfig(t, nil, tconf)
 	require.NoError(t, err)
 
-	serviceC := make(chan *service.TeleportProcess, 20)
+	serviceC := make(chan *service.SiriusecProcess, 20)
 
 	runErrCh := make(chan error, 1)
 	go func() {
 		runErrCh <- service.Run(ctx, *config, func(cfg *service.Config) (service.Process, error) {
-			svc, err := service.NewTeleport(cfg)
+			svc, err := service.NewSiriusec(cfg)
 			if err == nil {
 				serviceC <- svc
 			}
@@ -3622,7 +3622,7 @@ func testRotateRollback(t *testing.T, s *integrationTestSuite) {
 	})
 	require.NoError(t, err)
 
-	err = waitForProcessEvent(svc, service.TeleportPhaseChangeEvent, 10*time.Second)
+	err = waitForProcessEvent(svc, service.SiriusecPhaseChangeEvent, 10*time.Second)
 	require.NoError(t, err)
 
 	t.Logf("Setting rotation state to %q.", types.RotationPhaseUpdateClients)
@@ -3642,9 +3642,9 @@ func testRotateRollback(t *testing.T, s *integrationTestSuite) {
 		Login:   s.me.Username,
 		Cluster: Site,
 		Host:    Loopback,
-		Port:    teleport.GetPortSSHInt(),
+		Port:    siriusec.GetPortSSHInt(),
 	}
-	clt, err := teleport.NewClientWithCreds(cfg, *initialCreds)
+	clt, err := siriusec.NewClientWithCreds(cfg, *initialCreds)
 	require.NoError(t, err)
 
 	// client works as is before servers have been rotated
@@ -3718,11 +3718,11 @@ func testRotateTrustedClusters(t *testing.T, suite *integrationTestSuite) {
 	config, err := main.GenerateConfig(t, nil, tconf)
 	require.NoError(t, err)
 
-	serviceC := make(chan *service.TeleportProcess, 20)
+	serviceC := make(chan *service.SiriusecProcess, 20)
 	runErrCh := make(chan error, 1)
 	go func() {
 		runErrCh <- service.Run(ctx, *config, func(cfg *service.Config) (service.Process, error) {
-			svc, err := service.NewTeleport(cfg)
+			svc, err := service.NewSiriusec(cfg)
 			if err == nil {
 				serviceC <- svc
 			}
@@ -3807,7 +3807,7 @@ func testRotateTrustedClusters(t *testing.T, suite *integrationTestSuite) {
 	require.NoError(t, err)
 
 	// wait until service phase update to be broadcasted (init phase does not trigger reload)
-	err = waitForProcessEvent(svc, service.TeleportPhaseChangeEvent, 10*time.Second)
+	err = waitForProcessEvent(svc, service.SiriusecPhaseChangeEvent, 10*time.Second)
 	require.NoError(t, err)
 
 	// waitForPhase waits until aux cluster detects the rotation
@@ -3919,18 +3919,18 @@ func testRotateTrustedClusters(t *testing.T, suite *integrationTestSuite) {
 func testRotateChangeSigningAlg(t *testing.T, suite *integrationTestSuite) {
 	// Start with an instance using default signing alg.
 	tconf := suite.rotationConfig(true)
-	teleport := suite.newTeleportInstance()
+	siriusec := suite.newTeleportInstance()
 	logins := []string{suite.me.Username}
 	for _, login := range logins {
-		teleport.AddUser(login, []string{login})
+		siriusec.AddUser(login, []string{login})
 	}
-	config, err := teleport.GenerateConfig(t, nil, tconf)
+	config, err := siriusec.GenerateConfig(t, nil, tconf)
 	require.NoError(t, err)
 
-	serviceC := make(chan *service.TeleportProcess, 20)
+	serviceC := make(chan *service.SiriusecProcess, 20)
 	runErrCh := make(chan error, 1)
 
-	restart := func(svc *service.TeleportProcess, cancel func()) (*service.TeleportProcess, func()) {
+	restart := func(svc *service.SiriusecProcess, cancel func()) (*service.SiriusecProcess, func()) {
 		if svc != nil && cancel != nil {
 			// shut down the service
 			cancel()
@@ -3951,7 +3951,7 @@ func testRotateChangeSigningAlg(t *testing.T, suite *integrationTestSuite) {
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
 			runErrCh <- service.Run(ctx, *config, func(cfg *service.Config) (service.Process, error) {
-				svc, err := service.NewTeleport(cfg)
+				svc, err := service.NewSiriusec(cfg)
 				if err == nil {
 					serviceC <- svc
 				}
@@ -3964,7 +3964,7 @@ func testRotateChangeSigningAlg(t *testing.T, suite *integrationTestSuite) {
 		return svc, cancel
 	}
 
-	assertSigningAlg := func(svc *service.TeleportProcess, alg string) {
+	assertSigningAlg := func(svc *service.SiriusecProcess, alg string) {
 		hostCA, err := svc.GetAuthServer().GetCertAuthority(types.CertAuthID{Type: types.HostCA, DomainName: Site}, false)
 		require.NoError(t, err)
 		require.Equal(t, alg, sshutils.GetSigningAlgName(hostCA))
@@ -3974,7 +3974,7 @@ func testRotateChangeSigningAlg(t *testing.T, suite *integrationTestSuite) {
 		require.Equal(t, alg, sshutils.GetSigningAlgName(userCA))
 	}
 
-	rotate := func(svc *service.TeleportProcess, mode string) *service.TeleportProcess {
+	rotate := func(svc *service.SiriusecProcess, mode string) *service.SiriusecProcess {
 		t.Logf("Rotation phase: %q.", types.RotationPhaseInit)
 		err = svc.GetAuthServer().RotateCertAuthority(auth.RotateRequest{
 			TargetPhase: types.RotationPhaseInit,
@@ -3983,7 +3983,7 @@ func testRotateChangeSigningAlg(t *testing.T, suite *integrationTestSuite) {
 		require.NoError(t, err)
 
 		// wait until service phase update to be broadcasted (init phase does not trigger reload)
-		err = waitForProcessEvent(svc, service.TeleportPhaseChangeEvent, 10*time.Second)
+		err = waitForProcessEvent(svc, service.SiriusecPhaseChangeEvent, 10*time.Second)
 		require.NoError(t, err)
 
 		t.Logf("Rotation phase: %q.", types.RotationPhaseUpdateClients)
@@ -4074,7 +4074,7 @@ func (s *integrationTestSuite) rotationConfig(disableWebService bool) *service.C
 }
 
 // waitForProcessEvent waits for process event to occur or timeout
-func waitForProcessEvent(svc *service.TeleportProcess, event string, timeout time.Duration) error {
+func waitForProcessEvent(svc *service.SiriusecProcess, event string, timeout time.Duration) error {
 	eventC := make(chan service.Event, 1)
 	svc.WaitForEvent(context.TODO(), event, eventC)
 	select {
@@ -4086,8 +4086,8 @@ func waitForProcessEvent(svc *service.TeleportProcess, event string, timeout tim
 }
 
 // waitForProcessStart is waiting for the process to start
-func waitForProcessStart(serviceC chan *service.TeleportProcess) (*service.TeleportProcess, error) {
-	var svc *service.TeleportProcess
+func waitForProcessStart(serviceC chan *service.SiriusecProcess) (*service.SiriusecProcess, error) {
+	var svc *service.SiriusecProcess
 	select {
 	case svc = <-serviceC:
 	case <-time.After(1 * time.Minute):
@@ -4103,8 +4103,8 @@ func waitForProcessStart(serviceC chan *service.TeleportProcess) (*service.Telep
 // 2. old service, if present to shut down
 //
 // this helper function allows to serialize tests for reloads.
-func (s *integrationTestSuite) waitForReload(serviceC chan *service.TeleportProcess, old *service.TeleportProcess) (*service.TeleportProcess, error) {
-	var svc *service.TeleportProcess
+func (s *integrationTestSuite) waitForReload(serviceC chan *service.SiriusecProcess, old *service.SiriusecProcess) (*service.SiriusecProcess, error) {
+	var svc *service.SiriusecProcess
 	select {
 	case svc = <-serviceC:
 	case <-time.After(1 * time.Minute):
@@ -4113,7 +4113,7 @@ func (s *integrationTestSuite) waitForReload(serviceC chan *service.TeleportProc
 	}
 
 	eventC := make(chan service.Event, 1)
-	svc.WaitForEvent(context.TODO(), service.TeleportReadyEvent, eventC)
+	svc.WaitForEvent(context.TODO(), service.SiriusecReadyEvent, eventC)
 	select {
 	case <-eventC:
 
@@ -4141,7 +4141,7 @@ func (s *integrationTestSuite) waitForReload(serviceC chan *service.TeleportProc
 }
 
 // runAndMatch runs command and makes sure it matches the pattern
-func runAndMatch(tc *client.TeleportClient, attempts int, command []string, pattern string) error {
+func runAndMatch(tc *client.SiriusecClient, attempts int, command []string, pattern string) error {
 	output := &bytes.Buffer{}
 	tc.Stdout = output
 	var err error
@@ -4163,16 +4163,16 @@ func runAndMatch(tc *client.TeleportClient, attempts int, command []string, patt
 	return err
 }
 
-// TestWindowChange checks if custom Teleport window change requests are sent
+// TestWindowChange checks if custom Siriusec window change requests are sent
 // when the server side PTY changes its size.
 func testWindowChange(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
 	defer tr.Stop()
 
-	teleport := suite.newTeleport(t, nil, true)
-	defer teleport.StopAll()
+	siriusec := suite.newTeleport(t, nil, true)
+	defer siriusec.StopAll()
 
-	site := teleport.GetSiteAPI(Site)
+	site := siriusec.GetSiteAPI(Site)
 	require.NotNil(t, site)
 
 	personA := NewTerminal(250)
@@ -4180,11 +4180,11 @@ func testWindowChange(t *testing.T, suite *integrationTestSuite) {
 
 	// openSession will open a new session on a server.
 	openSession := func() {
-		cl, err := teleport.NewClient(t, ClientConfig{
+		cl, err := siriusec.NewClient(t, ClientConfig{
 			Login:   suite.me.Username,
 			Cluster: Site,
 			Host:    Host,
-			Port:    teleport.GetPortSSHInt(),
+			Port:    siriusec.GetPortSSHInt(),
 		})
 		require.NoError(t, err)
 
@@ -4206,11 +4206,11 @@ func testWindowChange(t *testing.T, suite *integrationTestSuite) {
 		require.NoError(t, err)
 		sessionID := string(sessions[0].ID)
 
-		cl, err := teleport.NewClient(t, ClientConfig{
+		cl, err := siriusec.NewClient(t, ClientConfig{
 			Login:   suite.me.Username,
 			Cluster: Site,
 			Host:    Host,
-			Port:    teleport.GetPortSSHInt(),
+			Port:    siriusec.GetPortSSHInt(),
 		})
 		require.NoError(t, err)
 
@@ -4290,7 +4290,7 @@ func testList(t *testing.T, suite *integrationTestSuite) {
 	tr := utils.NewTracer(utils.ThisFunction()).Start()
 	defer tr.Stop()
 
-	// Create and start a Teleport cluster with auth, proxy, and node.
+	// Create and start a Siriusec cluster with auth, proxy, and node.
 	makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 		recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 			Mode: types.RecordOff,
@@ -4311,27 +4311,27 @@ func testList(t *testing.T, suite *integrationTestSuite) {
 
 		return t, nil, nil, tconf
 	}
-	teleport := suite.newTeleportWithConfig(makeConfig())
-	defer teleport.StopAll()
+	siriusec := suite.newTeleportWithConfig(makeConfig())
+	defer siriusec.StopAll()
 
-	// Create and start a Teleport node.
+	// Create and start a Siriusec node.
 	nodeSSHPort := ports.PopInt()
 	nodeConfig := func() *service.Config {
 		tconf := suite.defaultServiceConfig()
 		tconf.Hostname = "server-02"
 		tconf.SSH.Enabled = true
-		tconf.SSH.Addr.Addr = net.JoinHostPort(teleport.Hostname, fmt.Sprintf("%v", nodeSSHPort))
+		tconf.SSH.Addr.Addr = net.JoinHostPort(siriusec.Hostname, fmt.Sprintf("%v", nodeSSHPort))
 		tconf.SSH.Labels = map[string]string{
 			"role": "database",
 		}
 
 		return tconf
 	}
-	_, err := teleport.StartNode(nodeConfig())
+	_, err := siriusec.StartNode(nodeConfig())
 	require.NoError(t, err)
 
 	// Get an auth client to the cluster.
-	clt := teleport.GetSiteAPI(Site)
+	clt := siriusec.GetSiteAPI(Site)
 	require.NotNil(t, clt)
 
 	// Wait 10 seconds for both nodes to show up to make sure they both have
@@ -4398,18 +4398,18 @@ func testList(t *testing.T, suite *integrationTestSuite) {
 			require.NoError(t, err)
 
 			// Create user, role, and generate credentials.
-			err = SetupUser(teleport.Process, tt.inLogin, []types.Role{role})
+			err = SetupUser(siriusec.Process, tt.inLogin, []types.Role{role})
 			require.NoError(t, err)
-			initialCreds, err := GenerateUserCreds(UserCredsRequest{Process: teleport.Process, Username: tt.inLogin})
+			initialCreds, err := GenerateUserCreds(UserCredsRequest{Process: siriusec.Process, Username: tt.inLogin})
 			require.NoError(t, err)
 
-			// Create a Teleport client.
+			// Create a Siriusec client.
 			cfg := ClientConfig{
 				Login:   tt.inLogin,
 				Cluster: Site,
-				Port:    teleport.GetPortSSHInt(),
+				Port:    siriusec.GetPortSSHInt(),
 			}
-			userClt, err := teleport.NewClientWithCreds(cfg, *initialCreds)
+			userClt, err := siriusec.NewClientWithCreds(cfg, *initialCreds)
 			require.NoError(t, err)
 
 			// Get list of nodes and check that the returned nodes match the
@@ -4436,7 +4436,7 @@ func testCmdLabels(t *testing.T, suite *integrationTestSuite) {
 	lib.SetInsecureDevMode(true)
 	defer lib.SetInsecureDevMode(false)
 
-	// Create and start a Teleport cluster with auth, proxy, and node.
+	// Create and start a Siriusec cluster with auth, proxy, and node.
 	makeConfig := func() *service.Config {
 		recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 			Mode: types.RecordOff,
@@ -4458,8 +4458,8 @@ func testCmdLabels(t *testing.T, suite *integrationTestSuite) {
 
 		return tconf
 	}
-	teleport := suite.newTeleportWithConfig(t, nil, nil, makeConfig())
-	defer teleport.StopAll()
+	siriusec := suite.newTeleportWithConfig(t, nil, nil, makeConfig())
+	defer siriusec.StopAll()
 
 	// Create and start a reversetunnel node.
 	nodeConfig := func() *service.Config {
@@ -4473,7 +4473,7 @@ func testCmdLabels(t *testing.T, suite *integrationTestSuite) {
 
 		return tconf
 	}
-	_, err := teleport.StartReverseTunnelNode(nodeConfig())
+	_, err := siriusec.StartReverseTunnelNode(nodeConfig())
 	require.NoError(t, err)
 
 	// test label patterns that match both nodes, and each
@@ -4512,7 +4512,7 @@ func testCmdLabels(t *testing.T, suite *integrationTestSuite) {
 				Labels:  tt.labels,
 			}
 
-			output, err := runCommand(t, teleport, tt.command, cfg, 1)
+			output, err := runCommand(t, siriusec, tt.command, cfg, 1)
 			require.NoError(t, err)
 			require.Equal(t, tt.expect, output)
 		})
@@ -4528,11 +4528,11 @@ func testDataTransfer(t *testing.T, suite *integrationTestSuite) {
 	KB := 1024
 	MB := 1048576
 
-	// Create a Teleport cluster.
+	// Create a Siriusec cluster.
 	main := suite.newTeleport(t, nil, true)
 	defer main.StopAll()
 
-	// Create a client to the above Teleport cluster.
+	// Create a client to the above Siriusec cluster.
 	clientConfig := ClientConfig{
 		Login:   suite.me.Username,
 		Cluster: Site,
@@ -4606,7 +4606,7 @@ func testBPFInteractive(t *testing.T, suite *integrationTestSuite) {
 			// Create temporary directory where cgroup2 hierarchy will be mounted.
 			dir := t.TempDir()
 
-			// Create and start a Teleport cluster.
+			// Create and start a Siriusec cluster.
 			makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 				recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 					Mode: tt.inSessionRecording,
@@ -4734,7 +4734,7 @@ func testBPFExec(t *testing.T, suite *integrationTestSuite) {
 			// Create temporary directory where cgroup2 hierarchy will be mounted.
 			dir := t.TempDir()
 
-			// Create and start a Teleport cluster.
+			// Create and start a Siriusec cluster.
 			makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 				recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 					Mode: tt.inSessionRecording,
@@ -4766,7 +4766,7 @@ func testBPFExec(t *testing.T, suite *integrationTestSuite) {
 			main := suite.newTeleportWithConfig(makeConfig())
 			defer main.StopAll()
 
-			// Create a client to the above Teleport cluster.
+			// Create a client to the above Siriusec cluster.
 			clientConfig := ClientConfig{
 				Login:   suite.me.Username,
 				Cluster: Site,
@@ -4860,7 +4860,7 @@ func testSSHExitCode(t *testing.T, suite *integrationTestSuite) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			// Create and start a Teleport cluster.
+			// Create and start a Siriusec cluster.
 			makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 				// Create default config.
 				tconf := suite.defaultServiceConfig()
@@ -4937,7 +4937,7 @@ func testBPFSessionDifferentiation(t *testing.T, suite *integrationTestSuite) {
 	// Create temporary directory where cgroup2 hierarchy will be mounted.
 	dir := t.TempDir()
 
-	// Create and start a Teleport cluster.
+	// Create and start a Siriusec cluster.
 	makeConfig := func() (*testing.T, []string, []*InstanceSecrets, *service.Config) {
 		recConfig, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
 			Mode: types.RecordAtNode,
@@ -5048,7 +5048,7 @@ func testExecEvents(t *testing.T, suite *integrationTestSuite) {
 	lsPath, err := exec.LookPath("ls")
 	require.NoError(t, err)
 
-	// Creates new teleport cluster
+	// Creates new siriusec cluster
 	main := suite.newTeleport(t, nil, true)
 	defer main.StopAll()
 
@@ -5102,7 +5102,7 @@ func testSessionStartContainsAccessRequest(t *testing.T, suite *integrationTestS
 	lsPath, err := exec.LookPath("ls")
 	require.NoError(t, err)
 
-	// Creates new teleport cluster
+	// Creates new siriusec cluster
 	main := suite.newTeleport(t, nil, true)
 	defer main.StopAll()
 
@@ -5422,10 +5422,10 @@ func waitForError(c chan error, timeout time.Duration) error {
 // they do it returns true, otherwise returns false.
 func hasPAMPolicy() bool {
 	pamPolicyFiles := []string{
-		"/etc/pam.d/teleport-acct-failure",
-		"/etc/pam.d/teleport-session-failure",
-		"/etc/pam.d/teleport-success",
-		"/etc/pam.d/teleport-custom-env",
+		"/etc/pam.d/siriusec-acct-failure",
+		"/etc/pam.d/siriusec-session-failure",
+		"/etc/pam.d/siriusec-success",
+		"/etc/pam.d/siriusec-custom-env",
 	}
 
 	for _, fileName := range pamPolicyFiles {
@@ -5621,10 +5621,10 @@ func TestTraitsPropagation(t *testing.T) {
 func testSessionStreaming(t *testing.T, suite *integrationTestSuite) {
 	ctx := context.Background()
 	sessionID := session.ID(uuid.New())
-	teleport := suite.newTeleport(t, nil, true)
-	defer teleport.StopAll()
+	siriusec := suite.newTeleport(t, nil, true)
+	defer siriusec.StopAll()
 
-	api := teleport.GetSiteAPI(Site)
+	api := siriusec.GetSiteAPI(Site)
 	uploadStream, err := api.CreateAuditStream(ctx, sessionID)
 	require.Nil(t, err)
 

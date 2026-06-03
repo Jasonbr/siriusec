@@ -166,7 +166,7 @@ type HostCertParams struct {
 	CASigningAlg string
 	// PublicHostKey is the public key of the host
 	PublicHostKey []byte
-	// HostID is used by Teleport to uniquely identify a node within a cluster
+	// HostID is used by Siriusec to uniquely identify a node within a cluster
 	HostID string
 	// Principals is a list of additional principals to add to the certificate.
 	Principals []string
@@ -174,7 +174,7 @@ type HostCertParams struct {
 	NodeName string
 	// ClusterName is the name of the cluster within which a node lives
 	ClusterName string
-	// Roles identifies the roles of a Teleport instance
+	// Roles identifies the roles of a Siriusec instance
 	Roles types.SystemRoles
 	// TTL defines how long a certificate is valid for
 	TTL time.Duration

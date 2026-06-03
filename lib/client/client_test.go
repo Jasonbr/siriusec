@@ -34,7 +34,7 @@ import (
 )
 
 type ClientTestSuite struct {
-	client *TeleportClient
+	client *SiriusecClient
 }
 
 var _ = check.Suite(&ClientTestSuite{})

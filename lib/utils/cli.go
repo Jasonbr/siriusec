@@ -215,7 +215,7 @@ func formatErrorWriter(err error, w io.Writer) {
 	strErr := err.Error()
 	// Error can be of type trace.proxyError where error message didn't get captured.
 	if strErr == "" {
-		fmt.Fprintln(w, "please check Teleport's log for more details")
+		fmt.Fprintln(w, "please check Siriusec's log for more details")
 	} else {
 		fmt.Fprintln(w, AllowNewlines(err.Error()))
 	}
@@ -291,7 +291,7 @@ func Consolef(w io.Writer, log log.FieldLogger, component, msg string, params ..
 }
 
 // InitCLIParser configures kingpin command line args parser with
-// some defaults common for all Teleport CLI tools
+// some defaults common for all Siriusec CLI tools
 func InitCLIParser(appName, appHelp string) (app *kingpin.Application) {
 	app = kingpin.New(appName, appHelp)
 

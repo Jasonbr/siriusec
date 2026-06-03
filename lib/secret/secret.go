@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package secret implements a authenticated encryption with associated data
-// (AEAD) cipher to be used when symmetric is required in Teleport. The
+// (AEAD) cipher to be used when symmetric is required in Siriusec. The
 // underlying cipher is AES-GCM.
 package secret
 

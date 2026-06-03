@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package defaults defines Teleport-specific defaults
+// Package defaults defines Siriusec-specific defaults
 package defaults
 
 import (
@@ -57,7 +57,7 @@ var (
 	// when servers announce only presence without sending full data
 	serverKeepAliveTTL = 60 * time.Second
 
-	// keepAliveInterval is interval at which Teleport will send keep-alive
+	// keepAliveInterval is interval at which Siriusec will send keep-alive
 	// messages to the client. The default interval of 5 minutes (300 seconds) is
 	// set to help keep connections alive when using AWS NLBs (which have a default
 	// timeout of 350 seconds)

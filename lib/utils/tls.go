@@ -144,7 +144,7 @@ func GenerateSelfSignedCert(hostNames []string) (*TLSCredentials, error) {
 	}, nil
 }
 
-// CipherSuiteMapping transforms Teleport formatted cipher suites strings
+// CipherSuiteMapping transforms Siriusec formatted cipher suites strings
 // into uint16 IDs.
 func CipherSuiteMapping(cipherSuites []string) ([]uint16, error) {
 	out := make([]uint16, 0, len(cipherSuites))
@@ -161,7 +161,7 @@ func CipherSuiteMapping(cipherSuites []string) ([]uint16, error) {
 	return out, nil
 }
 
-// cipherSuiteMapping is the mapping between Teleport formatted cipher
+// cipherSuiteMapping is the mapping between Siriusec formatted cipher
 // suites strings and uint16 IDs.
 var cipherSuiteMapping map[string]uint16 = map[string]uint16{
 	"tls-rsa-with-aes-128-cbc-sha":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
@@ -191,7 +191,7 @@ const (
 )
 
 // DefaultCipherSuites returns the default list of cipher suites that
-// Teleport supports. By default Teleport only support modern ciphers
+// Teleport supports. By default Siriusec only support modern ciphers
 // (Chacha20 and AES GCM) and key exchanges which support perfect forward
 // secrecy (ECDHE).
 //

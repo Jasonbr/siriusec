@@ -78,7 +78,7 @@ type TokenCommand struct {
 	// tokenDel is used to delete a token.
 	tokenDel *kingpin.CmdClause
 
-	// tokenList is used to view all tokens that Teleport knows about.
+	// tokenList is used to view all tokens that Siriusec knows about.
 	tokenList *kingpin.CmdClause
 }
 
@@ -128,7 +128,7 @@ func (c *TokenCommand) TryRun(cmd string, client auth.ClientI) (match bool, err 
 
 // Add is called to execute "tokens add ..." command.
 func (c *TokenCommand) Add(client auth.ClientI) error {
-	// Parse string to see if it's a type of role that Teleport supports.
+	// Parse string to see if it's a type of role that Siriusec supports.
 	roles, err := types.ParseTeleportRoles(c.tokenType)
 	if err != nil {
 		return trace.Wrap(err)

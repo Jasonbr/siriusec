@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package types contains all types and logic required by the Teleport API.
+// Package types contains all types and logic required by the Siriusec API.
 
 package services
 

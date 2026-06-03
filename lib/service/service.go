@@ -144,48 +144,48 @@ const (
 	// and is ready to start accepting connections.
 	ProxySSHReady = "ProxySSHReady"
 
-	// NodeSSHReady is generated when the Teleport node has initialized a SSH server
+	// NodeSSHReady is generated when the Siriusec node has initialized a SSH server
 	// and is ready to start accepting SSH connections.
 	NodeSSHReady = "NodeReady"
 
 	// KubernetesReady is generated when the kubernetes service has been initialized.
 	KubernetesReady = "KubernetesReady"
 
-	// AppsReady is generated when the Teleport app proxy service is ready to
+	// AppsReady is generated when the Siriusec app proxy service is ready to
 	// start accepting connections.
 	AppsReady = "AppsReady"
 
-	// DatabasesReady is generated when the Teleport database proxy service
+	// DatabasesReady is generated when the Siriusec database proxy service
 	// is ready to start accepting connections.
 	DatabasesReady = "DatabasesReady"
 
-	// TeleportExitEvent is generated when the Teleport process begins closing
+	// SiriusecExitEvent is generated when the Siriusec process begins closing
 	// all listening sockets and exiting.
-	TeleportExitEvent = "TeleportExit"
+	SiriusecExitEvent = "TeleportExit"
 
-	// TeleportReloadEvent is generated to trigger in-process teleport
+	// SiriusecReloadEvent is generated to trigger in-process teleport
 	// service reload - all servers and clients will be re-created
 	// in a graceful way.
-	TeleportReloadEvent = "TeleportReload"
+	SiriusecReloadEvent = "TeleportReload"
 
-	// TeleportPhaseChangeEvent is generated to indidate that teleport
+	// SiriusecPhaseChangeEvent is generated to indidate that teleport
 	// CA rotation phase has been updated, used in tests
-	TeleportPhaseChangeEvent = "TeleportPhaseChange"
+	SiriusecPhaseChangeEvent = "TeleportPhaseChange"
 
-	// TeleportReadyEvent is generated to signal that all teleport
+	// SiriusecReadyEvent is generated to signal that all teleport
 	// internal components have started successfully.
-	TeleportReadyEvent = "TeleportReady"
+	SiriusecReadyEvent = "TeleportReady"
 
 	// ServiceExitedWithErrorEvent is emitted whenever a service
 	// has exited with an error, the payload includes the error
 	ServiceExitedWithErrorEvent = "ServiceExitedWithError"
 
-	// TeleportDegradedEvent is emitted whenever a service is operating in a
+	// SiriusecDegradedEvent is emitted whenever a service is operating in a
 	// degraded manner.
-	TeleportDegradedEvent = "TeleportDegraded"
+	SiriusecDegradedEvent = "TeleportDegraded"
 
-	// TeleportOKEvent is emitted whenever a service is operating normally.
-	TeleportOKEvent = "TeleportOKEvent"
+	// SiriusecOKEvent is emitted whenever a service is operating normally.
+	SiriusecOKEvent = "SiriusecOKEvent"
 )
 
 // RoleConfig is a configuration for a server role (either proxy or node)
@@ -240,15 +240,15 @@ func (c *Connector) Close() error {
 	return nil
 }
 
-// TeleportProcess structure holds the state of the Teleport daemon, controlling
+// SiriusecProcess structure holds the state of the Siriusec daemon, controlling
 // execution and configuration of the teleport services: ssh, auth and proxy.
-type TeleportProcess struct {
+type SiriusecProcess struct {
 	Clock clockwork.Clock
 	sync.Mutex
 	Supervisor
 	Config *Config
 
-	// PluginsRegistry handles plugin registrations with Teleport services
+	// PluginsRegistry handles plugin registrations with Siriusec services
 	PluginRegistry plugin.Registry
 
 	// localAuth has local auth server listed in case if this process
@@ -319,21 +319,21 @@ func nextProcessID() int32 {
 }
 
 // GetAuthServer returns the process' auth server
-func (process *TeleportProcess) GetAuthServer() *auth.Server {
+func (process *SiriusecProcess) GetAuthServer() *auth.Server {
 	return process.localAuth
 }
 
 // GetAuditLog returns the process' audit log
-func (process *TeleportProcess) GetAuditLog() events.IAuditLog {
+func (process *SiriusecProcess) GetAuditLog() events.IAuditLog {
 	return process.auditLog
 }
 
 // GetBackend returns the process' backend
-func (process *TeleportProcess) GetBackend() backend.Backend {
+func (process *SiriusecProcess) GetBackend() backend.Backend {
 	return process.backend
 }
 
-func (process *TeleportProcess) findStaticIdentity(id auth.IdentityID) (*auth.Identity, error) {
+func (process *SiriusecProcess) findStaticIdentity(id auth.IdentityID) (*auth.Identity, error) {
 	for i := range process.Config.Identities {
 		identity := process.Config.Identities[i]
 		if identity.ID.Equals(id) {
@@ -344,7 +344,7 @@ func (process *TeleportProcess) findStaticIdentity(id auth.IdentityID) (*auth.Id
 }
 
 // getConnectors returns a copy of the identities registered for auth server
-func (process *TeleportProcess) getConnectors() []*Connector {
+func (process *SiriusecProcess) getConnectors() []*Connector {
 	process.Lock()
 	defer process.Unlock()
 
@@ -357,14 +357,14 @@ func (process *TeleportProcess) getConnectors() []*Connector {
 
 // addConnector adds connector to registered connectors list,
 // it will overwrite the connector for the same role
-func (process *TeleportProcess) addConnector(connector *Connector) {
+func (process *SiriusecProcess) addConnector(connector *Connector) {
 	process.Lock()
 	defer process.Unlock()
 
 	process.connectors[connector.ClientIdentity.ID.Role] = connector
 }
 
-func (process *TeleportProcess) setClusterFeatures(features *proto.Features) {
+func (process *SiriusecProcess) setClusterFeatures(features *proto.Features) {
 	process.Lock()
 	defer process.Unlock()
 
@@ -373,7 +373,7 @@ func (process *TeleportProcess) setClusterFeatures(features *proto.Features) {
 	}
 }
 
-func (process *TeleportProcess) getClusterFeatures() proto.Features {
+func (process *SiriusecProcess) getClusterFeatures() proto.Features {
 	process.Lock()
 	defer process.Unlock()
 
@@ -383,7 +383,7 @@ func (process *TeleportProcess) getClusterFeatures() proto.Features {
 // GetIdentity returns the process identity (credentials to the auth server) for a given
 // teleport Role. A teleport process can have any combination of 3 roles: auth, node, proxy
 // and they have their own identities
-func (process *TeleportProcess) GetIdentity(role types.SystemRole) (i *auth.Identity, err error) {
+func (process *SiriusecProcess) GetIdentity(role types.SystemRole) (i *auth.Identity, err error) {
 	var found bool
 
 	process.Lock()
@@ -457,15 +457,15 @@ type Process interface {
 // NewProcess is a function that creates new teleport from config
 type NewProcess func(cfg *Config) (Process, error)
 
-func newTeleportProcess(cfg *Config) (Process, error) {
-	return NewTeleport(cfg)
+func newSiriusecProcess(cfg *Config) (Process, error) {
+	return NewSiriusec(cfg)
 }
 
 // Run starts teleport processes, waits for signals
 // and handles internal process reloads.
 func Run(ctx context.Context, cfg Config, newTeleport NewProcess) error {
 	if newTeleport == nil {
-		newTeleport = newTeleportProcess
+		newTeleport = newSiriusecProcess
 	}
 	copyCfg := cfg
 	srv, err := newTeleport(&copyCfg)
@@ -523,7 +523,7 @@ func waitAndReload(ctx context.Context, cfg Config, srv Process, newTeleport New
 	startTimeoutCtx, startCancel := context.WithTimeout(ctx, signalPipeTimeout)
 	defer startCancel()
 	eventC := make(chan Event, 1)
-	newSrv.WaitForEvent(startTimeoutCtx, TeleportReadyEvent, eventC)
+	newSrv.WaitForEvent(startTimeoutCtx, SiriusecReadyEvent, eventC)
 	select {
 	case <-eventC:
 		cfg.Log.Infof("New service has started successfully.")
@@ -568,9 +568,9 @@ func waitAndReload(ctx context.Context, cfg Config, srv Process, newTeleport New
 	return newSrv, nil
 }
 
-// NewTeleport takes the daemon configuration, instantiates all required services
+// NewSiriusec takes the daemon configuration, instantiates all required services
 // and starts them under a supervisor, returning the supervisor object.
-func NewTeleport(cfg *Config) (*TeleportProcess, error) {
+func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 	var err error
 
 	// Before we do anything reset the SIGINT handler back to the default.
@@ -670,7 +670,7 @@ func NewTeleport(cfg *Config) (*TeleportProcess, error) {
 		cfg.PluginRegistry = plugin.NewRegistry()
 	}
 
-	process := &TeleportProcess{
+	process := &SiriusecProcess{
 		PluginRegistry:      cfg.PluginRegistry,
 		Clock:               cfg.Clock,
 		Supervisor:          supervisor,
@@ -712,10 +712,10 @@ func NewTeleport(cfg *Config) (*TeleportProcess, error) {
 		cfg.Keygen = native.New(process.ExitContext(), native.PrecomputeKeys(precomputeCount))
 	}
 
-	// Produce global TeleportReadyEvent
+	// Produce global SiriusecReadyEvent
 	// when all components have started
 	eventMapping := EventMapping{
-		Out: TeleportReadyEvent,
+		Out: SiriusecReadyEvent,
 	}
 	if cfg.Auth.Enabled {
 		eventMapping.In = append(eventMapping.In, AuthTLSReady)
@@ -809,13 +809,13 @@ func NewTeleport(cfg *Config) (*TeleportProcess, error) {
 
 // notifyParent notifies parent process that this process has started
 // by writing to in-memory pipe used by communication channel.
-func (process *TeleportProcess) notifyParent() {
+func (process *SiriusecProcess) notifyParent() {
 	signalPipe, err := process.importSignalPipe()
 	if err != nil {
 		if !trace.IsNotFound(err) {
 			process.log.Warningf("Failed to import signal pipe")
 		}
-		process.log.Debugf("No signal pipe to import, must be first Teleport process.")
+		process.log.Debugf("No signal pipe to import, must be first Siriusec process.")
 		return
 	}
 	defer signalPipe.Close()
@@ -824,7 +824,7 @@ func (process *TeleportProcess) notifyParent() {
 	defer cancel()
 
 	eventC := make(chan Event, 1)
-	process.WaitForEvent(ctx, TeleportReadyEvent, eventC)
+	process.WaitForEvent(ctx, SiriusecReadyEvent, eventC)
 	select {
 	case <-eventC:
 		process.log.Infof("New service has started successfully.")
@@ -844,13 +844,13 @@ func (process *TeleportProcess) notifyParent() {
 	}
 }
 
-func (process *TeleportProcess) setLocalAuth(a *auth.Server) {
+func (process *SiriusecProcess) setLocalAuth(a *auth.Server) {
 	process.Lock()
 	defer process.Unlock()
 	process.localAuth = a
 }
 
-func (process *TeleportProcess) getLocalAuth() *auth.Server {
+func (process *SiriusecProcess) getLocalAuth() *auth.Server {
 	process.Lock()
 	defer process.Unlock()
 	return process.localAuth
@@ -1035,7 +1035,7 @@ func initExternalLog(ctx context.Context, auditConfig types.ClusterAuditConfig, 
 }
 
 // initAuthService can be called to initialize auth server service
-func (process *TeleportProcess) initAuthService() error {
+func (process *SiriusecProcess) initAuthService() error {
 	var err error
 
 	cfg := process.Config
@@ -1056,7 +1056,7 @@ func (process *TeleportProcess) initAuthService() error {
 		// this is for teleconsole
 		process.auditLog = events.NewDiscardAuditLog()
 
-		warningMessage := "Warning: Teleport audit and session recording have been " +
+		warningMessage := "Warning: Siriusec audit and session recording have been " +
 			"turned off. This is dangerous, you will not be able to view audit events " +
 			"or save and playback recorded sessions."
 		process.log.Warn(warningMessage)
@@ -1069,7 +1069,7 @@ func (process *TeleportProcess) initAuthService() error {
 		if cfg.Auth.SessionRecordingConfig.GetMode() == types.RecordOff {
 			recordSessions = false
 
-			warningMessage := "Warning: Teleport session recording have been turned off. " +
+			warningMessage := "Warning: Siriusec session recording have been turned off. " +
 				"This is dangerous, you will not be able to save and playback sessions."
 			process.log.Warn(warningMessage)
 		}
@@ -1394,9 +1394,9 @@ func (process *TeleportProcess) initAuthService() error {
 		ServerTTL:       apidefaults.ServerAnnounceTTL,
 		OnHeartbeat: func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentAuth})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentAuth})
 			} else {
-				process.BroadcastEvent(Event{Name: TeleportOKEvent, Payload: teleport.ComponentAuth})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth})
 			}
 		},
 	})
@@ -1447,12 +1447,12 @@ func payloadContext(payload interface{}, log logrus.FieldLogger) context.Context
 }
 
 // OnExit allows individual services to register a callback function which will be
-// called when Teleport Process is asked to exit. Usually services terminate themselves
+// called when Siriusec Process is asked to exit. Usually services terminate themselves
 // when the callback is called
-func (process *TeleportProcess) OnExit(serviceName string, callback func(interface{})) {
+func (process *SiriusecProcess) OnExit(serviceName string, callback func(interface{})) {
 	process.RegisterFunc(serviceName, func() error {
 		eventC := make(chan Event)
-		process.WaitForEvent(context.TODO(), TeleportExitEvent, eventC)
+		process.WaitForEvent(context.TODO(), SiriusecExitEvent, eventC)
 
 		event := <-eventC
 		callback(event.Payload)
@@ -1497,7 +1497,7 @@ func (c *accessCacheConfig) CheckAndSetDefaults() error {
 }
 
 // newAccessCache returns new local cache access point
-func (process *TeleportProcess) newAccessCache(cfg accessCacheConfig) (*cache.Cache, error) {
+func (process *SiriusecProcess) newAccessCache(cfg accessCacheConfig) (*cache.Cache, error) {
 	if err := cfg.CheckAndSetDefaults(); err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1561,13 +1561,13 @@ func (process *TeleportProcess) newAccessCache(cfg accessCacheConfig) (*cache.Ca
 }
 
 // newLocalCacheForProxy returns new instance of access point configured for a local proxy.
-func (process *TeleportProcess) newLocalCacheForProxy(clt auth.ClientI, cacheName []string) (auth.AccessPoint, error) {
+func (process *SiriusecProcess) newLocalCacheForProxy(clt auth.ClientI, cacheName []string) (auth.AccessPoint, error) {
 	return process.newLocalCache(clt, cache.ForProxy, cacheName)
 }
 
 // newLocalCacheForRemoteProxy returns new instance of access point configured
 // for a remote proxy.
-func (process *TeleportProcess) newLocalCacheForRemoteProxy(clt auth.ClientI, cacheName []string) (auth.AccessPoint, error) {
+func (process *SiriusecProcess) newLocalCacheForRemoteProxy(clt auth.ClientI, cacheName []string) (auth.AccessPoint, error) {
 	return process.newLocalCache(clt, cache.ForRemoteProxy, cacheName)
 }
 
@@ -1575,12 +1575,12 @@ func (process *TeleportProcess) newLocalCacheForRemoteProxy(clt auth.ClientI, ca
 //
 // newLocalCacheForOldRemoteProxy returns new instance of access point
 // configured for an old remote proxy.
-func (process *TeleportProcess) newLocalCacheForOldRemoteProxy(clt auth.ClientI, cacheName []string) (auth.AccessPoint, error) {
+func (process *SiriusecProcess) newLocalCacheForOldRemoteProxy(clt auth.ClientI, cacheName []string) (auth.AccessPoint, error) {
 	return process.newLocalCache(clt, cache.ForOldRemoteProxy, cacheName)
 }
 
 // newLocalCache returns new instance of access point
-func (process *TeleportProcess) newLocalCache(clt auth.ClientI, setupConfig cache.SetupConfigFn, cacheName []string) (auth.AccessPoint, error) {
+func (process *SiriusecProcess) newLocalCache(clt auth.ClientI, setupConfig cache.SetupConfigFn, cacheName []string) (auth.AccessPoint, error) {
 	// if caching is disabled, return access point
 	if !process.Config.CachePolicy.Enabled {
 		return clt, nil
@@ -1597,7 +1597,7 @@ func (process *TeleportProcess) newLocalCache(clt auth.ClientI, setupConfig cach
 	return auth.NewWrapper(clt, cache), nil
 }
 
-func (process *TeleportProcess) getRotation(role types.SystemRole) (*types.Rotation, error) {
+func (process *SiriusecProcess) getRotation(role types.SystemRole) (*types.Rotation, error) {
 	state, err := process.storage.GetState(role)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1605,7 +1605,7 @@ func (process *TeleportProcess) getRotation(role types.SystemRole) (*types.Rotat
 	return &state.Spec.Rotation, nil
 }
 
-func (process *TeleportProcess) proxyPublicAddr() utils.NetAddr {
+func (process *SiriusecProcess) proxyPublicAddr() utils.NetAddr {
 	if len(process.Config.Proxy.PublicAddrs) == 0 {
 		return utils.NetAddr{}
 	}
@@ -1614,7 +1614,7 @@ func (process *TeleportProcess) proxyPublicAddr() utils.NetAddr {
 
 // newAsyncEmitter wraps client and returns emitter that never blocks, logs some events and checks values.
 // It is caller's responsibility to call Close on the emitter once done.
-func (process *TeleportProcess) newAsyncEmitter(clt apievents.Emitter) (*events.AsyncEmitter, error) {
+func (process *SiriusecProcess) newAsyncEmitter(clt apievents.Emitter) (*events.AsyncEmitter, error) {
 	emitter, err := events.NewCheckingEmitter(events.CheckingEmitterConfig{
 		Inner: events.NewMultiEmitter(events.NewLoggingEmitter(), clt),
 		Clock: process.Clock,
@@ -1631,7 +1631,7 @@ func (process *TeleportProcess) newAsyncEmitter(clt apievents.Emitter) (*events.
 }
 
 // initSSH initializes the "node" role, i.e. a simple SSH server connected to the auth server.
-func (process *TeleportProcess) initSSH() error {
+func (process *SiriusecProcess) initSSH() error {
 	process.registerWithAuthServer(types.RoleNode, SSHIdentityEvent)
 	eventsC := make(chan Event)
 	process.WaitForEvent(process.ExitContext(), SSHIdentityEvent, eventsC)
@@ -1685,7 +1685,7 @@ func (process *TeleportProcess) initSSH() error {
 		if recConfig.GetMode() == types.RecordOff && cfg.SSH.BPF.Enabled {
 			return trace.BadParameter("session recording is disabled at the cluster " +
 				"level. To enable enhanced session recording, enable session recording at " +
-				"the cluster level, then restart Teleport.")
+				"the cluster level, then restart Sirius.")
 		}
 
 		// Restricted session requires BPF (enhanced recording)
@@ -1698,7 +1698,7 @@ func (process *TeleportProcess) initSSH() error {
 		// not support enhanced session recording (like macOS), exit right away.
 		if cfg.SSH.BPF.Enabled && !bpf.SystemHasBPF() {
 			return trace.BadParameter("operating system does not support enhanced " +
-				"session recording, check Teleport documentation for more details on " +
+				"session recording, check Sirius documentation for more details on " +
 				"supported operating systems, kernels, and configuration")
 		}
 
@@ -1804,9 +1804,9 @@ func (process *TeleportProcess) initSSH() error {
 			regular.SetRestrictedSessionManager(rm),
 			regular.SetOnHeartbeat(func(err error) {
 				if err != nil {
-					process.BroadcastEvent(Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentNode})
+					process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentNode})
 				} else {
-					process.BroadcastEvent(Event{Name: TeleportOKEvent, Payload: teleport.ComponentNode})
+					process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentNode})
 				}
 			}),
 			regular.SetAllowTCPForwarding(cfg.SSH.AllowTCPForwarding),
@@ -1926,7 +1926,7 @@ func (process *TeleportProcess) initSSH() error {
 // registerWithAuthServer uses one time provisioning token obtained earlier
 // from the server to get a pair of SSH keys signed by Auth server host
 // certificate authority
-func (process *TeleportProcess) registerWithAuthServer(role types.SystemRole, eventName string) {
+func (process *SiriusecProcess) registerWithAuthServer(role types.SystemRole, eventName string) {
 	serviceName := strings.ToLower(role.String())
 	process.RegisterCriticalFunc(fmt.Sprintf("register.%v", serviceName), func() error {
 		connector, err := process.reconnectToAuthService(role)
@@ -1938,7 +1938,7 @@ func (process *TeleportProcess) registerWithAuthServer(role types.SystemRole, ev
 	})
 }
 
-func (process *TeleportProcess) initUploaderService(accessPoint auth.AccessPoint, auditLog events.IAuditLog) error {
+func (process *SiriusecProcess) initUploaderService(accessPoint auth.AccessPoint, auditLog events.IAuditLog) error {
 	log := process.log.WithFields(logrus.Fields{
 		trace.Component: teleport.Component(teleport.ComponentAuditLog, process.id),
 	})
@@ -2035,7 +2035,7 @@ func (process *TeleportProcess) initUploaderService(accessPoint auth.AccessPoint
 
 // initDiagnosticService starts diagnostic service currently serving healthz
 // and prometheus endpoints
-func (process *TeleportProcess) initDiagnosticService() error {
+func (process *SiriusecProcess) initDiagnosticService() error {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 
@@ -2058,7 +2058,7 @@ func (process *TeleportProcess) initDiagnosticService() error {
 	})
 
 	// Create a state machine that will process and update the internal state of
-	// Teleport based off Events. Use this state machine to return return the
+	// Siriusec based off Events. Use this state machine to return return the
 	// status from the /readyz endpoint.
 	ps, err := newProcessState(process)
 	if err != nil {
@@ -2066,17 +2066,17 @@ func (process *TeleportProcess) initDiagnosticService() error {
 	}
 
 	process.RegisterFunc("readyz.monitor", func() error {
-		// Start loop to monitor for events that are used to update Teleport state.
+		// Start loop to monitor for events that are used to update Siriusec state.
 		eventCh := make(chan Event, 1024)
-		process.WaitForEvent(process.ExitContext(), TeleportDegradedEvent, eventCh)
-		process.WaitForEvent(process.ExitContext(), TeleportOKEvent, eventCh)
+		process.WaitForEvent(process.ExitContext(), SiriusecDegradedEvent, eventCh)
+		process.WaitForEvent(process.ExitContext(), SiriusecOKEvent, eventCh)
 
 		for {
 			select {
 			case e := <-eventCh:
 				ps.update(e)
 			case <-process.GracefulExitContext().Done():
-				log.Debugf("Teleport is exiting, returning.")
+				log.Debugf("Siriusec is exiting, returning.")
 				return nil
 			}
 		}
@@ -2143,7 +2143,7 @@ func (process *TeleportProcess) initDiagnosticService() error {
 
 // getAdditionalPrincipals returns a list of additional principals to add
 // to role's service certificates.
-func (process *TeleportProcess) getAdditionalPrincipals(role types.SystemRole) ([]string, []string, error) {
+func (process *SiriusecProcess) getAdditionalPrincipals(role types.SystemRole) ([]string, []string, error) {
 	var principals []string
 	var dnsNames []string
 	if process.Config.Hostname != "" {
@@ -2228,7 +2228,7 @@ func (process *TeleportProcess) getAdditionalPrincipals(role types.SystemRole) (
 //    1. serve a web UI
 //    2. proxy SSH connections to nodes running with 'node' role
 //    3. take care of reverse tunnels
-func (process *TeleportProcess) initProxy() error {
+func (process *SiriusecProcess) initProxy() error {
 	// If no TLS key was provided for the web UI, generate a self-signed cert
 	if len(process.Config.Proxy.KeyPairs) == 0 &&
 		!process.Config.Proxy.DisableTLS &&
@@ -2329,7 +2329,7 @@ func (l *proxyListeners) Close() {
 }
 
 // setupProxyListeners sets up web proxy listeners based on the configuration
-func (process *TeleportProcess) setupProxyListeners() (*proxyListeners, error) {
+func (process *SiriusecProcess) setupProxyListeners() (*proxyListeners, error) {
 	cfg := process.Config
 	process.log.Debugf("Setup Proxy: Web Proxy Address: %v, Reverse Tunnel Proxy Address: %v", cfg.Proxy.WebAddr.Addr, cfg.Proxy.ReverseTunnelListenAddr.Addr)
 	var err error
@@ -2458,7 +2458,7 @@ func (process *TeleportProcess) setupProxyListeners() (*proxyListeners, error) {
 	}
 }
 
-func (process *TeleportProcess) initProxyEndpoint(conn *Connector) error {
+func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 	// clean up unused descriptors passed for proxy, but not used by it
 	defer func() {
 		if err := process.closeImportedDescriptors(teleport.ComponentProxy); err != nil {
@@ -2791,9 +2791,9 @@ func (process *TeleportProcess) initProxyEndpoint(conn *Connector) error {
 		regular.SetFIPS(cfg.FIPS),
 		regular.SetOnHeartbeat(func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentProxy})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentProxy})
 			} else {
-				process.BroadcastEvent(Event{Name: TeleportOKEvent, Payload: teleport.ComponentProxy})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentProxy})
 			}
 		}),
 		regular.SetEmitter(streamEmitter),
@@ -2883,9 +2883,9 @@ func (process *TeleportProcess) initProxyEndpoint(conn *Connector) error {
 			AccessPoint:   accessPoint,
 			OnHeartbeat: func(err error) {
 				if err != nil {
-					process.BroadcastEvent(Event{Name: TeleportDegradedEvent, Payload: component})
+					process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: component})
 				} else {
-					process.BroadcastEvent(Event{Name: TeleportOKEvent, Payload: component})
+					process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: component})
 				}
 			},
 		})
@@ -3020,7 +3020,7 @@ func (process *TeleportProcess) initProxyEndpoint(conn *Connector) error {
 }
 
 // registerAppDepend will register dependencies for application service.
-func (process *TeleportProcess) registerAppDepend() {
+func (process *SiriusecProcess) registerAppDepend() {
 	for _, eventName := range appDependEvents {
 		process.WaitForEvent(process.ExitContext(), eventName, process.appDependCh)
 	}
@@ -3028,7 +3028,7 @@ func (process *TeleportProcess) registerAppDepend() {
 
 // waitForAppDepend waits until all dependencies for an application service
 // are ready.
-func (process *TeleportProcess) waitForAppDepend() {
+func (process *SiriusecProcess) waitForAppDepend() {
 	for i := 0; i < len(appDependEvents); i++ {
 		select {
 		case <-process.appDependCh:
@@ -3047,7 +3047,7 @@ var appDependEvents = []string{
 	ProxyReverseTunnelReady,
 }
 
-func (process *TeleportProcess) initApps() {
+func (process *SiriusecProcess) initApps() {
 	// If no applications are specified, exit early. This is due to the strange
 	// behavior in reading file configuration. If the user does not specify an
 	// "app_service" section, that is considered enabling "app_service".
@@ -3221,9 +3221,9 @@ func (process *TeleportProcess) initApps() {
 			Server:       server,
 			OnHeartbeat: func(err error) {
 				if err != nil {
-					process.BroadcastEvent(Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentApp})
+					process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentApp})
 				} else {
-					process.BroadcastEvent(Event{Name: TeleportOKEvent, Payload: teleport.ComponentApp})
+					process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentApp})
 				}
 			},
 		})
@@ -3298,7 +3298,7 @@ func warnOnErr(err error, log logrus.FieldLogger) {
 }
 
 // initAuthStorage initializes the storage backend for the auth service.
-func (process *TeleportProcess) initAuthStorage() (bk backend.Backend, err error) {
+func (process *SiriusecProcess) initAuthStorage() (bk backend.Backend, err error) {
 	ctx := context.TODO()
 	bc := &process.Config.Auth.StorageConfig
 	process.log.Debugf("Using %v backend.", bc.Type)
@@ -3335,14 +3335,14 @@ func (process *TeleportProcess) initAuthStorage() (bk backend.Backend, err error
 	return reporter, nil
 }
 
-func (process *TeleportProcess) setReporter(reporter *backend.Reporter) {
+func (process *SiriusecProcess) setReporter(reporter *backend.Reporter) {
 	process.Lock()
 	defer process.Unlock()
 	process.reporter = reporter
 }
 
 // WaitWithContext waits until all internal services stop.
-func (process *TeleportProcess) WaitWithContext(ctx context.Context) {
+func (process *SiriusecProcess) WaitWithContext(ctx context.Context) {
 	local, cancel := context.WithCancel(ctx)
 	go func() {
 		defer cancel()
@@ -3356,8 +3356,8 @@ func (process *TeleportProcess) WaitWithContext(ctx context.Context) {
 
 // StartShutdown launches non-blocking graceful shutdown process that signals
 // completion, returns context that will be closed once the shutdown is done
-func (process *TeleportProcess) StartShutdown(ctx context.Context) context.Context {
-	process.BroadcastEvent(Event{Name: TeleportExitEvent, Payload: ctx})
+func (process *SiriusecProcess) StartShutdown(ctx context.Context) context.Context {
+	process.BroadcastEvent(Event{Name: SiriusecExitEvent, Payload: ctx})
 	localCtx, cancel := context.WithCancel(ctx)
 	go func() {
 		defer cancel()
@@ -3378,7 +3378,7 @@ func (process *TeleportProcess) StartShutdown(ctx context.Context) context.Conte
 
 // Shutdown launches graceful shutdown process and waits
 // for it to complete
-func (process *TeleportProcess) Shutdown(ctx context.Context) {
+func (process *SiriusecProcess) Shutdown(ctx context.Context) {
 	localCtx := process.StartShutdown(ctx)
 	// wait until parent context closes
 	<-localCtx.Done()
@@ -3386,8 +3386,8 @@ func (process *TeleportProcess) Shutdown(ctx context.Context) {
 }
 
 // Close broadcasts close signals and exits immediately
-func (process *TeleportProcess) Close() error {
-	process.BroadcastEvent(Event{Name: TeleportExitEvent})
+func (process *SiriusecProcess) Close() error {
+	process.BroadcastEvent(Event{Name: SiriusecExitEvent})
 
 	process.Config.Keygen.Close()
 
@@ -3479,7 +3479,7 @@ func initSelfSignedHTTPSCert(cfg *Config) (err error) {
 }
 
 // initDebugApp starts a debug server that dumpers request headers.
-func (process *TeleportProcess) initDebugApp() {
+func (process *SiriusecProcess) initDebugApp() {
 	var server *httptest.Server
 
 	process.RegisterFunc("debug.app.service", func() error {
@@ -3497,7 +3497,7 @@ func (process *TeleportProcess) initDebugApp() {
 
 // singleProcessMode returns true when running all components needed within
 // the same process. It's used for development and demo purposes.
-func (process *TeleportProcess) singleProcessMode() (string, bool) {
+func (process *SiriusecProcess) singleProcessMode() (string, bool) {
 	if !process.Config.Proxy.Enabled || !process.Config.Auth.Enabled {
 		return "", false
 	}
@@ -3533,7 +3533,7 @@ func dumperHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(requestDump))
 }
 
-// getPublicAddr waits for a proxy to be registered with Teleport.
+// getPublicAddr waits for a proxy to be registered with Siriusec.
 func getPublicAddr(authClient auth.AccessPoint, a App) (string, error) {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()

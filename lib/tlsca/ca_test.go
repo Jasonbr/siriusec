@@ -87,7 +87,7 @@ func TestKubeExtensions(t *testing.T) {
 		KubernetesGroups:  []string{"system:masters", "admin"},
 		KubernetesUsers:   []string{"IAM#alice@example.com"},
 		KubernetesCluster: "kube-cluster",
-		TeleportCluster:   "tele-cluster",
+		SiriusecCluster:   "tele-cluster",
 		RouteToDatabase: RouteToDatabase{
 			ServiceName: "postgres-rds",
 			Protocol:    "postgres",

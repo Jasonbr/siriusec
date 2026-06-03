@@ -99,7 +99,7 @@ type Command interface {
 	// Execute processes SCP traffic
 	Execute(ch io.ReadWriter) error
 	// GetRemoteShellCmd returns a remote shell command that
-	// has to be executed on the remove server (handled by Teleport)
+	// has to be executed on the remove server (handled by Siriusec)
 	GetRemoteShellCmd() (string, error)
 }
 

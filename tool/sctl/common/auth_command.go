@@ -73,7 +73,7 @@ func (a *AuthCommand) Initialize(app *kingpin.Application, config *service.Confi
 	a.authExport = auth.Command("export", "Export public cluster (CA) keys to stdout")
 	a.authExport.Flag("keys", "if set, will print private keys").BoolVar(&a.exportPrivateKeys)
 	a.authExport.Flag("fingerprint", "filter authority by fingerprint").StringVar(&a.exportAuthorityFingerprint)
-	a.authExport.Flag("compat", "export cerfiticates compatible with specific version of Teleport").StringVar(&a.compatVersion)
+	a.authExport.Flag("compat", "export cerfiticates compatible with specific version of Sirius").StringVar(&a.compatVersion)
 	a.authExport.Flag("type", "certificate type: 'user', 'host' or 'tls'").StringVar(&a.authType)
 
 	a.authGenerate = auth.Command("gen", "Generate a new SSH keypair").Hidden()
@@ -81,8 +81,8 @@ func (a *AuthCommand) Initialize(app *kingpin.Application, config *service.Confi
 	a.authGenerate.Flag("priv-key", "path to the private key").Required().StringVar(&a.genPrivPath)
 
 	a.authSign = auth.Command("sign", "Create an identity file(s) for a given user")
-	a.authSign.Flag("user", "Teleport user name").StringVar(&a.genUser)
-	a.authSign.Flag("host", "Teleport host name").StringVar(&a.genHost)
+	a.authSign.Flag("user", "Sirius user name").StringVar(&a.genUser)
+	a.authSign.Flag("host", "Sirius host name").StringVar(&a.genHost)
 	a.authSign.Flag("out", "identity output").Short('o').Required().StringVar(&a.output)
 	a.authSign.Flag("format", fmt.Sprintf("identity format: %q (default), %q, %q, %q, %q or %q",
 		identityfile.FormatFile,
@@ -364,7 +364,7 @@ func (a *AuthCommand) generateHostKeys(clusterAPI auth.ClientI) error {
 	return nil
 }
 
-// generateDatabaseKeys generates a new unsigned key and signs it with Teleport
+// generateDatabaseKeys generates a new unsigned key and signs it with Siriusec
 // CA for database access.
 func (a *AuthCommand) generateDatabaseKeys(clusterAPI auth.ClientI) error {
 	key, err := client.NewKey()
@@ -374,7 +374,7 @@ func (a *AuthCommand) generateDatabaseKeys(clusterAPI auth.ClientI) error {
 	return a.generateDatabaseKeysForKey(clusterAPI, key)
 }
 
-// generateDatabaseKeysForKey signs the provided unsigned key with Teleport CA
+// generateDatabaseKeysForKey signs the provided unsigned key with Siriusec CA
 // for database access.
 func (a *AuthCommand) generateDatabaseKeysForKey(clusterAPI auth.ClientI, key *client.Key) error {
 	subject := pkix.Name{CommonName: a.genHost}
@@ -387,7 +387,7 @@ func (a *AuthCommand) generateDatabaseKeysForKey(clusterAPI auth.ClientI, key *c
 		// https://docs.mongodb.com/manual/core/security-internal-authentication/#x.509
 		//
 		// The actual O value doesn't matter as long as it matches on all
-		// MongoDB cluster members so set it to the Teleport cluster name
+		// MongoDB cluster members so set it to the Siriusec cluster name
 		// to avoid hardcoding anything.
 		clusterName, err := clusterAPI.GetClusterName()
 		if err != nil {

@@ -68,7 +68,7 @@ func (c *Config) CheckAndSetDefaults() error {
 type Service struct {
 	*Config
 
-	// teleportRoot is the root cgroup that holds all Teleport sessions. Used
+	// teleportRoot is the root cgroup that holds all Siriusec sessions. Used
 	// to remove all cgroups upon shutdown.
 	teleportRoot string
 }
@@ -91,7 +91,7 @@ func New(config *Config) (*Service, error) {
 		return nil, trace.Wrap(err)
 	}
 
-	log.Debugf("Teleport session hierarchy mounted at: %v.", s.teleportRoot)
+	log.Debugf("Siriusec session hierarchy mounted at: %v.", s.teleportRoot)
 
 	return s, nil
 }
@@ -108,7 +108,7 @@ func (s *Service) Close() error {
 		return trace.Wrap(err)
 	}
 
-	log.Debugf("Cleaned up and unmounted Teleport session hierarchy at: %v.", s.teleportRoot)
+	log.Debugf("Cleaned up and unmounted Siriusec session hierarchy at: %v.", s.teleportRoot)
 	return nil
 }
 
@@ -211,7 +211,7 @@ func writePids(path string, pids []string) error {
 func (s *Service) cleanupHierarchy() error {
 	var sessions []string
 
-	// Recursively look within the Teleport hierarchy for cgroups for session.
+	// Recursively look within the Siriusec hierarchy for cgroups for session.
 	err := filepath.Walk(path.Join(s.teleportRoot), func(path string, info os.FileInfo, err error) error {
 		// Only pick up cgroup.procs files.
 		if !pattern.MatchString(path) {
@@ -256,11 +256,11 @@ func (s *Service) mount() error {
 		return trace.Wrap(err)
 	}
 
-	// Check if the Teleport root cgroup exists, if it does the cgroup filesystem
+	// Check if the Siriusec root cgroup exists, if it does the cgroup filesystem
 	// is already mounted, return right away.
 	files, err := ioutil.ReadDir(s.MountPath)
 	if err == nil && len(files) > 0 {
-		// Create cgroup that will hold Teleport sessions.
+		// Create cgroup that will hold Siriusec sessions.
 		err = os.MkdirAll(s.teleportRoot, fileMode)
 		if err != nil {
 			return trace.Wrap(err)
@@ -306,7 +306,7 @@ func (s *Service) mount() error {
 	}
 	log.Debugf("Mounted cgroup filesystem to %v.", s.MountPath)
 
-	// Create cgroup that will hold Teleport sessions.
+	// Create cgroup that will hold Siriusec sessions.
 	err = os.MkdirAll(s.teleportRoot, fileMode)
 	if err != nil {
 		return trace.Wrap(err)
@@ -377,7 +377,7 @@ const (
 	fileMode = 0555
 
 	// teleportRoot is the prefix of the root cgroup that holds all other
-	// Teleport cgroups.
+	// Siriusec cgroups.
 	teleportRoot = "teleport"
 
 	// cgroupProcs is the name of the file that contains all processes within

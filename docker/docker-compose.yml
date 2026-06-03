@@ -6,7 +6,7 @@ services:
   one:
     image: siriusec:latest
     container_name: one
-    command: ${CONTAINERHOME}/build/teleport start -d -c ${CONTAINERHOME}/docker/one.yaml
+    command: ${CONTAINERHOME}/build/siriusec start -d -c ${CONTAINERHOME}/docker/one.yaml
     mem_limit: 300m
     memswap_limit: 0
     ports:
@@ -15,7 +15,7 @@ services:
       - "3025:3025"
     env_file: env.file
     volumes:
-      - ./data/one:/var/lib/teleport
+      - ./data/one:/var/lib/siriusec
       - ../:/root/go/src/github.com/gravitational/teleport
       - certs:/mnt/shared/certs
     networks:
@@ -30,11 +30,11 @@ services:
   one-node:
     image: siriusec:latest
     container_name: one-node
-    command: ${CONTAINERHOME}/build/teleport start -d -c ${CONTAINERHOME}/docker/one-node.yaml
+    command: ${CONTAINERHOME}/build/siriusec start -d -c ${CONTAINERHOME}/docker/one-node.yaml
     env_file: env.file
     mem_limit: 300m
     volumes:
-      - ./data/one-node:/var/lib/teleport
+      - ./data/one-node:/var/lib/siriusec
       - ../:/root/go/src/github.com/gravitational/teleport
     networks:
       siriusec:
@@ -63,14 +63,14 @@ services:
   one-proxy:
     image: siriusec:latest
     container_name: one-proxy
-    command: ${CONTAINERHOME}/build/teleport start -d -c ${CONTAINERHOME}/docker/one-proxy.yaml
+    command: ${CONTAINERHOME}/build/siriusec start -d -c ${CONTAINERHOME}/docker/one-proxy.yaml
     mem_limit: 300m
     ports:
       - "4080:3080"
       - "4023:3023"
     env_file: env.file
     volumes:
-      - ./data/one-proxy:/var/lib/teleport
+      - ./data/one-proxy:/var/lib/siriusec
       - ../:/root/go/src/github.com/gravitational/teleport
     networks:
       siriusec:
@@ -85,10 +85,10 @@ services:
     mem_limit: 300m
     image: siriusec:latest
     container_name: two-auth
-    command: ${CONTAINERHOME}/build/teleport start -d -c ${CONTAINERHOME}/docker/two-auth.yaml --insecure
+    command: ${CONTAINERHOME}/build/siriusec start -d -c ${CONTAINERHOME}/docker/two-auth.yaml --insecure
     env_file: env.file
     volumes:
-      - ./data/two/auth:/var/lib/teleport
+      - ./data/two/auth:/var/lib/siriusec
       - ../:/root/go/src/github.com/gravitational/teleport
     networks:
       siriusec:
@@ -101,13 +101,13 @@ services:
     mem_limit: 300m
     image: siriusec:latest
     container_name: two-proxy
-    command: ${CONTAINERHOME}/build/teleport start -d -c ${CONTAINERHOME}/docker/two-proxy.yaml
+    command: ${CONTAINERHOME}/build/siriusec start -d -c ${CONTAINERHOME}/docker/two-proxy.yaml
     env_file: env.file
     ports:
       - "5080:5080"
       - "5023:5023"
     volumes:
-      - ./data/two/proxy:/var/lib/teleport
+      - ./data/two/proxy:/var/lib/siriusec
       - ../:/root/go/src/github.com/gravitational/teleport
     networks:
       siriusec:
@@ -120,10 +120,10 @@ services:
     mem_limit: 300m
     image: siriusec:latest
     container_name: two-node
-    command: ${CONTAINERHOME}/build/teleport start -d -c ${CONTAINERHOME}/docker/two-node.yaml
+    command: ${CONTAINERHOME}/build/siriusec start -d -c ${CONTAINERHOME}/docker/two-node.yaml
     env_file: env.file
     volumes:
-      - ./data/two/node:/var/lib/teleport
+      - ./data/two/node:/var/lib/siriusec
       - ../:/root/go/src/github.com/gravitational/teleport
     networks:
       siriusec:

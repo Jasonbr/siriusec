@@ -27,8 +27,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /tmpfs/go/src/github.com/gravitational/teleport /tmpfs/go/cache
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - mkdir -p /tmpfs/go/src/github.com/siriusec/siriusec /tmpfs/go/cache
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - |
     # handle pull requests
@@ -58,7 +58,7 @@ steps:
       export PR_REPO=$(curl -Ls https://api.github.com/repos/gravitational/${DRONE_REPO_NAME}/pulls/${DRONE_PULL_REQUEST} | jq -r '.head.repo.full_name')
       echo "---> Source repo for PR ${DRONE_PULL_REQUEST}: $${PR_REPO}"
       # if the source repo for the PR matches DRONE_REPO, then this is not a PR raised from a fork
-      if [ "$${PR_REPO}" = "${DRONE_REPO}" ] || [ "${DRONE_REPO}" = "gravitational/teleport-private" ]; then
+      if [ "$${PR_REPO}" = "${DRONE_REPO}" ] || [ "${DRONE_REPO}" = "siriusec/siriusec-private" ]; then
         mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
         ssh-keyscan -H github.com > /root/.ssh/known_hosts 2>/dev/null && chmod 600 /root/.ssh/known_hosts
         git submodule update --init e
@@ -86,8 +86,8 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /tmpfs/go
-  - docker pull registry.siriusec.com/teleport-buildbox:$RUNTIME || true
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - docker pull registry.siriusec.com/siriusec-buildbox:$RUNTIME || true
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - make -C build.assets buildbox
   volumes:
   - name: tmpfs
@@ -99,7 +99,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /tmpfs/go
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - make -C build.assets lint
   environment:
     GOCACHE: /tmpfs/go/cache
@@ -113,7 +113,7 @@ steps:
   image: docker:git
   commands:
   - |
-    cd /tmpfs/go/src/github.com/gravitational/teleport
+    cd /tmpfs/go/src/github.com/siriusec/siriusec
     echo -e "\n---> git diff --raw ${DRONE_COMMIT}..origin/${DRONE_COMMIT_BRANCH:-master}\n"
     git diff --raw ${DRONE_COMMIT}..origin/${DRONE_COMMIT_BRANCH:-master}
     git diff --raw ${DRONE_COMMIT}..origin/${DRONE_COMMIT_BRANCH:-master} | awk '{print $6}' | grep -Ev '^docs/' | grep -Ev '.mdx$' | grep -Ev '.md$' | grep -v ^$ | wc -l > /tmp/.change_count.txt
@@ -134,7 +134,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /tmpfs/go
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - make -C build.assets test
   environment:
     GOCACHE: /tmpfs/go/cache
@@ -148,7 +148,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache make
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - make -C build.assets integration-root
   environment:
     GOCACHE: /tmpfs/go/cache
@@ -166,7 +166,7 @@ steps:
   - apk add --no-cache make
   - echo "$INTEGRATION_CI_KUBECONFIG" > "$KUBECONFIG"
   - chown -R $UID:$GID /tmpfs/go
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - make -C build.assets integration
   - rm -f "$KUBECONFIG"
   environment:
@@ -232,8 +232,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /tmpfs/go/src/github.com/gravitational/teleport /tmpfs/go/cache
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - mkdir -p /tmpfs/go/src/github.com/siriusec/siriusec /tmpfs/go/cache
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - |
     # handle pull requests
@@ -270,7 +270,7 @@ steps:
   image: docker:git
   commands:
   - apk add --no-cache make
-  - cd /tmpfs/go/src/github.com/gravitational/teleport
+  - cd /tmpfs/go/src/github.com/siriusec/siriusec
   - chown -R $UID:$GID /tmpfs/go
   - git diff --raw ${DRONE_COMMIT}..origin/${DRONE_COMMIT_BRANCH:-master} | awk '{print
     $6}' | grep -E '^docs' | { grep -v ^$ || true; } > /tmp/docs-changes.txt
@@ -331,7 +331,7 @@ trigger:
       - branch/*
   repo:
     include:
-      - gravitational/teleport
+      - siriusec/siriusec
 
 clone:
   disable: true
@@ -378,8 +378,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport /go/cache
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec /go/cache
+  - cd /go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - git fetch origin
   - git checkout -qf ${DRONE_COMMIT_SHA}
@@ -405,7 +405,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-amd64
   environment:
     ARCH: amd64
@@ -480,8 +480,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport /go/cache
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec /go/cache
+  - cd /go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - git fetch origin
   - git checkout -qf ${DRONE_COMMIT_SHA}
@@ -507,7 +507,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-386
   environment:
     ARCH: "386"
@@ -582,8 +582,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport /go/cache
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec /go/cache
+  - cd /go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - git fetch origin
   - git checkout -qf ${DRONE_COMMIT_SHA}
@@ -611,7 +611,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - make -C build.assets release-amd64-fips
   environment:
@@ -688,8 +688,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport /go/cache
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec /go/cache
+  - cd /go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - git fetch origin
   - git checkout -qf ${DRONE_COMMIT_SHA}
@@ -715,7 +715,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-windows-unsigned
   environment:
     ARCH: amd64
@@ -799,8 +799,8 @@ steps:
 - name: Check out code
   commands:
   - set -u
-  - mkdir -p $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
@@ -820,7 +820,7 @@ steps:
 - name: Build Mac artifacts
   commands:
   - set -u
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - make clean release OS=$OS ARCH=$ARCH
   environment:
     ARCH: amd64
@@ -887,8 +887,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport /go/cache
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec /go/cache
+  - cd /go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - git fetch origin
   - git checkout -qf ${DRONE_COMMIT_SHA}
@@ -914,7 +914,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-arm
   environment:
     ARCH: arm
@@ -989,8 +989,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport /go/cache
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec /go/cache
+  - cd /go/src/github.com/siriusec/siriusec
   - git init && git remote add origin ${DRONE_REMOTE_URL}
   - git fetch origin
   - git checkout -qf ${DRONE_COMMIT_SHA}
@@ -1016,7 +1016,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-arm64
   environment:
     ARCH: arm64
@@ -1059,14 +1059,14 @@ volumes:
 ---
 kind: pipeline
 type: kubernetes
-name: teleport-docker-cron
+name: siriusec-docker-cron
 
 trigger:
   cron:
-    - teleport-docker-cron
+    - siriusec-docker-cron
   repo:
     include:
-      - gravitational/teleport
+      - siriusec/siriusec
 
 workspace:
   path: /go
@@ -1088,18 +1088,18 @@ steps:
       - apk --update --no-cache add curl
       - mkdir -p /go/build && cd /go/build
       # CURRENT_VERSION (6)
-      - echo $(git ls-remote --tags https://github.com/gravitational/teleport | cut -d'/' -f3 | grep $CURRENT_VERSION_ROOT | grep -Ev '(alpha|beta|dev|rc)' | sort -rV | head -n1) > /go/build/CURRENT_VERSION_TAG.txt
+      - echo $(git ls-remote --tags https://github.com/siriusec/siriusec | cut -d'/' -f3 | grep $CURRENT_VERSION_ROOT | grep -Ev '(alpha|beta|dev|rc)' | sort -rV | head -n1) > /go/build/CURRENT_VERSION_TAG.txt
       - echo "$(cat /go/build/CURRENT_VERSION_TAG.txt | cut -d. -f1 | tr -d '^v')" > /go/build/CURRENT_VERSION_TAG_GENERIC.txt
       # PREVIOUS_VERSION_ONE (5)
-      - echo $(git ls-remote --tags https://github.com/gravitational/teleport | cut -d'/' -f3 | grep $PREVIOUS_VERSION_ONE_ROOT | grep -Ev '(alpha|beta|dev|rc)' | sort -rV | head -n1) > /go/build/PREVIOUS_VERSION_ONE_TAG.txt
+      - echo $(git ls-remote --tags https://github.com/siriusec/siriusec | cut -d'/' -f3 | grep $PREVIOUS_VERSION_ONE_ROOT | grep -Ev '(alpha|beta|dev|rc)' | sort -rV | head -n1) > /go/build/PREVIOUS_VERSION_ONE_TAG.txt
       - echo "$(cat /go/build/PREVIOUS_VERSION_ONE_TAG.txt | cut -d. -f1 | tr -d '^v')" > /go/build/PREVIOUS_VERSION_ONE_TAG_GENERIC.txt
       # PREVIOUS_VERSION_TWO (4.4)
-      - echo $(git ls-remote --tags https://github.com/gravitational/teleport | cut -d'/' -f3 | grep $PREVIOUS_VERSION_TWO_ROOT | grep -Ev '(alpha|beta|dev|rc)' | sort -rV | head -n1) > /go/build/PREVIOUS_VERSION_TWO_TAG.txt
+      - echo $(git ls-remote --tags https://github.com/siriusec/siriusec | cut -d'/' -f3 | grep $PREVIOUS_VERSION_TWO_ROOT | grep -Ev '(alpha|beta|dev|rc)' | sort -rV | head -n1) > /go/build/PREVIOUS_VERSION_TWO_TAG.txt
       - echo "$(cat /go/build/PREVIOUS_VERSION_TWO_TAG.txt | cut -d. -f1-2 | cut -dv -f2)" > /go/build/PREVIOUS_VERSION_TWO_TAG_GENERIC.txt
       # list versions
       - for FILE in /go/build/*.txt; do echo $FILE; cat $FILE; done
       # get Dockerfiles
-      - curl -Ls -o /go/build/Dockerfile-cron https://raw.githubusercontent.com/gravitational/teleport/${DRONE_SOURCE_BRANCH:-master}/build.assets/Dockerfile-cron
+      - curl -Ls -o /go/build/Dockerfile-cron https://raw.githubusercontent.com/siriusec/siriusec/${DRONE_SOURCE_BRANCH:-master}/build.assets/Dockerfile-cron
       # wait for Docker to be ready
       - sleep 3
 
@@ -1119,17 +1119,17 @@ steps:
     commands:
       - export VERSION_TAG=$(cat /go/build/CURRENT_VERSION_TAG.txt)
       - export OSS_IMAGE_NAME="registry.siriusec.com/siriusec:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)"
-      - export ENT_IMAGE_NAME="registry.siriusec.com/teleport-ent:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)"
-      - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/teleport-ent:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)-fips"
+      - export ENT_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)"
+      - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)-fips"
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
       # OSS
-      - docker build --target teleport --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $OSS_IMAGE_NAME
       # Enterprise
-      - docker build --target teleport --build-arg DOWNLOAD_TYPE=teleport-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $ENT_IMAGE_NAME
       # Enterprise FIPS
-      - docker build --target teleport-fips --build-arg DOWNLOAD_TYPE=teleport-ent --build-arg EXTRA_DOWNLOAD_ARGS="-fips" --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $ENT_FIPS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec-fips --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg EXTRA_DOWNLOAD_ARGS="-fips" --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $ENT_FIPS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $ENT_FIPS_IMAGE_NAME
 
   - name: Build and push Siriusec containers (PREVIOUS_VERSION_ONE)
@@ -1148,17 +1148,17 @@ steps:
     commands:
       - export VERSION_TAG=$(cat /go/build/PREVIOUS_VERSION_ONE_TAG.txt)
       - export OSS_IMAGE_NAME="registry.siriusec.com/siriusec:$(cat /go/build/PREVIOUS_VERSION_ONE_TAG_GENERIC.txt)"
-      - export ENT_IMAGE_NAME="registry.siriusec.com/teleport-ent:$(cat /go/build/PREVIOUS_VERSION_ONE_TAG_GENERIC.txt)"
-      - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/teleport-ent:$(cat /go/build/PREVIOUS_VERSION_ONE_TAG_GENERIC.txt)-fips"
+      - export ENT_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/PREVIOUS_VERSION_ONE_TAG_GENERIC.txt)"
+      - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/PREVIOUS_VERSION_ONE_TAG_GENERIC.txt)-fips"
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
       # OSS
-      - docker build --target teleport --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $OSS_IMAGE_NAME
       # Enterprise
-      - docker build --target teleport --build-arg DOWNLOAD_TYPE=teleport-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $ENT_IMAGE_NAME
       # Enterprise FIPS
-      - docker build --target teleport-fips --build-arg DOWNLOAD_TYPE=teleport-ent --build-arg EXTRA_DOWNLOAD_ARGS="-fips" --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $ENT_FIPS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec-fips --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg EXTRA_DOWNLOAD_ARGS="-fips" --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $ENT_FIPS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $ENT_FIPS_IMAGE_NAME
 
   - name: Build and push Siriusec containers (PREVIOUS_VERSION_TWO)
@@ -1177,17 +1177,17 @@ steps:
     commands:
       - export VERSION_TAG=$(cat /go/build/PREVIOUS_VERSION_TWO_TAG.txt)
       - export OSS_IMAGE_NAME="registry.siriusec.com/siriusec:$(cat /go/build/PREVIOUS_VERSION_TWO_TAG_GENERIC.txt)"
-      - export ENT_IMAGE_NAME="registry.siriusec.com/teleport-ent:$(cat /go/build/PREVIOUS_VERSION_TWO_TAG_GENERIC.txt)"
-      - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/teleport-ent:$(cat /go/build/PREVIOUS_VERSION_TWO_TAG_GENERIC.txt)-fips"
+      - export ENT_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/PREVIOUS_VERSION_TWO_TAG_GENERIC.txt)"
+      - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/PREVIOUS_VERSION_TWO_TAG_GENERIC.txt)-fips"
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
       # OSS
-      - docker build --target teleport --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $OSS_IMAGE_NAME
       # Enterprise
-      - docker build --target teleport --build-arg DOWNLOAD_TYPE=teleport-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $ENT_IMAGE_NAME
       # Enterprise FIPS
-      - docker build --target teleport-fips --build-arg DOWNLOAD_TYPE=teleport-ent --build-arg EXTRA_DOWNLOAD_ARGS="-fips" --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $ENT_FIPS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec-fips --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg EXTRA_DOWNLOAD_ARGS="-fips" --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $ENT_FIPS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $ENT_FIPS_IMAGE_NAME
 
   - name: Build/push Siriusec Lab Docker image
@@ -1204,15 +1204,15 @@ steps:
       - name: dockersock
         path: /var/run
     commands:
-      - export TELEPORT_TAG=$(cat /go/build/CURRENT_VERSION_TAG.txt)
-      - export TELEPORT_LAB_IMAGE_NAME="registry.siriusec.com/teleport-lab:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)"
+      - export SIRIUSEC_TAG=$(cat /go/build/CURRENT_VERSION_TAG.txt)
+      - export SIRIUSEC_LAB_IMAGE_NAME="registry.siriusec.com/siriusec-lab:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)"
       - apk add --no-cache curl
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
        # Get Dockerfile
-      - curl -Ls -o /go/build/Dockerfile-teleport-lab https://raw.githubusercontent.com/gravitational/teleport/${DRONE_SOURCE_BRANCH:-master}/docker/sshd/Dockerfile
+      - curl -Ls -o /go/build/Dockerfile-siriusec-lab https://raw.githubusercontent.com/siriusec/siriusec/${DRONE_SOURCE_BRANCH:-master}/docker/sshd/Dockerfile
       # Build and push Siriusec lab image
-      - docker build --build-arg TELEPORT_TAG=$TELEPORT_TAG -t $TELEPORT_LAB_IMAGE_NAME -f /go/build/Dockerfile-teleport-lab /go/build
-      - docker push $TELEPORT_LAB_IMAGE_NAME
+      - docker build --build-arg SIRIUSEC_TAG=$SIRIUSEC_TAG -t $SIRIUSEC_LAB_IMAGE_NAME -f /go/build/Dockerfile-siriusec-lab /go/build
+      - docker push $SIRIUSEC_LAB_IMAGE_NAME
 
 services:
   - name: Start Docker
@@ -1236,7 +1236,7 @@ trigger:
     - teleport-helm-cron
   repo:
     include:
-      - gravitational/teleport
+      - siriusec/siriusec
 
 workspace:
   path: /go
@@ -1248,8 +1248,8 @@ steps:
   - name: Check out code
     image: alpine/git
     commands:
-      - mkdir -p /go/src/github.com/gravitational/teleport
-      - cd /go/src/github.com/gravitational/teleport
+      - mkdir -p /go/src/github.com/siriusec/siriusec
+      - cd /go/src/github.com/siriusec/siriusec
       - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_COMMIT}
       - mkdir -p /go/chart
@@ -1273,10 +1273,10 @@ steps:
     image: alpine/helm:latest
     commands:
       - cd /go/chart
-      - helm package /go/src/github.com/gravitational/teleport/examples/chart/teleport-cluster
-      - helm package /go/src/github.com/gravitational/teleport/examples/chart/teleport-kube-agent
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-cluster
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-kube-agent
       # copy index.html to root of the S3 bucket
-      - cp /go/src/github.com/gravitational/teleport/examples/chart/index.html /go/chart
+      - cp /go/src/github.com/siriusec/siriusec/examples/chart/index.html /go/chart
       # this will index all previous versions of the charts downloaded from the S3 bucket,
       # plus the just-packaged charts listed above
       - helm repo index /go/chart
@@ -1341,8 +1341,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -1369,7 +1369,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-amd64
   environment:
     ARCH: amd64
@@ -1384,7 +1384,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
@@ -1445,8 +1445,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -1473,7 +1473,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - make -C build.assets release-amd64-fips
   environment:
@@ -1490,7 +1490,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
@@ -1549,8 +1549,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -1577,7 +1577,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-amd64-centos6
   environment:
     ARCH: amd64
@@ -1592,14 +1592,14 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - export VERSION=$(cat /go/.version.txt)
   - mv /go/artifacts/teleport-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/teleport-v$${VERSION}-linux-amd64-centos6-bin.tar.gz
-  - mv /go/artifacts/teleport-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/teleport-ent-v$${VERSION}-linux-amd64-centos6-bin.tar.gz
+  - mv /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-centos6-bin.tar.gz
   - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
@@ -1656,8 +1656,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -1687,7 +1687,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -1701,7 +1701,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - mkdir -m0700 $GNUPG_DIR
   - echo "$GPG_RPM_SIGNING_ARCHIVE" | base64 -d | tar -xzf - -C $GNUPG_DIR
@@ -1724,7 +1724,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
@@ -1788,8 +1788,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -1817,7 +1817,7 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -1831,7 +1831,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - mkdir -m0700 $GNUPG_DIR
   - echo "$GPG_RPM_SIGNING_ARCHIVE" | base64 -d | tar -xzf - -C $GNUPG_DIR
@@ -1855,7 +1855,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
@@ -1917,8 +1917,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -1948,7 +1948,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -1962,7 +1962,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - make deb
   environment:
@@ -1976,7 +1976,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
@@ -2035,8 +2035,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -2064,7 +2064,7 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2078,7 +2078,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - make -C e deb
   environment:
@@ -2093,7 +2093,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
@@ -2150,8 +2150,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -2178,7 +2178,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-386
   environment:
     ARCH: "386"
@@ -2193,7 +2193,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
@@ -2254,8 +2254,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -2285,7 +2285,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-386-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2299,7 +2299,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - mkdir -m0700 $GNUPG_DIR
   - echo "$GPG_RPM_SIGNING_ARCHIVE" | base64 -d | tar -xzf - -C $GNUPG_DIR
@@ -2322,7 +2322,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
@@ -2386,8 +2386,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -2417,7 +2417,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-386-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2431,7 +2431,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - make deb
   environment:
@@ -2445,7 +2445,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
@@ -2515,8 +2515,8 @@ steps:
 - name: Check out code
   commands:
   - set -u
-  - mkdir -p $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
@@ -2539,7 +2539,7 @@ steps:
 - name: Build Mac release artifacts
   commands:
   - set -u
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - make clean release OS=$OS ARCH=$ARCH
   environment:
     ARCH: amd64
@@ -2550,9 +2550,9 @@ steps:
 - name: Copy Mac artifacts
   commands:
   - set -u
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - cp teleport*.tar.gz $WORKSPACE_DIR/go/artifacts
-  - cp e/teleport-ent*.tar.gz $WORKSPACE_DIR/go/artifacts
+  - cp e/siriusec-ent*.tar.gz $WORKSPACE_DIR/go/artifacts
   - cd $WORKSPACE_DIR/go/artifacts && for FILE in teleport*.tar.gz; do shasum -a 256
     $FILE > $FILE.sha256; done && ls -l
   environment:
@@ -2622,8 +2622,8 @@ steps:
 - name: Check out code
   commands:
   - set -u
-  - mkdir -p $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
@@ -2650,7 +2650,7 @@ steps:
   - export S3_PATH="tag/$${DRONE_TAG##v}/"
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2666,7 +2666,7 @@ steps:
 - name: Build Mac pkg release artifacts
   commands:
   - set -u
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat $WORKSPACE_DIR/go/.version.txt)
   - export HOME=/Users/build
   - security unlock-keychain -p $${BUILDBOX_PASSWORD} login.keychain
@@ -2687,9 +2687,9 @@ steps:
 - name: Copy Mac pkg artifacts
   commands:
   - set -u
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - rm -rf $WORKSPACE_DIR/go/artifacts/*.tar.gz
-  - cp build/teleport*.pkg e/build/teleport-ent*.pkg $WORKSPACE_DIR/go/artifacts/
+  - cp build/teleport*.pkg e/build/siriusec-ent*.pkg $WORKSPACE_DIR/go/artifacts/
   - cd $WORKSPACE_DIR/go/artifacts && for FILE in *.pkg; do shasum -a 256 $FILE >
     $FILE.sha256; done && ls -l
   environment:
@@ -2759,8 +2759,8 @@ steps:
 - name: Check out code
   commands:
   - set -u
-  - mkdir -p $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
@@ -2787,7 +2787,7 @@ steps:
   - export S3_PATH="tag/$${DRONE_TAG##v}/"
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2803,7 +2803,7 @@ steps:
 - name: Build Mac pkg release artifacts
   commands:
   - set -u
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat $WORKSPACE_DIR/go/.version.txt)
   - export HOME=/Users/build
   - security unlock-keychain -p $${BUILDBOX_PASSWORD} login.keychain
@@ -2824,7 +2824,7 @@ steps:
 - name: Copy Mac pkg artifacts
   commands:
   - set -u
-  - cd $WORKSPACE_DIR/go/src/github.com/gravitational/teleport
+  - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - rm -rf $WORKSPACE_DIR/go/artifacts/*.tar.gz
   - cp build/tsh*.pkg $WORKSPACE_DIR/go/artifacts/
   - cd $WORKSPACE_DIR/go/artifacts && for FILE in *.pkg; do shasum -a 256 $FILE >
@@ -2883,8 +2883,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -2911,7 +2911,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-arm
   environment:
     ARCH: arm
@@ -2926,7 +2926,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
@@ -2987,8 +2987,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -3015,7 +3015,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - make -C build.assets release-arm64
   environment:
     ARCH: arm64
@@ -3030,7 +3030,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
@@ -3091,8 +3091,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -3122,7 +3122,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-arm64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3136,7 +3136,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - make deb
   environment:
@@ -3150,7 +3150,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
@@ -3209,8 +3209,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -3240,7 +3240,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-arm-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3254,7 +3254,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - make deb
   environment:
@@ -3268,7 +3268,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
@@ -3327,8 +3327,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -3358,7 +3358,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-arm64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3372,7 +3372,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - mkdir -m0700 $GNUPG_DIR
   - echo "$GPG_RPM_SIGNING_ARCHIVE" | base64 -d | tar -xzf - -C $GNUPG_DIR
@@ -3395,7 +3395,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
@@ -3459,8 +3459,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -3490,7 +3490,7 @@ steps:
     export S3_PATH="tag/"; fi
   - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-arm-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3504,7 +3504,7 @@ steps:
   image: docker
   commands:
   - apk add --no-cache bash curl gzip make tar
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - export VERSION=$(cat /go/.version.txt)
   - mkdir -m0700 $GNUPG_DIR
   - echo "$GPG_RPM_SIGNING_ARCHIVE" | base64 -d | tar -xzf - -C $GNUPG_DIR
@@ -3527,7 +3527,7 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
     \;
   - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
@@ -3591,8 +3591,8 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - mkdir -p /go/src/github.com/gravitational/teleport
-  - cd /go/src/github.com/gravitational/teleport
+  - mkdir -p /go/src/github.com/siriusec/siriusec
+  - cd /go/src/github.com/siriusec/siriusec
   - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
@@ -3619,7 +3619,7 @@ steps:
   commands:
   - apk add --no-cache make
   - chown -R $UID:$GID /go
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - echo -n "$WINDOWS_SIGNING_CERT" | base64 -d > windows-signing-cert.pfx
   - make -C build.assets release-amd64
   - rm -f windows-signing-cert.pfx
@@ -3638,10 +3638,10 @@ steps:
 - name: Copy artifacts
   image: docker
   commands:
-  - cd /go/src/github.com/gravitational/teleport
+  - cd /go/src/github.com/siriusec/siriusec
   - find . -maxdepth 1 -iname "teleport*.zip" -print -exec cp {} /go/artifacts \;
   - export VERSION=$(cat /go/.version.txt)
-  - cp /go/artifacts/teleport-v$${VERSION}-windows-amd64-bin.zip /go/artifacts/teleport-ent-v$${VERSION}-windows-amd64-bin.zip
+  - cp /go/artifacts/teleport-v$${VERSION}-windows-amd64-bin.zip /go/artifacts/siriusec-ent-v$${VERSION}-windows-amd64-bin.zip
   - cd /go/artifacts && for FILE in teleport*.zip; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
@@ -3700,8 +3700,8 @@ steps:
         from_secret: GITHUB_PRIVATE_KEY
       GOCACHE: /go/cache
     commands:
-      - mkdir -p /go/src/github.com/gravitational/teleport
-      - cd /go/src/github.com/gravitational/teleport
+      - mkdir -p /go/src/github.com/siriusec/siriusec
+      - cd /go/src/github.com/siriusec/siriusec
       - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
       # fetch enterprise submodules
@@ -3737,8 +3737,8 @@ steps:
       - apk add --no-cache make
       - chown -R $UID:$GID /go
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
-      - docker pull registry.siriusec.com/teleport-buildbox:$RUNTIME || true
-      - cd /go/src/github.com/gravitational/teleport
+      - docker pull registry.siriusec.com/siriusec-buildbox:$RUNTIME || true
+      - cd /go/src/github.com/siriusec/siriusec
       - make image-ci publish-ci
 
   - name: Build/push FIPS Docker image
@@ -3762,8 +3762,8 @@ steps:
       - apk add --no-cache make
       - chown -R $UID:$GID /go
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
-      - docker pull registry.siriusec.com/teleport-buildbox:$RUNTIME || true
-      - cd /go/src/github.com/gravitational/teleport
+      - docker pull registry.siriusec.com/siriusec-buildbox:$RUNTIME || true
+      - cd /go/src/github.com/siriusec/siriusec
       # VERSION needs to be set manually when running in the e directory.
       # Normally, the version is set and exported by the root Makefile and then inherited,
       # but this is not the case for FIPS builds (which only run in e/Makefile)
@@ -3810,8 +3810,8 @@ steps:
   - name: Check out code
     image: docker:git
     commands:
-      - mkdir -p /go/src/github.com/gravitational/teleport
-      - cd /go/src/github.com/gravitational/teleport
+      - mkdir -p /go/src/github.com/siriusec/siriusec
+      - cd /go/src/github.com/siriusec/siriusec
       - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
       # set version
@@ -3830,7 +3830,7 @@ steps:
     commands:
       - export VERSION=$(cat /go/.version.txt)
       - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else export S3_PATH="tag/"; fi
-      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/gravitational/teleport/assets/aws/files
+      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
 
   - name: Build OSS AMIs
     image: hashicorp/packer:1.7.6
@@ -3844,7 +3844,7 @@ steps:
         path: /var/run
     commands:
       - apk add --no-cache aws-cli jq make
-      - cd /go/src/github.com/gravitational/teleport/assets/aws
+      - cd /go/src/github.com/siriusec/siriusec/assets/aws
       - export TELEPORT_VERSION=$(cat /go/.version.txt)
       - export PUBLIC_AMI_NAME=gravitational-teleport-ami-oss-$TELEPORT_VERSION
       - |
@@ -3869,7 +3869,7 @@ steps:
       AWS_REGION: us-west-2
     commands:
       - export VERSION=$(cat /go/.version.txt)
-      - aws s3 cp /go/src/github.com/gravitational/teleport/assets/aws/files/build/oss_build_timestamp.txt s3://$AWS_S3_BUCKET/teleport/ami/$${VERSION}/
+      - aws s3 cp /go/src/github.com/siriusec/siriusec/assets/aws/files/build/oss_build_timestamp.txt s3://$AWS_S3_BUCKET/teleport/ami/$${VERSION}/
 
 services:
   - name: Start Docker
@@ -3912,8 +3912,8 @@ steps:
   - name: Check out code
     image: docker:git
     commands:
-      - mkdir -p /go/src/github.com/gravitational/teleport
-      - cd /go/src/github.com/gravitational/teleport
+      - mkdir -p /go/src/github.com/siriusec/siriusec
+      - cd /go/src/github.com/siriusec/siriusec
       - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
       # set version
@@ -3932,8 +3932,8 @@ steps:
     commands:
       - export VERSION=$(cat /go/.version.txt)
       - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else export S3_PATH="tag/"; fi
-      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/gravitational/teleport/assets/aws/files
-      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz /go/src/github.com/gravitational/teleport/assets/aws/files
+      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
+      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
 
   - name: Build Enterprise AMIs
     image: hashicorp/packer:1.7.6
@@ -3947,7 +3947,7 @@ steps:
         path: /var/run
     commands:
       - apk add --no-cache aws-cli jq make
-      - cd /go/src/github.com/gravitational/teleport/assets/aws
+      - cd /go/src/github.com/siriusec/siriusec/assets/aws
       - export TELEPORT_VERSION=$(cat /go/.version.txt)
       - export PUBLIC_AMI_NAME=gravitational-teleport-ami-ent-$TELEPORT_VERSION
       - export FIPS_AMI_NAME=gravitational-teleport-ami-ent-$TELEPORT_VERSION-fips
@@ -3973,7 +3973,7 @@ steps:
       AWS_REGION: us-west-2
     commands:
       - export VERSION=$(cat /go/.version.txt)
-      - aws s3 cp /go/src/github.com/gravitational/teleport/assets/aws/files/build/ent_build_timestamp.txt s3://$AWS_S3_BUCKET/teleport/ami/$${VERSION}/
+      - aws s3 cp /go/src/github.com/siriusec/siriusec/assets/aws/files/build/ent_build_timestamp.txt s3://$AWS_S3_BUCKET/teleport/ami/$${VERSION}/
 
 services:
   - name: Start Docker
@@ -4007,12 +4007,12 @@ trigger:
     - push
   repo:
     include:
-    - gravitational/teleport
+    - siriusec/siriusec
   branch:
     include:
     - master
 workspace:
-  path: /go/src/github.com/gravitational/teleport
+  path: /go/src/github.com/siriusec/siriusec
 clone:
   disable: true
 steps:
@@ -4036,7 +4036,7 @@ steps:
   - chown -R $UID:$GID /go
   - docker login -u="$$QUAYIO_DOCKER_USERNAME" -p="$$QUAYIO_DOCKER_PASSWORD" quay.io
   - make -C build.assets buildbox
-  - docker push registry.siriusec.com/teleport-buildbox:$RUNTIME
+  - docker push registry.siriusec.com/siriusec-buildbox:$RUNTIME
   environment:
     QUAYIO_DOCKER_PASSWORD:
       from_secret: QUAYIO_DOCKER_PASSWORD
@@ -4052,7 +4052,7 @@ steps:
   - chown -R $UID:$GID /go
   - docker login -u="$$QUAYIO_DOCKER_USERNAME" -p="$$QUAYIO_DOCKER_PASSWORD" quay.io
   - make -C build.assets buildbox-fips
-  - docker push registry.siriusec.com/teleport-buildbox-fips:$RUNTIME
+  - docker push registry.siriusec.com/siriusec-buildbox-fips:$RUNTIME
   environment:
     QUAYIO_DOCKER_PASSWORD:
       from_secret: QUAYIO_DOCKER_PASSWORD
@@ -4068,7 +4068,7 @@ steps:
   - chown -R $UID:$GID /go
   - docker login -u="$$QUAYIO_DOCKER_USERNAME" -p="$$QUAYIO_DOCKER_PASSWORD" quay.io
   - make -C build.assets buildbox-centos6
-  - docker push registry.siriusec.com/teleport-buildbox-centos6:$RUNTIME
+  - docker push registry.siriusec.com/siriusec-buildbox-centos6:$RUNTIME
   environment:
     QUAYIO_DOCKER_PASSWORD:
       from_secret: QUAYIO_DOCKER_PASSWORD
@@ -4084,7 +4084,7 @@ steps:
   - chown -R $UID:$GID /go
   - docker login -u="$$QUAYIO_DOCKER_USERNAME" -p="$$QUAYIO_DOCKER_PASSWORD" quay.io
   - make -C build.assets buildbox-arm
-  - docker push registry.siriusec.com/teleport-buildbox-arm:$RUNTIME
+  - docker push registry.siriusec.com/siriusec-buildbox-arm:$RUNTIME
   environment:
     QUAYIO_DOCKER_PASSWORD:
       from_secret: QUAYIO_DOCKER_PASSWORD
@@ -4177,28 +4177,28 @@ steps:
       # pull 'temporary' CI-built images
       - echo "---> Pulling images for $${VERSION}"
       - docker pull registry.siriusec.com/teleport-ci:$${VERSION}
-      - docker pull registry.siriusec.com/teleport-ent-ci:$${VERSION}
-      - docker pull registry.siriusec.com/teleport-ent-ci:$${VERSION}-fips
+      - docker pull registry.siriusec.com/siriusec-ent-ci:$${VERSION}
+      - docker pull registry.siriusec.com/siriusec-ent-ci:$${VERSION}-fips
       # retag images to production naming
       - echo "---> Tagging images for $${VERSION}"
       - docker tag registry.siriusec.com/teleport-ci:$${VERSION} registry.siriusec.com/siriusec:$${VERSION}
-      - docker tag registry.siriusec.com/teleport-ent-ci:$${VERSION} registry.siriusec.com/teleport-ent:$${VERSION}
-      - docker tag registry.siriusec.com/teleport-ent-ci:$${VERSION}-fips registry.siriusec.com/teleport-ent:$${VERSION}-fips
+      - docker tag registry.siriusec.com/siriusec-ent-ci:$${VERSION} registry.siriusec.com/siriusec-ent:$${VERSION}
+      - docker tag registry.siriusec.com/siriusec-ent-ci:$${VERSION}-fips registry.siriusec.com/siriusec-ent:$${VERSION}-fips
       # reauthenticate with production credentials
       - docker logout quay.io
       - docker login -u="$PLUGIN_DOCKER_PRODUCTION_USERNAME" -p="$PLUGIN_DOCKER_PRODUCTION_PASSWORD" quay.io
       # push production images
       - echo "---> Pushing images for $${VERSION}"
       - docker push registry.siriusec.com/siriusec:$${VERSION}
-      - docker push registry.siriusec.com/teleport-ent:$${VERSION}
-      - docker push registry.siriusec.com/teleport-ent:$${VERSION}-fips
+      - docker push registry.siriusec.com/siriusec-ent:$${VERSION}
+      - docker push registry.siriusec.com/siriusec-ent:$${VERSION}-fips
 
   - name: Check out code
     image: docker:git
     commands:
       - |
-        mkdir -p /go/src/github.com/gravitational/teleport
-        cd /go/src/github.com/gravitational/teleport
+        mkdir -p /go/src/github.com/siriusec/siriusec
+        cd /go/src/github.com/siriusec/siriusec
         git init && git remote add origin ${DRONE_REMOTE_URL}
         git fetch origin +refs/tags/${DRONE_TAG}:
         git checkout -qf FETCH_HEAD
@@ -4214,8 +4214,8 @@ steps:
         from_secret: AWS_SECRET_ACCESS_KEY
     commands:
       - apk add --no-cache aws-cli
-      - mkdir -p /go/src/github.com/gravitational/teleport/assets/aws/files/build
-      - aws s3 sync s3://$AWS_S3_BUCKET/teleport/ami/${DRONE_TAG##v}/ /go/src/github.com/gravitational/teleport/assets/aws/files/build
+      - mkdir -p /go/src/github.com/siriusec/siriusec/assets/aws/files/build
+      - aws s3 sync s3://$AWS_S3_BUCKET/teleport/ami/${DRONE_TAG##v}/ /go/src/github.com/siriusec/siriusec/assets/aws/files/build
 
   - name: Make AMIs public
     image: docker
@@ -4226,7 +4226,7 @@ steps:
         from_secret: PRODUCTION_AWS_SECRET_ACCESS_KEY
     commands:
       - apk add --no-cache aws-cli bash jq make
-      - cd /go/src/github.com/gravitational/teleport/assets/aws
+      - cd /go/src/github.com/siriusec/siriusec/assets/aws
       - |
         make change-amis-to-public-oss
         make change-amis-to-public-ent
@@ -4251,10 +4251,10 @@ steps:
     image: alpine/helm:latest
     commands:
       - cd /go/chart
-      - helm package /go/src/github.com/gravitational/teleport/examples/chart/teleport-cluster
-      - helm package /go/src/github.com/gravitational/teleport/examples/chart/teleport-kube-agent
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-cluster
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-kube-agent
       # copy index.html to root of the S3 bucket.
-      - cp /go/src/github.com/gravitational/teleport/examples/chart/index.html /go/chart
+      - cp /go/src/github.com/siriusec/siriusec/examples/chart/index.html /go/chart
       # this will index all previous versions of the charts downloaded from the S3 bucket,
       # plus the just-packaged charts listed above
       - helm repo index /go/chart
@@ -4284,7 +4284,7 @@ steps:
     image: docker
     commands:
       - |
-        if [ "${DRONE_REPO}" != "gravitational/teleport" ]; then
+        if [ "${DRONE_REPO}" != "siriusec/siriusec" ]; then
           echo "---> Not publishing ${DRONE_REPO} packages to repos"
           exit 78
         fi
@@ -4413,7 +4413,7 @@ steps:
         # copy artifacts to PVC
         cp -r /go/reprepro/teleport /debrepo/
 
-  # Deb repo publish disabled for https://github.com/gravitational/teleport/issues/8166
+  # Deb repo publish disabled for https://github.com/siriusec/siriusec/issues/8166
 
 services:
   - name: Start Docker

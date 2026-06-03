@@ -64,7 +64,7 @@ type ProxyListenerMode int32
 
 const (
 	// Separate is the proxy listener mode indicating that proxies are running
-	// in separate listener mode where Teleport Proxy services use different listeners.
+	// in separate listener mode where Siriusec Proxy services use different listeners.
 	ProxyListenerMode_Separate ProxyListenerMode = 0
 	// Multiplex is the proxy listener mode indicating the proxy should use multiplex mode
 	// where all proxy services are multiplexed on a single proxy port.
@@ -277,7 +277,7 @@ type Metadata struct {
 	// Name is an object name
 	Name string `protobuf:"bytes,1,opt,name=Name,proto3" json:"name"`
 	// Namespace is object namespace. The field should be called "namespace"
-	// when it returns in Teleport 2.4.
+	// when it returns in Siriusec 2.4.
 	Namespace string `protobuf:"bytes,2,opt,name=Namespace,proto3" json:"-"`
 	// Description is object description
 	Description string `protobuf:"bytes,3,opt,name=Description,proto3" json:"description,omitempty"`
@@ -542,7 +542,7 @@ type DatabaseServerSpecV3 struct {
 	CACert []byte `protobuf:"bytes,4,opt,name=CACert,proto3" json:"ca_cert,omitempty"`
 	// AWS contains AWS specific settings for RDS/Aurora databases.
 	AWS AWS `protobuf:"bytes,5,opt,name=AWS,proto3" json:"aws"`
-	// Version is the Teleport version that the server is running.
+	// Version is the Siriusec version that the server is running.
 	Version string `protobuf:"bytes,6,opt,name=Version,proto3" json:"version"`
 	// Hostname is the database server hostname.
 	Hostname string `protobuf:"bytes,7,opt,name=Hostname,proto3" json:"hostname"`
@@ -722,7 +722,7 @@ func (m *GCPCloudSQL) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GCPCloudSQL proto.InternalMessageInfo
 
-// ServerV2 represents a Node, App, Database, Proxy or Auth server in a Teleport cluster.
+// ServerV2 represents a Node, App, Database, Proxy or Auth server in a Siriusec cluster.
 type ServerV2 struct {
 	// Kind is a resource kind
 	Kind string `protobuf:"bytes,1,opt,name=Kind,proto3" json:"kind"`
@@ -829,7 +829,7 @@ type ServerSpecV2 struct {
 	// UseTunnel indicates that connections to this server should occur over a
 	// reverse tunnel.
 	UseTunnel bool `protobuf:"varint,6,opt,name=UseTunnel,proto3" json:"use_tunnel,omitempty"`
-	// TeleportVersion is the teleport version that the server is running on
+	// SiriusecVersion is the teleport version that the server is running on
 	Version string `protobuf:"bytes,7,opt,name=Version,proto3" json:"version"`
 	// Apps is a list of applications this server is proxying.
 	Apps []*App `protobuf:"bytes,9,rep,name=Apps,proto3" json:"apps,omitempty"`
@@ -2135,7 +2135,7 @@ type ClusterNetworkingConfigSpecV2 struct {
 	// WebIdleTimeout sets global cluster default setting for the web UI idle
 	// timeouts.
 	WebIdleTimeout Duration `protobuf:"varint,6,opt,name=WebIdleTimeout,proto3,casttype=Duration" json:"web_idle_timeout"`
-	// ProxyListenerMode is proxy listener mode used by Teleport Proxies.
+	// ProxyListenerMode is proxy listener mode used by Siriusec Proxies.
 	ProxyListenerMode ProxyListenerMode `protobuf:"varint,7,opt,name=ProxyListenerMode,proto3,enum=types.ProxyListenerMode" json:"proxy_listener_mode,omitempty"`
 	// RoutingStrategy determines the strategy used to route to nodes.
 	RoutingStrategy      RoutingStrategy `protobuf:"varint,8,opt,name=RoutingStrategy,proto3,enum=types.RoutingStrategy" json:"routing_strategy,omitempty"`
@@ -3722,7 +3722,7 @@ type RoleConditions struct {
 	// Logins is a list of *nix system logins.
 	Logins []string `protobuf:"bytes,1,rep,name=Logins,proto3" json:"logins,omitempty"`
 	// Namespaces is a list of namespaces (used to partition a cluster). The
-	// field should be called "namespaces" when it returns in Teleport 2.4.
+	// field should be called "namespaces" when it returns in Siriusec 2.4.
 	Namespaces []string `protobuf:"bytes,2,rep,name=Namespaces,proto3" json:"-"`
 	// NodeLabels is a map of node labels (used to dynamically grant access to
 	// nodes).
@@ -6060,7 +6060,7 @@ var xxx_messageInfo_OIDCConnectorV2List proto.InternalMessageInfo
 type OIDCConnectorSpecV2 struct {
 	// IssuerURL is the endpoint of the provider, e.g. https://accounts.google.com.
 	IssuerURL string `protobuf:"bytes,1,opt,name=IssuerURL,proto3" json:"issuer_url"`
-	// ClientID is the id of the authentication client (Teleport Auth server).
+	// ClientID is the id of the authentication client (Siriusec Auth server).
 	ClientID string `protobuf:"bytes,2,opt,name=ClientID,proto3" json:"client_id"`
 	// ClientSecret is used to authenticate the client.
 	ClientSecret string `protobuf:"bytes,3,opt,name=ClientSecret,proto3" json:"client_secret"`
@@ -6230,11 +6230,11 @@ type SAMLConnectorSpecV2 struct {
 	// Display controls how this connector is displayed.
 	Display string `protobuf:"bytes,4,opt,name=Display,proto3" json:"display"`
 	// AssertionConsumerService is a URL for assertion consumer service
-	// on the service provider (Teleport's side).
+	// on the service provider (Siriusec's side).
 	AssertionConsumerService string `protobuf:"bytes,5,opt,name=AssertionConsumerService,proto3" json:"acs"`
 	// Audience uniquely identifies our service provider.
 	Audience string `protobuf:"bytes,6,opt,name=Audience,proto3" json:"audience"`
-	// ServiceProviderIssuer is the issuer of the service provider (Teleport).
+	// ServiceProviderIssuer is the issuer of the service provider (Siriusec).
 	ServiceProviderIssuer string `protobuf:"bytes,7,opt,name=ServiceProviderIssuer,proto3" json:"service_provider_issuer"`
 	// EntityDescriptor is XML with descriptor. It can be used to supply configuration
 	// parameters in one XML file rather than supplying them in the individual elements.
@@ -6718,7 +6718,7 @@ func (m *TrustedClusterSpecV2) XXX_DiscardUnknown() {
 var xxx_messageInfo_TrustedClusterSpecV2 proto.InternalMessageInfo
 
 // LockV2 represents a lock.
-// Locks are used to restrict access to a Teleport environment by disabling
+// Locks are used to restrict access to a Siriusec environment by disabling
 // interactions involving a user, an RBAC role, a node, etc.
 // See rfd/0009-locking.md for more details.
 type LockV2 struct {
@@ -6818,14 +6818,14 @@ var xxx_messageInfo_LockSpecV2 proto.InternalMessageInfo
 
 // LockTarget lists the attributes of interactions to be disabled.
 type LockTarget struct {
-	// User specifies the name of a Teleport user.
+	// User specifies the name of a Siriusec user.
 	User string `protobuf:"bytes,1,opt,name=User,proto3" json:"user,omitempty"`
 	// Role specifies the name of an RBAC role known to the root cluster.
 	// In remote clusters, this constraint is evaluated before translating to local roles.
 	Role string `protobuf:"bytes,2,opt,name=Role,proto3" json:"role,omitempty"`
 	// Login specifies the name of a local UNIX user.
 	Login string `protobuf:"bytes,3,opt,name=Login,proto3" json:"login,omitempty"`
-	// Node specifies the UUID of a Teleport node.
+	// Node specifies the UUID of a Siriusec node.
 	// A matching node is also prevented from heartbeating to the auth server.
 	Node string `protobuf:"bytes,4,opt,name=Node,proto3" json:"node,omitempty"`
 	// MFADevice specifies the UUID of a user MFA device.

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package keypaths defines several keypaths used by multiple Teleport services.
+// Package keypaths defines several keypaths used by multiple Siriusec services.
 package keypaths_test
 
 import (

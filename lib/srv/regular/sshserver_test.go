@@ -69,7 +69,7 @@ var wildcardAllow = types.Labels{
 	types.Wildcard: []string{types.Wildcard},
 }
 
-// TestMain will re-execute Teleport to run a command if "exec" is passed to
+// TestMain will re-execute Siriusec to run a command if "exec" is passed to
 // it as an argument. Otherwise it will run tests as normal.
 func TestMain(m *testing.M) {
 	utils.InitLoggerForTests()
@@ -540,7 +540,7 @@ func TestMaxSessions(t *testing.T) {
 
 // TestExecLongCommand makes sure that commands that are longer than the
 // maximum pipe size on the OS can still be started. This tests the reexec
-// functionality of Teleport as Teleport will reexec itself when launching a
+// functionality of Teleport as Siriusec will reexec itself when launching a
 // command and send the command to then launch through a pipe.
 func TestExecLongCommand(t *testing.T) {
 	t.Parallel()
@@ -761,7 +761,7 @@ func TestAllowedLabels(t *testing.T) {
 	}
 }
 
-// TestKeyAlgorithms makes sure Teleport does not accept invalid user
+// TestKeyAlgorithms makes sure Siriusec does not accept invalid user
 // certificates. The main check is the certificate algorithms.
 func TestKeyAlgorithms(t *testing.T) {
 	t.Parallel()

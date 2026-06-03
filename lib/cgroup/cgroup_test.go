@@ -93,7 +93,7 @@ func (s *Suite) TestCreate(c *check.C) {
 	}
 }
 
-// TestCleanup tests the ability for Teleport to remove and cleanup all
+// TestCleanup tests the ability for Siriusec to remove and cleanup all
 // cgroups which is performed upon startup.
 func (s *Suite) TestCleanup(c *check.C) {
 	// This test must be run as root. Only root can create cgroups.

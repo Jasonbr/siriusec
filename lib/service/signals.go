@@ -35,7 +35,7 @@ import (
 )
 
 // printShutdownStatus prints running services until shut down
-func (process *TeleportProcess) printShutdownStatus(ctx context.Context) {
+func (process *SiriusecProcess) printShutdownStatus(ctx context.Context) {
 	t := time.NewTicker(defaults.HighResReportingPeriod)
 	defer t.Stop()
 	for {
@@ -50,7 +50,7 @@ func (process *TeleportProcess) printShutdownStatus(ctx context.Context) {
 
 // WaitForSignals waits for system signals and processes them.
 // Should not be called twice by the process.
-func (process *TeleportProcess) WaitForSignals(ctx context.Context) error {
+func (process *SiriusecProcess) WaitForSignals(ctx context.Context) error {
 
 	sigC := make(chan os.Signal, 1024)
 	// Note: SIGKILL can't be trapped.
@@ -152,14 +152,14 @@ func (process *TeleportProcess) WaitForSignals(ctx context.Context) error {
 	}
 }
 
-// ErrTeleportReloading is returned when signal waiter exits
+// ErrSiriusecReloading is returned when signal waiter exits
 // because the teleport process has initiaded shutdown
 var ErrTeleportReloading = &trace.CompareFailedError{Message: "teleport process is reloading"}
 
-// ErrTeleportExited means that teleport has exited
+// ErrSiriusecExited means that teleport has exited
 var ErrTeleportExited = &trace.CompareFailedError{Message: "teleport process has shutdown"}
 
-func (process *TeleportProcess) writeToSignalPipe(signalPipe *os.File, message string) error {
+func (process *SiriusecProcess) writeToSignalPipe(signalPipe *os.File, message string) error {
 	messageSignalled, cancel := context.WithCancel(context.Background())
 	// Below the cancel is called second time, but it's ok.
 	// After the first call, subsequent calls to a CancelFunc do nothing.
@@ -184,7 +184,7 @@ func (process *TeleportProcess) writeToSignalPipe(signalPipe *os.File, message s
 
 // closeImportedDescriptors closes imported but unused file descriptors,
 // what could happen if service has updated configuration
-func (process *TeleportProcess) closeImportedDescriptors(prefix string) error {
+func (process *SiriusecProcess) closeImportedDescriptors(prefix string) error {
 	process.Lock()
 	defer process.Unlock()
 
@@ -201,7 +201,7 @@ func (process *TeleportProcess) closeImportedDescriptors(prefix string) error {
 
 // importOrCreateListener imports listener passed by the parent process (happens during live reload)
 // or creates a new listener if there was no listener registered
-func (process *TeleportProcess) importOrCreateListener(typ listenerType, address string) (net.Listener, error) {
+func (process *SiriusecProcess) importOrCreateListener(typ listenerType, address string) (net.Listener, error) {
 	l, err := process.importListener(typ, address)
 	if err == nil {
 		process.log.Infof("Using file descriptor %v %v passed by the parent process.", typ, address)
@@ -214,7 +214,7 @@ func (process *TeleportProcess) importOrCreateListener(typ listenerType, address
 	return process.createListener(typ, address)
 }
 
-func (process *TeleportProcess) importSignalPipe() (*os.File, error) {
+func (process *SiriusecProcess) importSignalPipe() (*os.File, error) {
 	process.Lock()
 	defer process.Unlock()
 
@@ -231,7 +231,7 @@ func (process *TeleportProcess) importSignalPipe() (*os.File, error) {
 
 // importListener imports listener passed by the parent process, if no listener is found
 // returns NotFound, otherwise removes the file from the list
-func (process *TeleportProcess) importListener(typ listenerType, address string) (net.Listener, error) {
+func (process *SiriusecProcess) importListener(typ listenerType, address string) (net.Listener, error) {
 	process.Lock()
 	defer process.Unlock()
 
@@ -252,7 +252,7 @@ func (process *TeleportProcess) importListener(typ listenerType, address string)
 }
 
 // createListener creates listener and adds to a list of tracked listeners
-func (process *TeleportProcess) createListener(typ listenerType, address string) (net.Listener, error) {
+func (process *SiriusecProcess) createListener(typ listenerType, address string) (net.Listener, error) {
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -265,7 +265,7 @@ func (process *TeleportProcess) createListener(typ listenerType, address string)
 }
 
 // ExportFileDescriptors exports file descriptors to be passed to child process
-func (process *TeleportProcess) ExportFileDescriptors() ([]FileDescriptor, error) {
+func (process *SiriusecProcess) ExportFileDescriptors() ([]FileDescriptor, error) {
 	var out []FileDescriptor
 	process.Lock()
 	defer process.Unlock()
@@ -396,7 +396,7 @@ const (
 	signalPipeTimeout = 2 * time.Minute
 )
 
-func (process *TeleportProcess) forkChild() error {
+func (process *SiriusecProcess) forkChild() error {
 	readPipe, writePipe, err := os.Pipe()
 	if err != nil {
 		return trace.ConvertSystemError(err)
@@ -489,7 +489,7 @@ func (process *TeleportProcess) forkChild() error {
 // have tried to collect the status of this process.
 // Instead this logic tries to collect statuses of the processes
 // forked during restart procedure.
-func (process *TeleportProcess) collectStatuses() {
+func (process *SiriusecProcess) collectStatuses() {
 	pids := process.getForkedPIDs()
 	if len(pids) == 0 {
 		return
@@ -508,13 +508,13 @@ func (process *TeleportProcess) collectStatuses() {
 	}
 }
 
-func (process *TeleportProcess) pushForkedPID(pid int) {
+func (process *SiriusecProcess) pushForkedPID(pid int) {
 	process.Lock()
 	defer process.Unlock()
 	process.forkedPIDs = append(process.forkedPIDs, pid)
 }
 
-func (process *TeleportProcess) popForkedPID(pid int) {
+func (process *SiriusecProcess) popForkedPID(pid int) {
 	process.Lock()
 	defer process.Unlock()
 	for i, p := range process.forkedPIDs {
@@ -525,7 +525,7 @@ func (process *TeleportProcess) popForkedPID(pid int) {
 	}
 }
 
-func (process *TeleportProcess) getForkedPIDs() []int {
+func (process *SiriusecProcess) getForkedPIDs() []int {
 	process.Lock()
 	defer process.Unlock()
 	if len(process.forkedPIDs) == 0 {

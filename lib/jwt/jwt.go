@@ -95,10 +95,10 @@ func New(config *Config) (*Key, error) {
 
 // SignParams are the claims to be embedded within the JWT token.
 type SignParams struct {
-	// Username is the Teleport identity.
+	// Username is the Siriusec identity.
 	Username string
 
-	// Roles are the roles assigned to the user within Teleport.
+	// Roles are the roles assigned to the user within Siriusec.
 	Roles []string
 
 	// Expiry is time to live for the token.
@@ -173,7 +173,7 @@ func (k *Key) Sign(p SignParams) (string, error) {
 
 // VerifyParams are the parameters needed to pass the token and data needed to verify.
 type VerifyParams struct {
-	// Username is the Teleport identity.
+	// Username is the Siriusec identity.
 	Username string
 
 	// RawToken is the JWT token.
@@ -238,10 +238,10 @@ type Claims struct {
 	// Claims represents public claim values (as specified in RFC 7519).
 	josejwt.Claims
 
-	// Username returns the Teleport identity of the user.
+	// Username returns the Siriusec identity of the user.
 	Username string `json:"username"`
 
-	// Roles returns the list of roles assigned to the user within Teleport.
+	// Roles returns the list of roles assigned to the user within Siriusec.
 	Roles []string `json:"roles"`
 }
 

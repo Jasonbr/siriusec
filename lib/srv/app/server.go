@@ -540,7 +540,7 @@ func (s *Server) getConfigForClient(info *tls.ClientHelloInfo) (*tls.Config, err
 }
 
 // copyAndConfigureTLS can be used to copy and modify an existing *tls.Config
-// for Teleport application proxy servers.
+// for Siriusec application proxy servers.
 func copyAndConfigureTLS(config *tls.Config, fn func(*tls.ClientHelloInfo) (*tls.Config, error)) *tls.Config {
 	tlsConfig := config.Clone()
 

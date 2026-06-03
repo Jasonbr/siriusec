@@ -25,8 +25,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// knownHostEntry is a parsed entry from a Teleport/OpenSSH known_hosts file,
-// used as part of the migration/pruning process to make Teleport's known_hosts
+// knownHostEntry is a parsed entry from a Siriusec/OpenSSH known_hosts file,
+// used as part of the migration/pruning process to make Siriusec's known_hosts
 // compatible with OpenSSH.
 type knownHostEntry struct {
 	raw     string

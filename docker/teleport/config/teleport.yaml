@@ -3,12 +3,12 @@
 # Creates a single proxy, auth and node server.
 #
 # Things to update:
-#  1. license.pem: You only need a license from https://dashboard.goteleport.com
+#  1. license.pem: You only need a license from https://dashboard.siriusec.com
 #     if you are an Enterprise customer.
 #
 siriusec:
   nodename: localhost
-  data_dir: /var/lib/teleport
+  data_dir: /var/lib/siriusec
   log:
     output: stderr
     severity: INFO

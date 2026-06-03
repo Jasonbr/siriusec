@@ -141,8 +141,8 @@ type Server interface {
 // IdentityContext holds all identity information associated with the user
 // logged on the connection.
 type IdentityContext struct {
-	// TeleportUser is the Teleport user associated with the connection.
-	TeleportUser string
+	// SiriusecUser is the Siriusec user associated with the connection.
+	SiriusecUser string
 
 	// Impersonator is a user acting on behalf of other user
 	Impersonator string
@@ -157,11 +157,11 @@ type IdentityContext struct {
 	// CertAuthority is the Certificate Authority that signed the Certificate.
 	CertAuthority types.CertAuthority
 
-	// RoleSet is the roles this Teleport user is associated with. RoleSet is
+	// RoleSet is the roles this Siriusec user is associated with. RoleSet is
 	// used to check RBAC permissions.
 	RoleSet services.RoleSet
 
-	// UnmappedRoles lists the original roles of this Teleport user without
+	// UnmappedRoles lists the original roles of this Siriusec user without
 	// trusted-cluster-related role mapping being applied.
 	UnmappedRoles []string
 
@@ -314,7 +314,7 @@ func NewServerContext(ctx context.Context, parent *sshutils.ConnectionContext, s
 		srv:                    srv,
 		ExecResultCh:           make(chan ExecResult, 10),
 		SubsystemResultCh:      make(chan SubsystemResult, 10),
-		ClusterName:            parent.ServerConn.Permissions.Extensions[utils.CertTeleportClusterName],
+		ClusterName:            parent.ServerConn.Permissions.Extensions[utils.CertSiriusecClusterName],
 		SessionRecordingConfig: recConfig,
 		Identity:               identityContext,
 		clientIdleTimeout:      identityContext.RoleSet.AdjustClientIdleTimeout(netConfig.GetClientIdleTimeout()),
@@ -336,7 +336,7 @@ func NewServerContext(ctx context.Context, parent *sshutils.ConnectionContext, s
 		"local":        child.ServerConn.LocalAddr(),
 		"remote":       child.ServerConn.RemoteAddr(),
 		"login":        child.Identity.Login,
-		"teleportUser": child.Identity.TeleportUser,
+		"teleportUser": child.Identity.SiriusecUser,
 		"id":           child.id,
 	}
 	if !child.disconnectExpiredCert.IsZero() {
@@ -364,7 +364,7 @@ func NewServerContext(ctx context.Context, parent *sshutils.ConnectionContext, s
 		Tracker:               child,
 		Conn:                  child.ServerConn,
 		Context:               cancelContext,
-		TeleportUser:          child.Identity.TeleportUser,
+		SiriusecUser:          child.Identity.SiriusecUser,
 		Login:                 child.Identity.Login,
 		ServerID:              child.srv.ID(),
 		Entry:                 child.Entry,
@@ -574,7 +574,7 @@ func (c *ServerContext) takeClosers() []io.Closer {
 // When the ServerContext (connection) is closed, emit "session.data" event
 // containing how much data was transmitted and received over the net.Conn.
 func (c *ServerContext) reportStats(conn utils.Stater) {
-	// Never emit session data events for the proxy or from a Teleport node if
+	// Never emit session data events for the proxy or from a Siriusec node if
 	// sessions are being recorded at the proxy (this would result in double
 	// events).
 	if c.GetServer().Component() == teleport.ComponentProxy {
@@ -607,7 +607,7 @@ func (c *ServerContext) reportStats(conn utils.Stater) {
 			WithMFA:   c.Identity.Certificate.Extensions[teleport.CertExtensionMFAVerified],
 		},
 		UserMetadata: apievents.UserMetadata{
-			User:         c.Identity.TeleportUser,
+			User:         c.Identity.SiriusecUser,
 			Login:        c.Identity.Login,
 			Impersonator: c.Identity.Impersonator,
 		},
@@ -735,11 +735,11 @@ func getPAMConfig(c *ServerContext) (*PAMConfig, error) {
 
 	// Fill in the environment variables from the config and interpolate them if needed.
 	environment := make(map[string]string)
-	environment["TELEPORT_USERNAME"] = c.Identity.TeleportUser
+	environment["TELEPORT_USERNAME"] = c.Identity.SiriusecUser
 	environment["TELEPORT_LOGIN"] = c.Identity.Login
 	environment["TELEPORT_ROLES"] = strings.Join(roleNames, " ")
 	if localPAMConfig.Environment != nil {
-		user, err := c.srv.GetAccessPoint().GetUser(c.Identity.TeleportUser, false)
+		user, err := c.srv.GetAccessPoint().GetUser(c.Identity.SiriusecUser, false)
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
@@ -780,7 +780,7 @@ func getPAMConfig(c *ServerContext) (*PAMConfig, error) {
 }
 
 // ExecCommand takes a *ServerContext and extracts the parts needed to create
-// an *execCommand which can be re-sent to Teleport.
+// an *execCommand which can be re-sent to Siriusec.
 func (c *ServerContext) ExecCommand() (*ExecCommand, error) {
 	// If the identity has roles, extract the role names.
 	var roleNames []string
@@ -817,7 +817,7 @@ func (c *ServerContext) ExecCommand() (*ExecCommand, error) {
 	return &ExecCommand{
 		Command:               command,
 		DestinationAddress:    c.DstAddr,
-		Username:              c.Identity.TeleportUser,
+		Username:              c.Identity.SiriusecUser,
 		Login:                 c.Identity.Login,
 		Roles:                 roleNames,
 		Terminal:              c.termAllocated || command == "",
@@ -868,13 +868,13 @@ func buildEnvironment(ctx *ServerContext) []string {
 		}
 	}
 
-	// Set some Teleport specific environment variables: SSH_TELEPORT_USER,
+	// Set some Siriusec specific environment variables: SSH_TELEPORT_USER,
 	// SSH_SESSION_WEBPROXY_ADDR, SSH_TELEPORT_HOST_UUID, and
 	// SSH_TELEPORT_CLUSTER_NAME.
 	env = append(env, teleport.SSHSessionWebproxyAddr+"="+ctx.ProxyPublicAddress())
 	env = append(env, teleport.SSHTeleportHostUUID+"="+ctx.srv.ID())
-	env = append(env, teleport.SSHTeleportClusterName+"="+ctx.ClusterName)
-	env = append(env, teleport.SSHTeleportUser+"="+ctx.Identity.TeleportUser)
+	env = append(env, teleport.SSHSiriusecClusterName+"="+ctx.ClusterName)
+	env = append(env, teleport.SSHSiriusecUser+"="+ctx.Identity.SiriusecUser)
 
 	return env
 }
@@ -927,7 +927,7 @@ func ComputeLockTargets(s Server, id IdentityContext) ([]types.LockTarget, error
 	}
 	roleTargets := services.RolesToLockTargets(apiutils.Deduplicate(append(id.RoleSet.RoleNames(), id.UnmappedRoles...)))
 	return append([]types.LockTarget{
-		{User: id.TeleportUser},
+		{User: id.SiriusecUser},
 		{Login: id.Login},
 		{Node: s.HostUUID()},
 		{Node: auth.HostFQDN(s.HostUUID(), clusterName.GetClusterName())},

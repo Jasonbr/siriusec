@@ -44,7 +44,7 @@ import (
 
 // reconnectToAuthService continuously attempts to reconnect to the auth
 // service until succeeds or process gets shut down
-func (process *TeleportProcess) reconnectToAuthService(role types.SystemRole) (*Connector, error) {
+func (process *SiriusecProcess) reconnectToAuthService(role types.SystemRole) (*Connector, error) {
 	retryTime := defaults.HighResPollingPeriod
 	for {
 		connector, err := process.connectToAuthService(role)
@@ -78,7 +78,7 @@ func (process *TeleportProcess) reconnectToAuthService(role types.SystemRole) (*
 
 // connectToAuthService attempts to login into the auth servers specified in the
 // configuration and receive credentials.
-func (process *TeleportProcess) connectToAuthService(role types.SystemRole) (*Connector, error) {
+func (process *SiriusecProcess) connectToAuthService(role types.SystemRole) (*Connector, error) {
 	connector, err := process.connect(role)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -90,7 +90,7 @@ func (process *TeleportProcess) connectToAuthService(role types.SystemRole) (*Co
 	return connector, nil
 }
 
-func (process *TeleportProcess) connect(role types.SystemRole) (conn *Connector, err error) {
+func (process *SiriusecProcess) connect(role types.SystemRole) (conn *Connector, err error) {
 	state, err := process.storage.GetState(role)
 	if err != nil {
 		if !trace.IsNotFound(err) {
@@ -241,14 +241,14 @@ type KeyPair struct {
 	PublicTLSKey []byte
 }
 
-func (process *TeleportProcess) deleteKeyPair(role types.SystemRole, reason string) {
+func (process *SiriusecProcess) deleteKeyPair(role types.SystemRole, reason string) {
 	process.keyMutex.Lock()
 	defer process.keyMutex.Unlock()
 	process.log.Debugf("Deleted generated key pair %v %v.", role, reason)
 	delete(process.keyPairs, keyPairKey{role: role, reason: reason})
 }
 
-func (process *TeleportProcess) generateKeyPair(role types.SystemRole, reason string) (*KeyPair, error) {
+func (process *SiriusecProcess) generateKeyPair(role types.SystemRole, reason string) (*KeyPair, error) {
 	process.keyMutex.Lock()
 	defer process.keyMutex.Unlock()
 
@@ -280,7 +280,7 @@ func (process *TeleportProcess) generateKeyPair(role types.SystemRole, reason st
 
 // newWatcher returns a new watcher,
 // either using local auth server connection or remote client
-func (process *TeleportProcess) newWatcher(conn *Connector, watch types.Watch) (types.Watcher, error) {
+func (process *SiriusecProcess) newWatcher(conn *Connector, watch types.Watch) (types.Watcher, error) {
 	if conn.ClientIdentity.ID.Role == types.RoleAdmin || conn.ClientIdentity.ID.Role == types.RoleAuth {
 		return process.localAuth.NewWatcher(process.ExitContext(), watch)
 	}
@@ -288,9 +288,9 @@ func (process *TeleportProcess) newWatcher(conn *Connector, watch types.Watch) (
 }
 
 // getCertAuthority returns cert authority by ID.
-// In case if auth servers, the role is 'TeleportAdmin' and instead of using
+// In case if auth servers, the role is 'SiriusecAdmin' and instead of using
 // TLS client this method uses the local auth server.
-func (process *TeleportProcess) getCertAuthority(conn *Connector, id types.CertAuthID, loadPrivateKeys bool) (types.CertAuthority, error) {
+func (process *SiriusecProcess) getCertAuthority(conn *Connector, id types.CertAuthID, loadPrivateKeys bool) (types.CertAuthority, error) {
 	if conn.ClientIdentity.ID.Role == types.RoleAdmin || conn.ClientIdentity.ID.Role == types.RoleAuth {
 		return process.localAuth.GetCertAuthority(id, loadPrivateKeys)
 	}
@@ -298,9 +298,9 @@ func (process *TeleportProcess) getCertAuthority(conn *Connector, id types.CertA
 }
 
 // reRegister receives new identity credentials for proxy, node and auth.
-// In case if auth servers, the role is 'TeleportAdmin' and instead of using
+// In case if auth servers, the role is 'SiriusecAdmin' and instead of using
 // TLS client this method uses the local auth server.
-func (process *TeleportProcess) reRegister(conn *Connector, additionalPrincipals []string, dnsNames []string, rotation types.Rotation) (*auth.Identity, error) {
+func (process *SiriusecProcess) reRegister(conn *Connector, additionalPrincipals []string, dnsNames []string, rotation types.Rotation) (*auth.Identity, error) {
 	if conn.ClientIdentity.ID.Role == types.RoleAdmin || conn.ClientIdentity.ID.Role == types.RoleAuth {
 		return auth.GenerateIdentity(process.localAuth, conn.ClientIdentity.ID, additionalPrincipals, dnsNames)
 	}
@@ -326,7 +326,7 @@ func (process *TeleportProcess) reRegister(conn *Connector, additionalPrincipals
 	return identity, nil
 }
 
-func (process *TeleportProcess) firstTimeConnect(role types.SystemRole) (*Connector, error) {
+func (process *SiriusecProcess) firstTimeConnect(role types.SystemRole) (*Connector, error) {
 	id := auth.IdentityID{
 		Role:     role,
 		HostUUID: process.Config.HostUUID,
@@ -436,10 +436,10 @@ func (process *TeleportProcess) firstTimeConnect(role types.SystemRole) (*Connec
 
 // periodicSyncRotationState checks rotation state periodically and
 // takes action if necessary
-func (process *TeleportProcess) periodicSyncRotationState() error {
+func (process *SiriusecProcess) periodicSyncRotationState() error {
 	// start rotation only after teleport process has started
 	eventC := make(chan Event, 1)
-	process.WaitForEvent(process.ExitContext(), TeleportReadyEvent, eventC)
+	process.WaitForEvent(process.ExitContext(), SiriusecReadyEvent, eventC)
 	select {
 	case <-eventC:
 		process.log.Infof("The new service has started successfully. Starting syncing rotation status with period %v.", process.Config.PollingPeriod)
@@ -471,7 +471,7 @@ func (process *TeleportProcess) periodicSyncRotationState() error {
 		if count > process.Config.RestartThreshold.Amount {
 			// signal quit
 			process.log.Error("Connection error threshold exceeded. Asking for a graceful restart.")
-			process.BroadcastEvent(Event{Name: TeleportReloadEvent})
+			process.BroadcastEvent(Event{Name: SiriusecReloadEvent})
 			return nil
 		}
 
@@ -492,7 +492,7 @@ func (process *TeleportProcess) periodicSyncRotationState() error {
 //
 // the function accepts extra delay timer extraDelay in case if parent
 // function needs a
-func (process *TeleportProcess) syncRotationStateCycle() error {
+func (process *SiriusecProcess) syncRotationStateCycle() error {
 	connectors := process.getConnectors()
 	if len(connectors) == 0 {
 		return trace.BadParameter("no connectors found")
@@ -567,7 +567,7 @@ func (process *TeleportProcess) syncRotationStateCycle() error {
 
 // syncRotationStateAndBroadcast syncs rotation state and broadcasts events
 // when phase has been changed or reload happened
-func (process *TeleportProcess) syncRotationStateAndBroadcast(conn *Connector) (*rotationStatus, error) {
+func (process *SiriusecProcess) syncRotationStateAndBroadcast(conn *Connector) (*rotationStatus, error) {
 	status, err := process.syncRotationState(conn)
 	if err != nil {
 		if trace.IsConnectionProblem(err) {
@@ -582,18 +582,18 @@ func (process *TeleportProcess) syncRotationStateAndBroadcast(conn *Connector) (
 		process.log.Debugf("Sync rotation state detected cert authority reload phase update.")
 	}
 	if status.phaseChanged {
-		process.BroadcastEvent(Event{Name: TeleportPhaseChangeEvent})
+		process.BroadcastEvent(Event{Name: SiriusecPhaseChangeEvent})
 	}
 	if status.needsReload {
 		process.log.Debugf("Triggering reload process.")
-		process.BroadcastEvent(Event{Name: TeleportReloadEvent})
+		process.BroadcastEvent(Event{Name: SiriusecReloadEvent})
 	}
 	return status, nil
 }
 
 // syncRotationState compares cluster rotation state with the state of
 // internal services and performs the rotation if necessary.
-func (process *TeleportProcess) syncRotationState(conn *Connector) (*rotationStatus, error) {
+func (process *SiriusecProcess) syncRotationState(conn *Connector) (*rotationStatus, error) {
 	connectors := process.getConnectors()
 	ca, err := process.getCertAuthority(conn, types.CertAuthID{
 		DomainName: conn.ClientIdentity.ClusterName,
@@ -621,7 +621,7 @@ func (process *TeleportProcess) syncRotationState(conn *Connector) (*rotationSta
 
 // syncServiceRotationState syncs up rotation state for internal services (Auth, Proxy, Node) and
 // if necessary, updates credentials. Returns true if the service will need to reload.
-func (process *TeleportProcess) syncServiceRotationState(ca types.CertAuthority, conn *Connector) (*rotationStatus, error) {
+func (process *SiriusecProcess) syncServiceRotationState(ca types.CertAuthority, conn *Connector) (*rotationStatus, error) {
 	state, err := process.storage.GetState(conn.ClientIdentity.ID.Role)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -673,7 +673,7 @@ func checkServerIdentity(conn *Connector, additionalPrincipals []string, dnsName
 }
 
 // rotate is called to check if rotation should be triggered.
-func (process *TeleportProcess) rotate(conn *Connector, localState auth.StateV2, remote types.Rotation) (*rotationStatus, error) {
+func (process *SiriusecProcess) rotate(conn *Connector, localState auth.StateV2, remote types.Rotation) (*rotationStatus, error) {
 	id := conn.ClientIdentity.ID
 	local := localState.Spec.Rotation
 
@@ -826,7 +826,7 @@ func (process *TeleportProcess) rotate(conn *Connector, localState auth.StateV2,
 // falls back to trying to connect to the Auth Server through the proxy.
 // The proxy address might be configured in process environment as apidefaults.TunnelPublicAddrEnvar
 // in which case, no attempt at discovering the reverse tunnel address is made.
-func (process *TeleportProcess) newClient(authServers []utils.NetAddr, identity *auth.Identity) (*auth.Client, error) {
+func (process *SiriusecProcess) newClient(authServers []utils.NetAddr, identity *auth.Identity) (*auth.Client, error) {
 	tlsConfig, err := identity.TLSConfig(process.Config.CipherSuites)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -875,7 +875,7 @@ func (process *TeleportProcess) newClient(authServers []utils.NetAddr, identity 
 
 // findReverseTunnel uses the web proxy to discover where the SSH reverse tunnel
 // server is running.
-func (process *TeleportProcess) findReverseTunnel(addrs []utils.NetAddr) (string, error) {
+func (process *SiriusecProcess) findReverseTunnel(addrs []utils.NetAddr) (string, error) {
 	var errs []error
 	for _, addr := range addrs {
 		// In insecure mode, any certificate is accepted. In secure mode the hosts
@@ -889,7 +889,7 @@ func (process *TeleportProcess) findReverseTunnel(addrs []utils.NetAddr) (string
 	return "", trace.NewAggregate(errs...)
 }
 
-func (process *TeleportProcess) newClientThroughTunnel(proxyAddr string, tlsConfig *tls.Config, sshConfig *ssh.ClientConfig) (*auth.Client, error) {
+func (process *SiriusecProcess) newClientThroughTunnel(proxyAddr string, tlsConfig *tls.Config, sshConfig *ssh.ClientConfig) (*auth.Client, error) {
 	clt, err := auth.NewClient(apiclient.Config{
 		Dialer: &reversetunnel.TunnelAuthDialer{
 			ProxyAddr:    proxyAddr,
@@ -916,7 +916,7 @@ func (process *TeleportProcess) newClientThroughTunnel(proxyAddr string, tlsConf
 	return clt, nil
 }
 
-func (process *TeleportProcess) newClientDirect(authServers []utils.NetAddr, tlsConfig *tls.Config) (*auth.Client, error) {
+func (process *SiriusecProcess) newClientDirect(authServers []utils.NetAddr, tlsConfig *tls.Config) (*auth.Client, error) {
 	var cltParams []roundtrip.ClientParam
 	if process.Config.ClientTimeout != 0 {
 		cltParams = []roundtrip.ClientParam{auth.ClientTimeout(process.Config.ClientTimeout)}

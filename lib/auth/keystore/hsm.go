@@ -80,7 +80,7 @@ func (c *hsmKeyStore) findUnusedID() (uuid.UUID, error) {
 	// Some HSMs (like YubiHSM2) will silently truncate the passed ID to as few
 	// as 2 bytes. There's not a great way to detect this and I don't want to
 	// limit the ID to 2 bytes on all systems, so for now we will generate a
-	// few random IDs and hope to avoid a collision. Ideally Teleport should be
+	// few random IDs and hope to avoid a collision. Ideally Siriusec should be
 	// the only thing creating keys for this token and there should only be 10
 	// keys per HSM at a given time:
 	// 2(rotation phases) * (4(SSH and TLS for User and Host CA) + 1(JWT CA))

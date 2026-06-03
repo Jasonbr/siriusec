@@ -57,10 +57,10 @@ type claims struct {
 	// Claims represents public claim values (as specified in RFC 7519).
 	jwt.Claims
 
-	// Username returns the Teleport identity of the user.
+	// Username returns the Siriusec identity of the user.
 	Username string `json:"username"`
 
-	// Roles returns the list of roles assigned to the user within Teleport.
+	// Roles returns the list of roles assigned to the user within Siriusec.
 	Roles []string `json:"roles"`
 }
 
@@ -154,8 +154,8 @@ func main() {
 	skipVerify := flag.Bool("insecure-skip-verify", false, "Skip server certificate validation.")
 	jwt := flag.String("jwt", "", "JWT token to verify.")
 	validateClaims := flag.Bool("validate-claims", true, "Validate the claims received match expected.")
-	issuer := flag.String("issuer", "", "Issuer is name of the Teleport cluster.")
-	subject := flag.String("subject", "", "Subject is the identity of the Teleport user.")
+	issuer := flag.String("issuer", "", "Issuer is name of the Siriusec cluster.")
+	subject := flag.String("subject", "", "Subject is the identity of the Siriusec user.")
 	audience := flag.String("audience", "", "Audience is the URI of the application.")
 	flag.Parse()
 

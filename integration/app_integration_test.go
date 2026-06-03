@@ -421,7 +421,7 @@ func TestAppAccessRewriteHeadersRoot(t *testing.T) {
 							Name:  "X-Existing",
 							Value: "rewritten-existing-header",
 						},
-						// Make sure can't rewrite Teleport headers.
+						// Make sure can't rewrite Siriusec headers.
 						{
 							Name:  teleport.AppJWTHeader,
 							Value: "rewritten-app-jwt-header",
@@ -520,7 +520,7 @@ func TestAppAccessRewriteHeadersLeaf(t *testing.T) {
 							Name:  "X-Existing",
 							Value: "rewritten-existing-header",
 						},
-						// Make sure can't rewrite Teleport headers.
+						// Make sure can't rewrite Siriusec headers.
 						{
 							Name:  teleport.AppJWTHeader,
 							Value: "rewritten-app-jwt-header",
@@ -634,12 +634,12 @@ func TestAppAuditEvents(t *testing.T) {
 	})
 }
 
-// pack contains identity as well as initialized Teleport clusters and instances.
+// pack contains identity as well as initialized Siriusec clusters and instances.
 type pack struct {
 	username string
 	password string
 
-	tc *client.TeleportClient
+	tc *client.SiriusecClient
 
 	user types.User
 
@@ -647,7 +647,7 @@ type pack struct {
 	webToken  string
 
 	rootCluster   *TeleInstance
-	rootAppServer *service.TeleportProcess
+	rootAppServer *service.SiriusecProcess
 	rootCertPool  *x509.CertPool
 
 	rootAppName        string
@@ -672,7 +672,7 @@ type pack struct {
 	jwtAppURI         string
 
 	leafCluster   *TeleInstance
-	leafAppServer *service.TeleportProcess
+	leafAppServer *service.SiriusecProcess
 
 	leafAppName        string
 	leafAppPublicAddr  string
@@ -842,7 +842,7 @@ func setupWithOptions(t *testing.T, opts appTestOptions) *pack {
 	privateKey, publicKey, err := testauthority.New().GenerateKeyPair("")
 	require.NoError(t, err)
 
-	// Create a new Teleport instance with passed in configuration.
+	// Create a new Siriusec instance with passed in configuration.
 	p.rootCluster = NewInstance(InstanceConfig{
 		ClusterName: "example.com",
 		HostID:      uuid.New(),
@@ -853,7 +853,7 @@ func setupWithOptions(t *testing.T, opts appTestOptions) *pack {
 		log:         log,
 	})
 
-	// Create a new Teleport instance with passed in configuration.
+	// Create a new Siriusec instance with passed in configuration.
 	p.leafCluster = NewInstance(InstanceConfig{
 		ClusterName: "leaf.example.com",
 		HostID:      uuid.New(),
@@ -1008,8 +1008,8 @@ func setupWithOptions(t *testing.T, opts appTestOptions) *pack {
 	// Initialize cert pool with root CA's.
 	p.initCertPool(t)
 
-	// Initialize Teleport client with the user's credentials.
-	p.initTeleportClient(t)
+	// Initialize Siriusec client with the user's credentials.
+	p.initSiriusecClient(t)
 
 	return p
 }
@@ -1096,9 +1096,9 @@ func (p *pack) initWebSession(t *testing.T) {
 	p.webToken = csResp.Token
 }
 
-// initTeleportClient initializes a Teleport client with this pack's user
+// initSiriusecClient initializes a Siriusec client with this pack's user
 // credentials.
-func (p *pack) initTeleportClient(t *testing.T) {
+func (p *pack) initSiriusecClient(t *testing.T) {
 	creds, err := GenerateUserCreds(UserCredsRequest{
 		Process:  p.rootCluster.Process,
 		Username: p.user.GetName(),

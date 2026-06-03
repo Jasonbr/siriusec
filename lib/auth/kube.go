@@ -64,7 +64,7 @@ type KubeCSRResponse struct {
 func (s *Server) ProcessKubeCSR(req KubeCSR) (*KubeCSRResponse, error) {
 	if !modules.GetModules().Features().Kubernetes {
 		return nil, trace.AccessDenied(
-			"this Teleport cluster is not licensed for Kubernetes, please contact the cluster administrator")
+			"this Siriusec cluster is not licensed for Kubernetes, please contact the cluster administrator")
 	}
 	if err := req.CheckAndSetDefaults(); err != nil {
 		return nil, trace.Wrap(err)
@@ -108,17 +108,17 @@ func (s *Server) ProcessKubeCSR(req KubeCSR) (*KubeCSRResponse, error) {
 
 	roleNames := id.Groups
 	// This is a remote user, map roles to local roles first.
-	if id.TeleportCluster != clusterName.GetClusterName() {
-		ca, err := s.GetCertAuthority(types.CertAuthID{Type: types.UserCA, DomainName: id.TeleportCluster}, false)
+	if id.SiriusecCluster != clusterName.GetClusterName() {
+		ca, err := s.GetCertAuthority(types.CertAuthID{Type: types.UserCA, DomainName: id.SiriusecCluster}, false)
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
 		roleNames, err = services.MapRoles(ca.CombinedMapping(), id.Groups)
 		if err != nil {
-			return nil, trace.AccessDenied("failed to map roles for remote user %q from cluster %q with remote roles %v", id.Username, id.TeleportCluster, id.Groups)
+			return nil, trace.AccessDenied("failed to map roles for remote user %q from cluster %q with remote roles %v", id.Username, id.SiriusecCluster, id.Groups)
 		}
 		if len(roleNames) == 0 {
-			return nil, trace.AccessDenied("no roles mapped for remote user %q from cluster %q with remote roles %v", id.Username, id.TeleportCluster, id.Groups)
+			return nil, trace.AccessDenied("no roles mapped for remote user %q from cluster %q with remote roles %v", id.Username, id.SiriusecCluster, id.Groups)
 		}
 	}
 

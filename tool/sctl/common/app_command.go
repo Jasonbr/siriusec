@@ -105,5 +105,5 @@ Please note:
   - This invitation token will expire in {{.minutes}} minutes.
   - {{.auth_server}} must be reachable from the new application service.
   - Update DNS to point {{.app_public_addr}} to the Teleport proxy.
-  - Add a TLS certificate for {{.app_public_addr}} to the Teleport proxy under "https_keypairs".
+  - Add a TLS certificate for {{.app_public_addr}} to the Sirius proxy under "https_keypairs".
 `))

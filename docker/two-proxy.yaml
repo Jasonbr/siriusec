@@ -6,9 +6,9 @@ siriusec:
   log:
     output: stdout
     severity: DEBUG
-  data_dir: /var/lib/teleport
+  data_dir: /var/lib/siriusec
   storage:
-      path: /var/lib/teleport/backend
+      path: /var/lib/siriusec/backend
       type: dir
 
 auth_service:

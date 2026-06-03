@@ -34,7 +34,7 @@ type Session struct {
 	ClusterName string
 	// Server is the database server handling the connection.
 	Server types.DatabaseServer
-	// Identity is the identity of the connecting Teleport user.
+	// Identity is the identity of the connecting Siriusec user.
 	Identity tlsca.Identity
 	// Checker is the access checker for the identity.
 	Checker services.AccessChecker

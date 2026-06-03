@@ -44,7 +44,7 @@ import (
 )
 
 // Config structure represents DynamoDB configuration as appears in `storage` section
-// of Teleport YAML
+// of Siriusec YAML
 type Config struct {
 	// Region is where DynamoDB Table will be used to store k/v
 	Region string `json:"region,omitempty"`
@@ -185,7 +185,7 @@ const (
 )
 
 // GetName is a part of backend API and it returns DynamoDB backend type
-// as it appears in `storage/type` section of Teleport YAML
+// as it appears in `storage/type` section of Siriusec YAML
 func GetName() string {
 	return BackendName
 }
@@ -246,7 +246,7 @@ func New(ctx context.Context, params backend.Params) (*Backend, error) {
 	}
 
 	// Increase the size of the connection pool. This substantially improves the
-	// performance of Teleport under load as it reduces the number of TLS
+	// performance of Siriusec under load as it reduces the number of TLS
 	// handshakes performed.
 	httpClient := &http.Client{
 		Transport: &http.Transport{

@@ -30,7 +30,7 @@ import (
 var webassetFS embed.FS
 
 // NewStaticFileSystem returns the initialized implementation of http.FileSystem
-// interface which can be used to serve Teleport Proxy Web UI
+// interface which can be used to serve Siriusec Proxy Web UI
 func NewStaticFileSystem() (http.FileSystem, error) {
 	wfs, err := fs.Sub(webassetFS, "build/webassets")
 	if err != nil {

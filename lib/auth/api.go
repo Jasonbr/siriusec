@@ -219,14 +219,14 @@ type Cache interface {
 
 	// GetLock gets a lock by name.
 	// NOTE: This method is intentionally available only for the auth server
-	// cache, the other Teleport components should make use of
+	// cache, the other Siriusec components should make use of
 	// services.LockWatcher that provides the necessary freshness guarantees.
 	GetLock(ctx context.Context, name string) (types.Lock, error)
 
 	// GetLocks gets all/in-force locks that match at least one of the targets
 	// when specified.
 	// NOTE: This method is intentionally available only for the auth server
-	// cache, the other Teleport components should make use of
+	// cache, the other Siriusec components should make use of
 	// services.LockWatcher that provides the necessary freshness guarantees.
 	GetLocks(ctx context.Context, inForceOnly bool, targets ...types.LockTarget) ([]types.Lock, error)
 
@@ -346,5 +346,5 @@ func NoCache(clt ClientI, cacheName []string) (AccessPoint, error) {
 }
 
 // notImplementedMessage is the message to return for endpoints that are not
-// implemented. This is due to how service interfaces are used with Teleport.
+// implemented. This is due to how service interfaces are used with Siriusec.
 const notImplementedMessage = "not implemented: can only be called by auth locally"

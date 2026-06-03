@@ -639,7 +639,7 @@ func TestNewClusterSessionLocal(t *testing.T) {
 	require.Equal(t, []kubeClusterEndpoint{{addr: f.creds["local"].targetAddr}}, sess.kubeClusterEndpoints)
 
 	// Make sure newClusterSession used provided creds
-	// instead of requesting a Teleport client cert.
+	// instead of requesting a Siriusec client cert.
 	require.Equal(t, f.creds["local"].tlsConfig, sess.tlsConfig)
 	require.Nil(t, f.cfg.AuthClient.(*mockCSRClient).lastCert)
 	require.Empty(t, 0, f.clientCredentials.Len())

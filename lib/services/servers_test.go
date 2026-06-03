@@ -86,7 +86,7 @@ func (s *ServerSuite) TestServersCompare(c *check.C) {
 	node2.Spec.Hostname = "luna2"
 	c.Assert(CompareServers(node, &node2), check.Equals, Different)
 
-	// TeleportVersion has changed
+	// SiriusecVersion has changed
 	node2 = *node
 	node2.Spec.Version = "5.0.0"
 	c.Assert(CompareServers(node, &node2), check.Equals, Different)
@@ -110,7 +110,7 @@ func (s *ServerSuite) TestServersCompare(c *check.C) {
 }
 
 // TestGuessProxyHostAndVersion checks that the GuessProxyHostAndVersion
-// correctly guesses the public address of the proxy (Teleport Cluster).
+// correctly guesses the public address of the proxy (Siriusec Cluster).
 func (s *ServerSuite) TestGuessProxyHostAndVersion(c *check.C) {
 	// No proxies passed in.
 	host, version, err := GuessProxyHostAndVersion(nil)

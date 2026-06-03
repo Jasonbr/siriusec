@@ -137,7 +137,7 @@ func (r *remoteSubsystem) emitAuditEvent(err error) {
 			Type: events.SubsystemEvent,
 		},
 		UserMetadata: apievents.UserMetadata{
-			User:         r.serverContext.Identity.TeleportUser,
+			User:         r.serverContext.Identity.SiriusecUser,
 			Login:        r.serverContext.Identity.Login,
 			Impersonator: r.serverContext.Identity.Impersonator,
 		},

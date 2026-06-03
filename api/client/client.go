@@ -53,12 +53,12 @@ func init() {
 	}
 }
 
-// Client is a gRPC Client that connects to a Teleport Auth server either
-// locally or over ssh through a Teleport web proxy or tunnel proxy.
+// Client is a gRPC Client that connects to a Siriusec Auth server either
+// locally or over ssh through a Siriusec web proxy or tunnel proxy.
 //
-// This client can be used to cover a variety of Teleport use cases,
+// This client can be used to cover a variety of Siriusec use cases,
 // such as programmatically handling access requests, integrating
-// with external tools, or dynamically configuring Teleport.
+// with external tools, or dynamically configuring Siriusec.
 type Client struct {
 	// c contains configuration values for the client.
 	c Config
@@ -77,7 +77,7 @@ type Client struct {
 	callOpts []grpc.CallOption
 }
 
-// New creates a new API client with an open connection to a Teleport server.
+// New creates a new API client with an open connection to a Siriusec server.
 //
 // New will try to open a connection with all combinations of addresses and credentials.
 // The first successful connection to a server will be used, or an aggregated error will

@@ -280,10 +280,10 @@ func Init(cfg InitConfig, opts ...ServerOption) (*Server, error) {
 			return nil, trace.Wrap(err)
 		}
 		if cn.GetClusterName() != cfg.ClusterName.GetClusterName() {
-			warnMessage := "Cannot rename cluster to %q: continuing with %q. Teleport " +
+			warnMessage := "Cannot rename cluster to %q: continuing with %q. Siriusec " +
 				"clusters can not be renamed once they are created. You are seeing this " +
 				"warning for one of two reasons. Either you have not set \"cluster_name\" in " +
-				"Teleport configuration and changed the hostname of the auth server or you " +
+				"Siriusec configuration and changed the hostname of the auth server or you " +
 				"are trying to change the value of \"cluster_name\"."
 			log.Warnf(warnMessage,
 				cfg.ClusterName.GetClusterName(),
@@ -565,7 +565,7 @@ func migrateOSS(ctx context.Context, asrv *Server) error {
 	}
 	if err == nil {
 		updatedRoles++
-		log.Infof("Enabling RBAC in OSS Teleport. Migrating users, roles and trusted clusters.")
+		log.Infof("Enabling RBAC in OSS Siriusec. Migrating users, roles and trusted clusters.")
 	}
 	migratedUsers, err := migrateOSSUsers(ctx, role, asrv)
 	if err != nil {

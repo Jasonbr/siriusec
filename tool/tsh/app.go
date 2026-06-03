@@ -79,7 +79,7 @@ var appLoginTpl = template.Must(template.New("").Parse(
 `))
 
 // getRegisteredApp returns the registered application with the specified name.
-func getRegisteredApp(cf *CLIConf, tc *client.TeleportClient) (app *types.App, err error) {
+func getRegisteredApp(cf *CLIConf, tc *client.SiriusecClient) (app *types.App, err error) {
 	err = client.RetryWithRelogin(cf.Context, tc, func() error {
 		allServers, err := tc.ListAppServers(cf.Context)
 		for _, server := range allServers {
@@ -162,7 +162,7 @@ func onAppConfig(cf *CLIConf) error {
 	return nil
 }
 
-func formatAppConfig(tc *client.TeleportClient, profile *client.ProfileStatus, appName, appPublicAddr, format string) string {
+func formatAppConfig(tc *client.SiriusecClient, profile *client.ProfileStatus, appName, appPublicAddr, format string) string {
 	switch format {
 	case appFormatURI:
 		return fmt.Sprintf("https://%v:%v", appPublicAddr, tc.WebProxyPort())

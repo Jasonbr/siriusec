@@ -201,7 +201,7 @@ func TestKnownHosts(t *testing.T) {
 	require.True(t, apisshutils.KeysEqual(keys[0], pub2))
 }
 
-// TestCheckKey makes sure Teleport clients can load non-RSA algorithms in
+// TestCheckKey makes sure Siriusec clients can load non-RSA algorithms in
 // normal operating mode.
 func TestCheckKey(t *testing.T) {
 	s, cleanup := newTest(t)
@@ -300,7 +300,7 @@ func TestProxySSHConfig(t *testing.T) {
 	require.Equal(t, int(called.Load()), 1)
 }
 
-// TestCheckKeyFIPS makes sure Teleport clients don't load invalid
+// TestCheckKeyFIPS makes sure Siriusec clients don't load invalid
 // certificates while in FIPS mode.
 func TestCheckKeyFIPS(t *testing.T) {
 	s, cleanup := newTest(t)

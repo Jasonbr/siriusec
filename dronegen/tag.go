@@ -22,7 +22,7 @@ func tagCheckoutCommands(fips bool) []string {
 		`mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa`,
 		`ssh-keyscan -H github.com > /root/.ssh/known_hosts 2>/dev/null && chmod 600 /root/.ssh/known_hosts`,
 		`git submodule update --init e`,
-		// this is allowed to fail because pre-4.3 Teleport versions don't use the webassets submodule
+		// this is allowed to fail because pre-4.3 Siriusec versions don't use the webassets submodule
 		`git submodule update --init --recursive webassets || true`,
 		`rm -f /root/.ssh/id_rsa`,
 		// create necessary directories
@@ -167,7 +167,7 @@ func tagPipelines() []pipeline {
 	ps = append(ps, tagPipeline(buildType{os: "windows", arch: "amd64"}))
 
 	// Also add the two CentOS 6 artifacts.
-	// CentOS 6 FIPS builds have been removed in Teleport 7.0. See https://github.com/siriusec/siriusec/issues/7207
+	// CentOS 6 FIPS builds have been removed in Siriusec 7.0. See https://github.com/siriusec/siriusec/issues/7207
 	ps = append(ps, tagPipeline(buildType{os: "linux", arch: "amd64", centos6: true}))
 
 	ps = append(ps, darwinTagPipeline(), darwinTeleportPkgPipeline(), darwinTshPkgPipeline())

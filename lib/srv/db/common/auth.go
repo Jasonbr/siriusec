@@ -126,7 +126,7 @@ func (a *dbAuth) GetRDSAuthToken(sessionCtx *Session) (string, error) {
 
   %v
 
-Make sure that Teleport database agent's IAM policy is attached and has "rds-connect"
+Make sure that Sirius database agent's IAM policy is attached and has "rds-connect"
 permissions:
 
 %v
@@ -159,7 +159,7 @@ func (a *dbAuth) GetRedshiftAuthToken(sessionCtx *Session) (string, string, erro
 
   %v
 
-Make sure that Teleport database agent's IAM policy is attached and has permissions
+Make sure that Sirius database agent's IAM policy is attached and has permissions
 to generate Redshift credentials:
 
 %v
@@ -199,7 +199,7 @@ func (a *dbAuth) GetCloudSQLAuthToken(ctx context.Context, sessionCtx *Session) 
 
   %v
 
-Make sure Teleport db service has "Service Account Token Creator" GCP IAM role,
+Make sure Sirius db service has "Service Account Token Creator" GCP IAM role,
 or "iam.serviceAccounts.getAccessToken" IAM permission.
 `, err)
 	}
@@ -256,7 +256,7 @@ func (a *dbAuth) updateCloudSQLUser(ctx context.Context, sessionCtx *Session, gc
 
   %v
 
-Make sure Teleport db service has "Cloud SQL Admin" GCP IAM role, or
+Make sure Sirius db service has "Cloud SQL Admin" GCP IAM role, or
 "cloudsql.users.update" IAM permission.
 `, sessionCtx.DatabaseUser, err)
 	}
@@ -325,7 +325,7 @@ func (a *dbAuth) GetTLSConfig(ctx context.Context, sessionCtx *Session) (*tls.Co
 	}
 	// Otherwise, when connecting to an onprem database, generate a client
 	// certificate. The database instance should be configured with
-	// Teleport's CA obtained with 'tctl auth sign --type=db'.
+	// Siriusec's CA obtained with 'tctl auth sign --type=db'.
 	cert, cas, err := a.getClientCert(ctx, sessionCtx)
 	if err != nil {
 		return nil, trace.Wrap(err)

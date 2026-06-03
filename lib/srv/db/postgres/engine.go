@@ -209,7 +209,7 @@ func (e *Engine) connect(ctx context.Context, sessionCtx *common.Session) (*pgpr
 
   %v
 
-Make sure that Postgres user %q has "rds_iam" role and Teleport database
+Make sure that Postgres user %q has "rds_iam" role and  Sirius database
 agent's IAM policy has "rds-connect" permissions:
 
 %v

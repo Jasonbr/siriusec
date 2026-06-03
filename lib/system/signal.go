@@ -20,8 +20,8 @@ import "C"
 import log "github.com/sirupsen/logrus"
 
 // ResetInterruptSignal will reset the handler for SIGINT back to the default
-// handler. We need to do this because when sysvinit launches Teleport on some
-// operating systems (like CentOS 6.8) it configures Teleport to ignore SIGINT
+// handler. We need to do this because when sysvinit launches Siriusec on some
+// operating systems (like CentOS 6.8) it configures Siriusec to ignore SIGINT
 // signals. See the following for more details:
 //
 // http://garethrees.org/2015/08/07/ping/

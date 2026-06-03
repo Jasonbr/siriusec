@@ -32,7 +32,7 @@ type DatabaseServer interface {
 	Resource
 	// GetNamespace returns server namespace.
 	GetNamespace() string
-	// GetTeleportVersion returns the teleport version the server is running on.
+	// GetSiriusecVersion returns the teleport version the server is running on.
 	GetTeleportVersion() string
 	// GetHostname returns the server hostname.
 	GetHostname() string
@@ -102,7 +102,7 @@ func (s *DatabaseServerV3) GetVersion() string {
 	return s.Version
 }
 
-// GetTeleportVersion returns the Teleport version the server is running.
+// GetTeleportVersion returns the Siriusec version the server is running.
 func (s *DatabaseServerV3) GetTeleportVersion() string {
 	return s.Spec.Version
 }

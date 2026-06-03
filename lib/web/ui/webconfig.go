@@ -37,7 +37,7 @@ const (
 
 // WebConfig is web application configuration
 type WebConfig struct {
-	// Auth contains Teleport auth. preferences
+	// Auth contains Siriusec auth. preferences
 	Auth WebConfigAuthSettings `json:"auth,omitempty"`
 	// CanJoinSessions disables joining sessions
 	CanJoinSessions bool `json:"canJoinSessions"`

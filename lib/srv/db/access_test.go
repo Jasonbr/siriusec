@@ -175,9 +175,9 @@ func TestAccessMySQL(t *testing.T) {
 	tests := []struct {
 		// desc is the test case description.
 		desc string
-		// user is the Teleport local user name the test will use.
+		// user is the Siriusec local user name the test will use.
 		user string
-		// role is the Teleport role name to create and assign to the user.
+		// role is the Siriusec role name to create and assign to the user.
 		role string
 		// allowDbUsers is the role's list of allowed database users.
 		allowDbUsers []string
@@ -544,7 +544,7 @@ func TestAccessDisabled(t *testing.T) {
 	// Try to connect to the database as this user.
 	_, err := testCtx.postgresClient(ctx, userName, "postgres", dbUser, dbName)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "this Teleport cluster is not licensed for database access")
+	require.Contains(t, err.Error(), "this Sirius cluster is not licensed for database access")
 }
 
 // TestPostgresInjectionDatabase makes sure Postgres connection is not
@@ -680,7 +680,7 @@ func (c *testContext) startHandlingConnections() {
 }
 
 // postgresClient connects to test Postgres through database access as a
-// specified Teleport user and database account.
+// specified Siriusec user and database account.
 func (c *testContext) postgresClient(ctx context.Context, teleportUser, dbService, dbUser, dbName string) (*pgconn.PgConn, error) {
 	return c.postgresClientWithAddr(ctx, c.mux.DB().Addr().String(), teleportUser, dbService, dbUser, dbName)
 }
@@ -703,7 +703,7 @@ func (c *testContext) postgresClientWithAddr(ctx context.Context, address, telep
 }
 
 // mysqlClient connects to test MySQL through database access as a specified
-// Teleport user and database account.
+// Siriusec user and database account.
 func (c *testContext) mysqlClient(teleportUser, dbService, dbUser string) (*client.Conn, error) {
 	return c.mysqlClientWithAddr(c.mysqlListener.Addr().String(), teleportUser, dbService, dbUser)
 }
@@ -725,7 +725,7 @@ func (c *testContext) mysqlClientWithAddr(address, teleportUser, dbService, dbUs
 }
 
 // mongoClient connects to test MongoDB through database access as a
-// specified Teleport user and database account.
+// specified Siriusec user and database account.
 func (c *testContext) mongoClient(ctx context.Context, teleportUser, dbService, dbUser string, opts ...*options.ClientOptions) (*mongo.Client, error) {
 	return c.mongoClientWithAddr(ctx, c.webListener.Addr().String(), teleportUser, dbService, dbUser, opts...)
 }
@@ -746,7 +746,7 @@ func (c *testContext) mongoClientWithAddr(ctx context.Context, address, teleport
 	}, opts...)
 }
 
-// createUserAndRole creates Teleport user and role with specified names
+// createUserAndRole creates Siriusec user and role with specified names
 // and allowed database users/names properties.
 func (c *testContext) createUserAndRole(ctx context.Context, t *testing.T, userName, roleName string, dbUsers, dbNames []string) (types.User, types.Role) {
 	user, role, err := auth.CreateUserAndRole(c.tlsServer.Auth(), userName, []string{roleName})

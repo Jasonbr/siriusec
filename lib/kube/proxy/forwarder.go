@@ -67,20 +67,20 @@ import (
 	utilexec "k8s.io/client-go/util/exec"
 )
 
-// KubeServiceType specifies a Teleport service type which can forward Kubernetes requests
+// KubeServiceType specifies a Siriusec service type which can forward Kubernetes requests
 type KubeServiceType int
 
 const (
-	// KubeService is a Teleport kubernetes_service. A KubeService always forwards
+	// KubeService is a Siriusec kubernetes_service. A KubeService always forwards
 	// requests directly to a Kubernetes endpoint.
 	KubeService KubeServiceType = iota
-	// ProxyService is a Teleport proxy_service with kube_listen_addr/
+	// ProxyService is a Siriusec proxy_service with kube_listen_addr/
 	// kube_public_addr enabled. A ProxyService always forwards requests to a
-	// Teleport KubeService or LegacyProxyService.
+	// Siriusec KubeService or LegacyProxyService.
 	ProxyService
-	// LegacyProxyService is a Teleport proxy_service with the kubernetes section
+	// LegacyProxyService is a Siriusec proxy_service with the kubernetes section
 	// enabled. A LegacyProxyService can forward requests directly to a Kubernetes
-	// endpoint, or to another Teleport LegacyProxyService or KubeService.
+	// endpoint, or to another Siriusec LegacyProxyService or KubeService.
 	LegacyProxyService
 )
 
@@ -115,7 +115,7 @@ type ForwarderConfig struct {
 	Context context.Context
 	// KubeconfigPath is a path to kubernetes configuration
 	KubeconfigPath string
-	// KubeServiceType specifies which Teleport service type this forwarder is for
+	// KubeServiceType specifies which Siriusec service type this forwarder is for
 	KubeServiceType KubeServiceType
 	// KubeClusterName is the name of the kubernetes cluster that this
 	// forwarder handles.
@@ -515,7 +515,7 @@ func (f *Forwarder) setupContext(ctx auth.Context, req *http.Request, isRemoteUs
 		// Tunnel is nil for a teleport process with "kubernetes_service" but
 		// not "proxy_service".
 		if f.cfg.ReverseTunnelSrv == nil {
-			return nil, trace.BadParameter("this Teleport process can not dial Kubernetes endpoints in remote Teleport clusters; only proxy_service supports this, make sure a Teleport proxy is first in the request path")
+			return nil, trace.BadParameter("this Siriusec process can not dial Kubernetes endpoints in remote Sirius clusters; only proxy_service supports this, make sure a Sirius proxy is first in the request path")
 		}
 
 		targetCluster, err := f.cfg.ReverseTunnelSrv.GetSite(teleportClusterName)
@@ -1363,7 +1363,7 @@ func (s *clusterSession) monitorConn(conn net.Conn, err error) (net.Conn, error)
 		Tracker:               tc,
 		Conn:                  tc,
 		Context:               ctx,
-		TeleportUser:          s.User.GetName(),
+		SiriusecUser:          s.User.GetName(),
 		ServerID:              s.parent.cfg.ServerID,
 		Entry:                 s.parent.log,
 		Emitter:               s.parent.cfg.AuthClient,
@@ -1489,7 +1489,7 @@ outer:
 
 func (f *Forwarder) newClusterSessionLocal(ctx authContext) (*clusterSession, error) {
 	if len(f.creds) == 0 {
-		return nil, trace.NotFound("this Teleport process is not configured for direct Kubernetes access; you likely need to 'tsh login' into a leaf cluster or 'tsh kube login' into a different kubernetes cluster")
+		return nil, trace.NotFound("this Siriusec process is not configured for direct Kubernetes access; you likely need to 'tsh login' into a leaf cluster or 'tsh kube login' into a different kubernetes cluster")
 	}
 
 	creds, ok := f.creds[ctx.kubeCluster]
@@ -1575,7 +1575,7 @@ func (f *Forwarder) newTransport(dial DialFunc, tlsConfig *tls.Config) *http.Tra
 		Dial:            dial,
 		TLSClientConfig: tlsConfig,
 		// Increase the size of the connection pool. This substantially improves the
-		// performance of Teleport under load as it reduces the number of TLS
+		// performance of Siriusec under load as it reduces the number of TLS
 		// handshakes performed.
 		MaxIdleConns:        defaults.HTTPMaxIdleConns,
 		MaxIdleConnsPerHost: defaults.HTTPMaxIdleConnsPerHost,

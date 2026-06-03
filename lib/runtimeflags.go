@@ -35,7 +35,7 @@ import (
 
 var (
 	// insecureDevMode is set to 'true' when teleport is started with a hidden
-	// --insecure flag. This mode is only useful for learning Teleport and following
+	// --insecure flag. This mode is only useful for learning Siriusec and following
 	// quick starts: it disables HTTPS certificate validation
 	insecureDevMode bool
 
@@ -43,7 +43,7 @@ var (
 	flagLock sync.Mutex
 )
 
-// SetInsecureDevMode turns the 'insecure' mode on. In this mode Teleport accepts
+// SetInsecureDevMode turns the 'insecure' mode on. In this mode Siriusec accepts
 // self-signed HTTPS certificates (for development only!)
 func SetInsecureDevMode(m bool) {
 	flagLock.Lock()
@@ -51,7 +51,7 @@ func SetInsecureDevMode(m bool) {
 	insecureDevMode = m
 }
 
-// IsInsecureDevMode returns 'true' if Teleport daemon was started with the
+// IsInsecureDevMode returns 'true' if Siriusec daemon was started with the
 // --insecure flag
 func IsInsecureDevMode() bool {
 	flagLock.Lock()

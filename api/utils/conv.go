@@ -26,7 +26,7 @@ import (
 // ObjectToStruct is converts any structure into JSON and then unmarshalls it into
 // another structure.
 //
-// Teleport configuration uses this (strange, at first) trick to convert from one
+// Siriusec configuration uses this (strange, at first) trick to convert from one
 // struct type to another, if their fields are loosely compatible via their `json` tags
 //
 // Example: assume you have two structs:

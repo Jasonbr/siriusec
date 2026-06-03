@@ -41,30 +41,30 @@ func init() {
 	}
 }
 
-type teleportService struct {
+type siriusecService struct {
 	name           string
 	log            utils.Logger
 	config         *service.Config
-	process        *service.TeleportProcess
-	serviceChannel chan *service.TeleportProcess
+	process        *service.SiriusecProcess
+	serviceChannel chan *service.SiriusecProcess
 	errorChannel   chan error
 }
 
-func newTeleportService(config *service.Config, name string) *teleportService {
-	return &teleportService{
+func newSiriusecService(config *service.Config, name string) *siriusecService {
+	return &siriusecService{
 		config:         config,
 		name:           name,
 		log:            config.Log,
-		serviceChannel: make(chan *service.TeleportProcess, 1),
+		serviceChannel: make(chan *service.SiriusecProcess, 1),
 		errorChannel:   make(chan error, 1),
 	}
 }
 
-func (t *teleportService) start(ctx context.Context) {
+func (t *siriusecService) start(ctx context.Context) {
 	go func() {
 		t.errorChannel <- service.Run(ctx, *t.config, func(cfg *service.Config) (service.Process, error) {
 			t.log.Debugf("(Re)starting %s", t.name)
-			svc, err := service.NewTeleport(cfg)
+			svc, err := service.NewSiriusec(cfg)
 			if err == nil {
 				t.log.Debugf("started %s, writing to serviceChannel", t.name)
 				t.serviceChannel <- svc
@@ -74,7 +74,7 @@ func (t *teleportService) start(ctx context.Context) {
 	}()
 }
 
-func (t *teleportService) waitForStart(ctx context.Context) error {
+func (t *siriusecService) waitForStart(ctx context.Context) error {
 	t.log.Debugf("Waiting for %s to start", t.name)
 	t.start(ctx)
 	select {
@@ -88,10 +88,10 @@ func (t *teleportService) waitForStart(ctx context.Context) error {
 	return t.waitForReady(ctx)
 }
 
-func (t *teleportService) waitForReady(ctx context.Context) error {
+func (t *siriusecService) waitForReady(ctx context.Context) error {
 	t.log.Debugf("Waiting for %s to be ready", t.name)
 	eventChannel := make(chan service.Event)
-	t.process.WaitForEvent(ctx, service.TeleportReadyEvent, eventChannel)
+	t.process.WaitForEvent(ctx, service.SiriusecReadyEvent, eventChannel)
 	select {
 	case <-eventChannel:
 	case <-ctx.Done():
@@ -111,7 +111,7 @@ func (t *teleportService) waitForReady(ctx context.Context) error {
 	return nil
 }
 
-func (t *teleportService) waitForRestart(ctx context.Context) error {
+func (t *siriusecService) waitForRestart(ctx context.Context) error {
 	t.log.Debugf("Waiting for %s to restart", t.name)
 	// get the new process
 	select {
@@ -131,7 +131,7 @@ func (t *teleportService) waitForRestart(ctx context.Context) error {
 	return nil
 }
 
-func (t *teleportService) waitForShutdown(ctx context.Context) error {
+func (t *siriusecService) waitForShutdown(ctx context.Context) error {
 	t.log.Debugf("Waiting for %s to shut down", t.name)
 	select {
 	case err := <-t.errorChannel:
@@ -141,7 +141,7 @@ func (t *teleportService) waitForShutdown(ctx context.Context) error {
 	}
 }
 
-func (t *teleportService) waitForLocalAdditionalKeys(ctx context.Context) error {
+func (t *siriusecService) waitForLocalAdditionalKeys(ctx context.Context) error {
 	t.log.Debugf("Waiting for %s to have local additional keys", t.name)
 	clusterName, err := t.process.GetAuthServer().GetClusterName()
 	if err != nil {
@@ -166,10 +166,10 @@ func (t *teleportService) waitForLocalAdditionalKeys(ctx context.Context) error 
 	return nil
 }
 
-func (t *teleportService) waitForPhaseChange(ctx context.Context) error {
+func (t *siriusecService) waitForPhaseChange(ctx context.Context) error {
 	t.log.Debugf("Waiting for %s to change phase", t.name)
 	eventC := make(chan service.Event, 1)
-	t.process.WaitForEvent(ctx, service.TeleportPhaseChangeEvent, eventC)
+	t.process.WaitForEvent(ctx, service.SiriusecPhaseChangeEvent, eventC)
 	select {
 	case <-ctx.Done():
 		return trace.Wrap(ctx.Err(), "timed out waiting for %s to change phase", t.name)
@@ -179,9 +179,9 @@ func (t *teleportService) waitForPhaseChange(ctx context.Context) error {
 	return nil
 }
 
-type TeleportServices []*teleportService
+type SiriusecServices []*siriusecService
 
-func (s TeleportServices) forEach(f func(t *teleportService) error) error {
+func (s SiriusecServices) forEach(f func(t *siriusecService) error) error {
 	for i := range s {
 		if err := f(s[i]); err != nil {
 			return trace.Wrap(err)
@@ -190,20 +190,20 @@ func (s TeleportServices) forEach(f func(t *teleportService) error) error {
 	return nil
 }
 
-func (s TeleportServices) waitForStart(ctx context.Context) error {
-	return s.forEach(func(t *teleportService) error { return t.waitForStart(ctx) })
+func (s SiriusecServices) waitForStart(ctx context.Context) error {
+	return s.forEach(func(t *siriusecService) error { return t.waitForStart(ctx) })
 }
 
-func (s TeleportServices) waitForRestart(ctx context.Context) error {
-	return s.forEach(func(t *teleportService) error { return t.waitForRestart(ctx) })
+func (s SiriusecServices) waitForRestart(ctx context.Context) error {
+	return s.forEach(func(t *siriusecService) error { return t.waitForRestart(ctx) })
 }
 
-func (s TeleportServices) waitForLocalAdditionalKeys(ctx context.Context) error {
-	return s.forEach(func(t *teleportService) error { return t.waitForLocalAdditionalKeys(ctx) })
+func (s SiriusecServices) waitForLocalAdditionalKeys(ctx context.Context) error {
+	return s.forEach(func(t *siriusecService) error { return t.waitForLocalAdditionalKeys(ctx) })
 }
 
-func (s TeleportServices) waitForPhaseChange(ctx context.Context) error {
-	return s.forEach(func(t *teleportService) error { return t.waitForPhaseChange(ctx) })
+func (s SiriusecServices) waitForPhaseChange(ctx context.Context) error {
+	return s.forEach(func(t *siriusecService) error { return t.waitForPhaseChange(ctx) })
 }
 
 func newHSMAuthConfig(ctx context.Context, t *testing.T, storageConfig backend.Config, log utils.Logger) *service.Config {
@@ -324,7 +324,7 @@ func TestHSMRotation(t *testing.T) {
 		require.NoError(t, auth1.process.GetAuthServer().GetKeyStore().DeleteUnusedKeys(nil))
 		require.NoError(t, auth1.process.Close())
 	})
-	teleportServices := TeleportServices{auth1}
+	siriusecServices := SiriusecServices{auth1}
 
 	log.Debug("TestHSMRotation: waiting for auth server to start")
 	require.NoError(t, auth1.waitForStart(ctx))
@@ -333,7 +333,7 @@ func TestHSMRotation(t *testing.T) {
 	log.Debug("TestHSMRotation: starting proxy")
 	proxy := newTeleportService(newProxyConfig(ctx, t, authConfig.Auth.SSHAddr, log), "proxy")
 	require.NoError(t, proxy.waitForStart(ctx))
-	teleportServices = append(teleportServices, proxy)
+	siriusecServices = append(siriusecServices, proxy)
 
 	log.Debug("TestHSMRotation: sending rotation request init")
 	err = auth1.process.GetAuthServer().RotateCertAuthority(auth.RotateRequest{
@@ -342,7 +342,7 @@ func TestHSMRotation(t *testing.T) {
 		Mode:        types.RotationModeManual,
 	})
 	require.NoError(t, err)
-	require.NoError(t, teleportServices.waitForPhaseChange(ctx))
+	require.NoError(t, siriusecServices.waitForPhaseChange(ctx))
 
 	log.Debug("TestHSMRotation: sending rotation request update_clients")
 	err = auth1.process.GetAuthServer().RotateCertAuthority(auth.RotateRequest{
@@ -351,7 +351,7 @@ func TestHSMRotation(t *testing.T) {
 		Mode:        types.RotationModeManual,
 	})
 	require.NoError(t, err)
-	require.NoError(t, teleportServices.waitForRestart(ctx))
+	require.NoError(t, siriusecServices.waitForRestart(ctx))
 
 	log.Debug("TestHSMRotation: sending rotation request update_servers")
 	err = auth1.process.GetAuthServer().RotateCertAuthority(auth.RotateRequest{
@@ -360,7 +360,7 @@ func TestHSMRotation(t *testing.T) {
 		Mode:        types.RotationModeManual,
 	})
 	require.NoError(t, err)
-	require.NoError(t, teleportServices.waitForRestart(ctx))
+	require.NoError(t, siriusecServices.waitForRestart(ctx))
 
 	log.Debug("TestHSMRotation: sending rotation request standby")
 	err = auth1.process.GetAuthServer().RotateCertAuthority(auth.RotateRequest{
@@ -369,7 +369,7 @@ func TestHSMRotation(t *testing.T) {
 		Mode:        types.RotationModeManual,
 	})
 	require.NoError(t, err)
-	require.NoError(t, teleportServices.waitForRestart(ctx))
+	require.NoError(t, siriusecServices.waitForRestart(ctx))
 }
 
 // Tests multiple CA rotations and rollbacks with 2 HSM auth servers in an HA configuration
@@ -405,8 +405,8 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		require.NoError(t, auth1.process.GetAuthServer().GetKeyStore().DeleteUnusedKeys(nil))
 		require.NoError(t, auth1.process.Close())
 	})
-	authServices := TeleportServices{auth1}
-	teleportServices := append(TeleportServices{}, authServices...)
+	authServices := SiriusecServices{auth1}
+	siriusecServices := append(SiriusecServices{}, authServices...)
 	require.NoError(t, authServices.waitForStart(ctx))
 
 	t.Cleanup(func() {
@@ -432,7 +432,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 	proxyConfig := newProxyConfig(ctx, t, *authAddr, log)
 	proxy := newTeleportService(proxyConfig, "proxy")
 	require.NoError(t, proxy.waitForStart(ctx))
-	teleportServices = append(teleportServices, proxy)
+	siriusecServices = append(siriusecServices, proxy)
 
 	// add a new auth server
 	log.Debug("TestHSMDualAuthRotation: Starting auth server 2")
@@ -444,7 +444,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		require.NoError(t, auth2.process.Close())
 	})
 	authServices = append(authServices, auth2)
-	teleportServices = append(teleportServices, auth2)
+	siriusecServices = append(siriusecServices, auth2)
 
 	// make sure the admin identity used by tctl works
 	getAdminClient := func() *auth.Client {
@@ -478,7 +478,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseInit,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForPhaseChange(ctx))
+				require.NoError(t, siriusecServices.waitForPhaseChange(ctx))
 				require.NoError(t, authServices.waitForLocalAdditionalKeys(ctx))
 				clt = getAdminClient()
 				require.NoError(t, testClient(clt))
@@ -487,7 +487,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseUpdateClients,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt = getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -495,7 +495,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseUpdateServers,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt = getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -503,7 +503,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseStandby,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt = getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -569,7 +569,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseInit,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForPhaseChange(ctx))
+				require.NoError(t, siriusecServices.waitForPhaseChange(ctx))
 				require.NoError(t, authServices.waitForLocalAdditionalKeys(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
@@ -578,7 +578,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseRollback,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -586,7 +586,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseStandby,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -594,7 +594,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseInit,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForPhaseChange(ctx))
+				require.NoError(t, siriusecServices.waitForPhaseChange(ctx))
 				require.NoError(t, authServices.waitForLocalAdditionalKeys(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
@@ -603,7 +603,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseUpdateClients,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -611,7 +611,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseRollback,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -619,7 +619,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseStandby,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -627,7 +627,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseInit,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForPhaseChange(ctx))
+				require.NoError(t, siriusecServices.waitForPhaseChange(ctx))
 				require.NoError(t, authServices.waitForLocalAdditionalKeys(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
@@ -636,7 +636,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseUpdateClients,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -644,7 +644,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseUpdateServers,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -652,7 +652,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseRollback,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -660,7 +660,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseStandby,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -783,8 +783,8 @@ func TestHSMMigrate(t *testing.T) {
 	clt = getAdminClient()
 	require.NoError(t, testClient(clt))
 
-	authServices := TeleportServices{auth1, auth2}
-	teleportServices := TeleportServices{auth1, auth2, proxy}
+	authServices := SiriusecServices{auth1, auth2}
+	siriusecServices := SiriusecServices{auth1, auth2, proxy}
 
 	stages := []struct {
 		targetPhase string
@@ -793,7 +793,7 @@ func TestHSMMigrate(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseInit,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForPhaseChange(ctx))
+				require.NoError(t, siriusecServices.waitForPhaseChange(ctx))
 				require.NoError(t, authServices.waitForLocalAdditionalKeys(ctx))
 				clt := getAdminClient()
 				require.NoError(t, testClient(clt))
@@ -802,7 +802,7 @@ func TestHSMMigrate(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseUpdateClients,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt = getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -810,7 +810,7 @@ func TestHSMMigrate(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseUpdateServers,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt = getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -818,7 +818,7 @@ func TestHSMMigrate(t *testing.T) {
 		{
 			targetPhase: types.RotationPhaseStandby,
 			verify: func(t *testing.T) {
-				require.NoError(t, teleportServices.waitForRestart(ctx))
+				require.NoError(t, siriusecServices.waitForRestart(ctx))
 				clt = getAdminClient()
 				require.NoError(t, testClient(clt))
 			},
@@ -847,8 +847,8 @@ func TestHSMMigrate(t *testing.T) {
 	auth2 = newTeleportService(auth2Config, "auth2")
 	require.NoError(t, auth2.waitForStart(ctx))
 
-	authServices = TeleportServices{auth1, auth2}
-	teleportServices = TeleportServices{auth1, auth2, proxy}
+	authServices = SiriusecServices{auth1, auth2}
+	siriusecServices = SiriusecServices{auth1, auth2, proxy}
 
 	clt = getAdminClient()
 	require.NoError(t, testClient(clt))

@@ -163,12 +163,12 @@ func (c *kubeLSCommand) run(cf *CLIConf) error {
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	currentTeleportCluster, kubeClusters, err := fetchKubeClusters(cf.Context, tc)
+	currentSiriusecCluster, kubeClusters, err := fetchKubeClusters(cf.Context, tc)
 	if err != nil {
 		return trace.Wrap(err)
 	}
 
-	selectedCluster := selectedKubeCluster(currentTeleportCluster)
+	selectedCluster := selectedKubeCluster(currentSiriusecCluster)
 
 	var t asciitable.Table
 	if cf.Quiet {
@@ -188,13 +188,13 @@ func (c *kubeLSCommand) run(cf *CLIConf) error {
 	return nil
 }
 
-func selectedKubeCluster(currentTeleportCluster string) string {
+func selectedKubeCluster(currentSiriusecCluster string) string {
 	kc, err := kubeconfig.Load("")
 	if err != nil {
 		log.WithError(err).Warning("Failed parsing existing kubeconfig")
 		return ""
 	}
-	return kubeconfig.KubeClusterFromContext(kc.CurrentContext, currentTeleportCluster)
+	return kubeconfig.KubeClusterFromContext(kc.CurrentContext, currentSiriusecCluster)
 }
 
 type kubeLoginCommand struct {
@@ -219,7 +219,7 @@ func (c *kubeLoginCommand) run(cf *CLIConf) error {
 		return trace.Wrap(err)
 	}
 	// Check that this kube cluster exists.
-	currentTeleportCluster, kubeClusters, err := fetchKubeClusters(cf.Context, tc)
+	currentSiriusecCluster, kubeClusters, err := fetchKubeClusters(cf.Context, tc)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -228,7 +228,7 @@ func (c *kubeLoginCommand) run(cf *CLIConf) error {
 	}
 
 	// Try updating the active kubeconfig context.
-	if err := kubeconfig.SelectContext(currentTeleportCluster, c.kubeCluster); err != nil {
+	if err := kubeconfig.SelectContext(currentSiriusecCluster, c.kubeCluster); err != nil {
 		if !trace.IsNotFound(err) {
 			return trace.Wrap(err)
 		}
@@ -246,7 +246,7 @@ func (c *kubeLoginCommand) run(cf *CLIConf) error {
 	// Generate a profile specific kubeconfig which can be used
 	// by setting the kubeconfig environment variable (with `tsh env`)
 	profileKubeconfigPath := keypaths.KubeConfigPath(
-		profile.FullProfilePath(cf.HomePath), tc.WebProxyHost(), tc.Username, currentTeleportCluster, c.kubeCluster,
+		profile.FullProfilePath(cf.HomePath), tc.WebProxyHost(), tc.Username, currentSiriusecCluster, c.kubeCluster,
 	)
 	if err := updateKubeConfig(cf, tc, profileKubeconfigPath); err != nil {
 		return trace.Wrap(err)
@@ -256,7 +256,7 @@ func (c *kubeLoginCommand) run(cf *CLIConf) error {
 	return nil
 }
 
-func fetchKubeClusters(ctx context.Context, tc *client.TeleportClient) (teleportCluster string, kubeClusters []string, err error) {
+func fetchKubeClusters(ctx context.Context, tc *client.SiriusecClient) (teleportCluster string, kubeClusters []string, err error) {
 	err = client.RetryWithRelogin(ctx, tc, func() error {
 		pc, err := tc.ConnectToProxy(ctx)
 		if err != nil {
@@ -295,8 +295,8 @@ type kubernetesStatus struct {
 	credentials         *client.Key
 }
 
-// fetchKubeStatus returns a kubernetesStatus populated from the given TeleportClient.
-func fetchKubeStatus(ctx context.Context, tc *client.TeleportClient) (*kubernetesStatus, error) {
+// fetchKubeStatus returns a kubernetesStatus populated from the given SiriusecClient.
+func fetchKubeStatus(ctx context.Context, tc *client.SiriusecClient) (*kubernetesStatus, error) {
 	var err error
 	kubeStatus := &kubernetesStatus{
 		clusterAddr: tc.KubeClusterAddr(),
@@ -317,7 +317,7 @@ func fetchKubeStatus(ctx context.Context, tc *client.TeleportClient) (*kubernete
 func buildKubeConfigUpdate(cf *CLIConf, kubeStatus *kubernetesStatus) (*kubeconfig.Values, error) {
 	v := &kubeconfig.Values{
 		ClusterAddr:         kubeStatus.clusterAddr,
-		TeleportClusterName: kubeStatus.teleportClusterName,
+		SiriusecClusterName: kubeStatus.teleportClusterName,
 		Credentials:         kubeStatus.credentials,
 	}
 
@@ -330,7 +330,7 @@ func buildKubeConfigUpdate(cf *CLIConf, kubeStatus *kubernetesStatus) (*kubeconf
 	if len(kubeStatus.kubeClusters) == 0 {
 		// If there are no registered k8s clusters, we may have an older teleport cluster.
 		// Fall back to the old kubeconfig, with static credentials from v.Credentials.
-		log.Debug("Disabling exec plugin mode for kubeconfig because this Teleport cluster has no Kubernetes clusters.")
+		log.Debug("Disabling exec plugin mode for kubeconfig because this Sirius cluster has no Kubernetes clusters.")
 		return v, nil
 	}
 
@@ -343,17 +343,17 @@ func buildKubeConfigUpdate(cf *CLIConf, kubeStatus *kubernetesStatus) (*kubeconf
 	// Only switch the current context if kube-cluster is explicitly set on the command line.
 	if cf.KubernetesCluster != "" {
 		if !apiutils.SliceContainsStr(kubeStatus.kubeClusters, cf.KubernetesCluster) {
-			return nil, trace.BadParameter("Kubernetes cluster %q is not registered in this Teleport cluster; you can list registered Kubernetes clusters using 'tsh kube ls'.", cf.KubernetesCluster)
+			return nil, trace.BadParameter("Kubernetes cluster %q is not registered in this Sirius cluster; you can list registered Kubernetes clusters using 'tsh kube ls'.", cf.KubernetesCluster)
 		}
 		v.Exec.SelectCluster = cf.KubernetesCluster
 	}
 	return v, nil
 }
 
-// updateKubeConfig adds Teleport configuration to the users's kubeconfig based on the CLI
-// parameters and the kubernetes services in the current Teleport cluster. If no path for
+// updateKubeConfig adds Siriusec configuration to the users's kubeconfig based on the CLI
+// parameters and the kubernetes services in the current Siriusec cluster. If no path for
 // the kubeconfig is given, it will use environment values or known defaults to get a path.
-func updateKubeConfig(cf *CLIConf, tc *client.TeleportClient, path string) error {
+func updateKubeConfig(cf *CLIConf, tc *client.SiriusecClient, path string) error {
 	// Fetch proxy's advertised ports to check for k8s support.
 	if _, err := tc.Ping(cf.Context); err != nil {
 		return trace.Wrap(err)

@@ -91,7 +91,7 @@ const rfd24MigrationLock = "dynamoEvents/rfd24Migration"
 const rfd24MigrationLockTTL = 5 * time.Minute
 
 // Config structure represents DynamoDB confniguration as appears in `storage` section
-// of Teleport YAML
+// of Siriusec YAML
 type Config struct {
 	// Region is where DynamoDB Table will be used to store k/v
 	Region string `json:"region,omitempty"`
@@ -1041,7 +1041,7 @@ func (l *Log) indexExists(ctx context.Context, tableName, indexName string) (boo
 // Invariants:
 // - This function may not be called concurrently across the cluster.
 // - This function must be called before the
-//   backend is considered initialized and the main Teleport process is started.
+//   backend is considered initialized and the main Siriusec process is started.
 func (l *Log) createV2GSI(ctx context.Context) error {
 	v2Exists, err := l.indexExists(ctx, l.Tablename, indexTimeSearchV2)
 	if err != nil {

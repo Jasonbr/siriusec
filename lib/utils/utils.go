@@ -575,10 +575,10 @@ func ReadAtMost(r io.Reader, limit int64) ([]byte, error) {
 var ErrLimitReached = &trace.LimitExceededError{Message: "the read limit is reached"}
 
 const (
-	// CertTeleportUser specifies teleport user
-	CertTeleportUser = "x-teleport-user"
-	// CertTeleportUserCA specifies teleport certificate authority
-	CertTeleportUserCA = "x-teleport-user-ca"
+	// CertSiriusecUser specifies teleport user
+	CertSiriusecUser = "x-teleport-user"
+	// CertSiriusecUserCA specifies teleport certificate authority
+	CertSiriusecUserCA = "x-teleport-user-ca"
 	// CertExtensionRole specifies teleport role
 	CertExtensionRole = "x-teleport-role"
 	// CertExtensionAuthority specifies teleport authority's name
@@ -586,10 +586,10 @@ const (
 	CertExtensionAuthority = "x-teleport-authority"
 	// HostUUIDFile is the file name where the host UUID file is stored
 	HostUUIDFile = "host_uuid"
-	// CertTeleportClusterName is a name of the teleport cluster
-	CertTeleportClusterName = "x-teleport-cluster-name"
-	// CertTeleportUserCertificate is the certificate of the authenticated in user.
-	CertTeleportUserCertificate = "x-teleport-certificate"
+	// CertSiriusecClusterName is a name of the teleport cluster
+	CertSiriusecClusterName = "x-teleport-cluster-name"
+	// CertSiriusecUserCertificate is the certificate of the authenticated in user.
+	CertSiriusecUserCertificate = "x-teleport-certificate"
 	// ExtIntCertType is an internal extension used to propagate cert type.
 	ExtIntCertType = "certtype@teleport"
 	// ExtIntCertTypeHost indicates a host-type certificate.

@@ -22,7 +22,7 @@ limitations under the License.
 // Testing the Keystore package predictably requires an HSM. Testcases are
 // currently written for the "raw" KeyStore (no HSM), SoftHSMv2, YubiHSM2, and
 // AWS CloudHSM. Only the "raw" tests run without any setup, but testing for
-// SoftHSM is enabled by default in the Teleport docker buildbox and will be
+// SoftHSM is enabled by default in the Siriusec docker buildbox and will be
 // run in CI.
 //
 // Testing this package with SoftHSMv2
@@ -70,7 +70,7 @@ limitations under the License.
 //
 // 6. Run the test on the connected EC2 instance
 //
-// Testing Teleport with an HSM-backed CA
+// Testing Siriusec with an HSM-backed CA
 //
 // TBD as full support is added.
 package keystore

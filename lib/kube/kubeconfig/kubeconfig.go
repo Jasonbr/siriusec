@@ -23,11 +23,11 @@ var log = logrus.WithFields(logrus.Fields{
 	trace.Component: teleport.ComponentKubeClient,
 })
 
-// Values are Teleport user data needed to generate kubeconfig entries.
+// Values are Siriusec user data needed to generate kubeconfig entries.
 type Values struct {
-	// TeleportClusterName is used to name kubeconfig sections ("context", "cluster" and
-	// "user"). Should match Teleport cluster name.
-	TeleportClusterName string
+	// SiriusecClusterName is used to name kubeconfig sections ("context", "cluster" and
+	// "user"). Should match Siriusec cluster name.
+	SiriusecClusterName string
 	// ClusterAddr is the public address the Kubernetes client will talk to,
 	// usually a proxy.
 	ClusterAddr string
@@ -58,7 +58,7 @@ type ExecValues struct {
 	TshBinaryInsecure bool
 }
 
-// Update adds Teleport configuration to kubeconfig.
+// Update adds Siriusec configuration to kubeconfig.
 //
 // If `path` is empty, Update will try to guess it based on the environment or
 // known defaults.
@@ -72,16 +72,16 @@ func Update(path string, v Values) error {
 	if len(cas) == 0 {
 		return trace.BadParameter("TLS trusted CAs missing in provided credentials")
 	}
-	config.Clusters[v.TeleportClusterName] = &clientcmdapi.Cluster{
+	config.Clusters[v.SiriusecClusterName] = &clientcmdapi.Cluster{
 		Server:                   v.ClusterAddr,
 		CertificateAuthorityData: cas,
 	}
 
 	if v.Exec != nil {
 		// Called from tsh, use the exec plugin model.
-		clusterName := v.TeleportClusterName
+		clusterName := v.SiriusecClusterName
 		for _, c := range v.Exec.KubeClusters {
-			contextName := ContextName(v.TeleportClusterName, c)
+			contextName := ContextName(v.SiriusecClusterName, c)
 			authName := contextName
 			authInfo := &clientcmdapi.AuthInfo{
 				Exec: &clientcmdapi.ExecConfig{
@@ -89,7 +89,7 @@ func Update(path string, v Values) error {
 					Command:    v.Exec.TshBinaryPath,
 					Args: []string{"kube", "credentials",
 						fmt.Sprintf("--kube-cluster=%s", c),
-						fmt.Sprintf("--teleport-cluster=%s", v.TeleportClusterName),
+						fmt.Sprintf("--teleport-cluster=%s", v.SiriusecClusterName),
 					},
 				},
 			}
@@ -101,7 +101,7 @@ func Update(path string, v Values) error {
 			setContext(config.Contexts, contextName, clusterName, authName)
 		}
 		if v.Exec.SelectCluster != "" {
-			contextName := ContextName(v.TeleportClusterName, v.Exec.SelectCluster)
+			contextName := ContextName(v.SiriusecClusterName, v.Exec.SelectCluster)
 			if _, ok := config.Contexts[contextName]; !ok {
 				return trace.BadParameter("can't switch kubeconfig context to cluster %q, run 'tsh kube ls' to see available clusters", v.Exec.SelectCluster)
 			}
@@ -119,13 +119,13 @@ func Update(path string, v Values) error {
 			return trace.BadParameter("TLS certificate missing in provided credentials")
 		}
 
-		config.AuthInfos[v.TeleportClusterName] = &clientcmdapi.AuthInfo{
+		config.AuthInfos[v.SiriusecClusterName] = &clientcmdapi.AuthInfo{
 			ClientCertificateData: v.Credentials.TLSCert,
 			ClientKeyData:         v.Credentials.Priv,
 		}
 
-		setContext(config.Contexts, v.TeleportClusterName, v.TeleportClusterName, v.TeleportClusterName)
-		config.CurrentContext = v.TeleportClusterName
+		setContext(config.Contexts, v.SiriusecClusterName, v.SiriusecClusterName, v.SiriusecClusterName)
+		config.CurrentContext = v.SiriusecClusterName
 	}
 
 	return Save(path, *config)
@@ -144,7 +144,7 @@ func setContext(contexts map[string]*clientcmdapi.Context, name, cluster, auth s
 	contexts[name] = newContext
 }
 
-// Remove removes Teleport configuration from kubeconfig.
+// Remove removes Siriusec configuration from kubeconfig.
 //
 // If `path` is empty, Remove will try to guess it based on the environment or
 // known defaults.
@@ -155,7 +155,7 @@ func Remove(path, name string) error {
 		return trace.Wrap(err)
 	}
 
-	// Remove Teleport related AuthInfos, Clusters, and Contexts from kubeconfig.
+	// Remove Siriusec related AuthInfos, Clusters, and Contexts from kubeconfig.
 	delete(config.AuthInfos, name)
 	delete(config.Clusters, name)
 	delete(config.Contexts, name)

@@ -146,7 +146,7 @@ const (
 )
 
 // Config structure represents Firestore configuration as appears in `storage` section
-// of Teleport YAML
+// of Siriusec YAML
 type EventsConfig struct {
 	firestorebk.Config
 	// RetentionPeriod is a default retention period for events

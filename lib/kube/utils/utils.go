@@ -185,7 +185,7 @@ func CheckOrSetKubeCluster(ctx context.Context, p KubeServicesPresence, kubeClus
 		}
 		return kubeClusterName, nil
 	}
-	// Default is the cluster with a name matching the Teleport cluster
+	// Default is the cluster with a name matching the Siriusec cluster
 	// name (for backwards-compatibility with pre-5.0 behavior) or the
 	// first name alphabetically.
 	if len(kubeClusterNames) == 0 {

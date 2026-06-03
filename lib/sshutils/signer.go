@@ -73,7 +73,7 @@ func (s fixedAlgorithmSigner) Sign(rand io.Reader, data []byte) (*ssh.Signature,
 }
 
 // NewSigner returns new ssh Signer from private key + certificate pair.  The
-// signer can be used to create "auth methods" i.e. login into Teleport SSH
+// signer can be used to create "auth methods" i.e. login into Siriusec SSH
 // servers.
 func NewSigner(keyBytes, certBytes []byte) (ssh.Signer, error) {
 	keySigner, err := ssh.ParsePrivateKey(keyBytes)

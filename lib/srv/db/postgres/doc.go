@@ -26,10 +26,10 @@ limitations under the License.
 //
 // The package provides the following main types:
 //
-// * Proxy. Runs inside Teleport proxy and proxies connections from Postgres
+// * Proxy. Runs inside Siriusec proxy and proxies connections from Postgres
 //   clients to appropriate database servers over reverse tunnel.
 //
-// * Engine. Runs inside Teleport database service, accepts connections
+// * Engine. Runs inside Siriusec database service, accepts connections
 //   coming from proxy over reversetunnel and proxies them to databases.
 //
 // * TestServer. Fake Postgres server that implements a small part of its
@@ -38,7 +38,7 @@ limitations under the License.
 // Protocol
 // --------
 //
-// When connecting to a database server (or a Teleport proxy in our case),
+// When connecting to a database server (or a Siriusec proxy in our case),
 // Postgres clients start on a plain connection to check whether the server
 // supports TLS and then upgrade the connection.
 //

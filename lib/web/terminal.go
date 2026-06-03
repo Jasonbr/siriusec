@@ -62,7 +62,7 @@ type TerminalRequest struct {
 	// Term is the initial PTY size.
 	Term session.TerminalParams `json:"term"`
 
-	// SessionID is a Teleport session ID to join as.
+	// SessionID is a Siriusec session ID to join as.
 	SessionID session.ID `json:"sid"`
 
 	// Namespace is node namespace.
@@ -213,7 +213,7 @@ func (t *TerminalHandler) Close() error {
 	return nil
 }
 
-// handler is the main websocket loop. It creates a Teleport client and then
+// handler is the main websocket loop. It creates a Siriusec client and then
 // pumps raw events and audit events back to the client until the SSH session
 // is complete.
 func (t *TerminalHandler) handler(ws *websocket.Conn) {
@@ -222,7 +222,7 @@ func (t *TerminalHandler) handler(ws *websocket.Conn) {
 	// Create a context for signaling when the terminal session is over.
 	t.terminalContext, t.terminalCancel = context.WithCancel(context.Background())
 
-	// Create a Teleport client, if not able to, show the reason to the user in
+	// Create a Siriusec client, if not able to, show the reason to the user in
 	// the terminal.
 	tc, err := t.makeClient(ws)
 	if err != nil {
@@ -248,9 +248,9 @@ func (t *TerminalHandler) handler(ws *websocket.Conn) {
 	t.log.Debugf("Closing websocket stream for %v.", t.params.SessionID)
 }
 
-// makeClient builds a *client.TeleportClient for the connection.
-func (t *TerminalHandler) makeClient(ws *websocket.Conn) (*client.TeleportClient, error) {
-	clientConfig, err := makeTeleportClientConfig(t.ctx)
+// makeClient builds a *client.SiriusecClient for the connection.
+func (t *TerminalHandler) makeClient(ws *websocket.Conn) (*client.SiriusecClient, error) {
+	clientConfig, err := makeSiriusecClientConfig(t.ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -300,7 +300,7 @@ func (t *TerminalHandler) makeClient(ws *websocket.Conn) (*client.TeleportClient
 	return tc, nil
 }
 
-func (t *TerminalHandler) issueSessionMFACerts(tc *client.TeleportClient, ws *websocket.Conn) error {
+func (t *TerminalHandler) issueSessionMFACerts(tc *client.SiriusecClient, ws *websocket.Conn) error {
 	pc, err := tc.ConnectToProxy(t.terminalContext)
 	if err != nil {
 		return trace.Wrap(err)
@@ -440,7 +440,7 @@ func (t *TerminalHandler) startPingLoop(ws *websocket.Conn) {
 
 // streamTerminal opens a SSH connection to the remote host and streams
 // events back to the web client.
-func (t *TerminalHandler) streamTerminal(ws *websocket.Conn, tc *client.TeleportClient) {
+func (t *TerminalHandler) streamTerminal(ws *websocket.Conn, tc *client.SiriusecClient) {
 	defer t.terminalCancel()
 
 	// Establish SSH connection to the server. This function will block until
@@ -488,7 +488,7 @@ func (t *TerminalHandler) streamTerminal(ws *websocket.Conn, tc *client.Teleport
 
 // streamEvents receives events over the SSH connection and forwards them to
 // the web client.
-func (t *TerminalHandler) streamEvents(ws *websocket.Conn, tc *client.TeleportClient) {
+func (t *TerminalHandler) streamEvents(ws *websocket.Conn, tc *client.SiriusecClient) {
 	for {
 		select {
 		// Send push events that come over the events channel to the web client.

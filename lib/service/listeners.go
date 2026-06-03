@@ -42,34 +42,34 @@ var (
 )
 
 // AuthSSHAddr returns auth server SSH endpoint, if configured and started.
-func (process *TeleportProcess) AuthSSHAddr() (*utils.NetAddr, error) {
+func (process *SiriusecProcess) AuthSSHAddr() (*utils.NetAddr, error) {
 	return process.registeredListenerAddr(listenerAuthSSH)
 }
 
 // NodeSSHAddr returns the node SSH endpoint, if configured and started.
-func (process *TeleportProcess) NodeSSHAddr() (*utils.NetAddr, error) {
+func (process *SiriusecProcess) NodeSSHAddr() (*utils.NetAddr, error) {
 	return process.registeredListenerAddr(listenerNodeSSH)
 }
 
 // ProxySSHAddr returns the proxy SSH endpoint, if configured and started.
-func (process *TeleportProcess) ProxySSHAddr() (*utils.NetAddr, error) {
+func (process *SiriusecProcess) ProxySSHAddr() (*utils.NetAddr, error) {
 	return process.registeredListenerAddr(listenerProxySSH)
 }
 
 // DiagnosticAddr returns the diagnostic endpoint, if configured and started.
-func (process *TeleportProcess) DiagnosticAddr() (*utils.NetAddr, error) {
+func (process *SiriusecProcess) DiagnosticAddr() (*utils.NetAddr, error) {
 	return process.registeredListenerAddr(listenerDiagnostic)
 }
 
 // ProxyKubeAddr returns the proxy kubernetes endpoint, if configured and
 // started.
-func (process *TeleportProcess) ProxyKubeAddr() (*utils.NetAddr, error) {
+func (process *SiriusecProcess) ProxyKubeAddr() (*utils.NetAddr, error) {
 	return process.registeredListenerAddr(listenerProxyKube)
 }
 
 // ProxyWebAddr returns the proxy web interface endpoint, if configured and
 // started.
-func (process *TeleportProcess) ProxyWebAddr() (*utils.NetAddr, error) {
+func (process *SiriusecProcess) ProxyWebAddr() (*utils.NetAddr, error) {
 	addr, err := process.registeredListenerAddr(listenerProxyTunnelAndWeb)
 	if err == nil {
 		return addr, nil
@@ -79,7 +79,7 @@ func (process *TeleportProcess) ProxyWebAddr() (*utils.NetAddr, error) {
 
 // ProxyTunnelAddr returns the proxy reverse tunnel endpoint, if configured and
 // started.
-func (process *TeleportProcess) ProxyTunnelAddr() (*utils.NetAddr, error) {
+func (process *SiriusecProcess) ProxyTunnelAddr() (*utils.NetAddr, error) {
 	addr, err := process.registeredListenerAddr(listenerProxyTunnelAndWeb)
 	if err == nil {
 		return addr, nil
@@ -87,7 +87,7 @@ func (process *TeleportProcess) ProxyTunnelAddr() (*utils.NetAddr, error) {
 	return process.registeredListenerAddr(listenerProxyTunnel)
 }
 
-func (process *TeleportProcess) registeredListenerAddr(typ listenerType) (*utils.NetAddr, error) {
+func (process *SiriusecProcess) registeredListenerAddr(typ listenerType) (*utils.NetAddr, error) {
 	process.Lock()
 	defer process.Unlock()
 

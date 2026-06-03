@@ -24,11 +24,11 @@ import (
 )
 
 // SystemRole identifies the role of an SSH connection. Unlike "user roles"
-// introduced as part of RBAC in Teleport 1.4+ these are built-in roles used
-// for different Teleport components when connecting to each other.
+// introduced as part of RBAC in Siriusec 1.4+ these are built-in roles used
+// for different Siriusec components when connecting to each other.
 type SystemRole string
 
-// SystemRoles is a TeleportRole list
+// SystemRoles is a SiriusecRole list
 type SystemRoles []SystemRole
 
 const (
@@ -71,7 +71,7 @@ func NewTeleportRoles(in []string) (SystemRoles, error) {
 	return roles, roles.Check()
 }
 
-// ParseTeleportRoles takes a comma-separated list of roles and returns a slice
+// ParseSiriusecRoles takes a comma-separated list of roles and returns a slice
 // of teleport roles, or an error if parsing failed
 func ParseTeleportRoles(str string) (SystemRoles, error) {
 	var roles SystemRoles

@@ -69,7 +69,7 @@ type ExecSuite struct {
 
 var _ = check.Suite(&ExecSuite{})
 
-// TestMain will re-execute Teleport to run a command if "exec" is passed to
+// TestMain will re-execute Siriusec to run a command if "exec" is passed to
 // it as an argument. Otherwise it will run tests as normal.
 func TestMain(m *testing.M) {
 	utils.InitLoggerForTests()
@@ -133,7 +133,7 @@ func (s *ExecSuite) SetUpSuite(c *check.C) {
 		},
 		Identity: IdentityContext{
 			Login:        s.usr.Username,
-			TeleportUser: "galt",
+			SiriusecUser: "galt",
 			Certificate:  cert,
 		},
 		session:     &session{id: "xxx", term: &fakeTerminal{f: f}},
@@ -281,7 +281,7 @@ func (s *ExecSuite) TestContinue(c *check.C) {
 		},
 	}
 	ctx.Identity.Login = s.usr.Username
-	ctx.Identity.TeleportUser = "galt"
+	ctx.Identity.SiriusecUser = "galt"
 	ctx.ServerConn = &ssh.ServerConn{Conn: s}
 	ctx.ExecRequest = &localExec{
 		Ctx:     ctx,
@@ -295,14 +295,14 @@ func (s *ExecSuite) TestContinue(c *check.C) {
 		Type: sshutils.ExecRequest,
 	}
 
-	// Create an exec.Cmd to execute through Teleport.
+	// Create an exec.Cmd to execute through Siriusec.
 	cmd, err := ConfigureCommand(ctx)
 	c.Assert(err, check.IsNil)
 
 	// Create a channel that will be used to signal that execution is complete.
 	cmdDone := make(chan error, 1)
 
-	// Re-execute Teleport and run "ls". Signal over the context when execution
+	// Re-execute Siriusec and run "ls". Signal over the context when execution
 	// is complete.
 	go func() {
 		cmdDone <- cmd.Run()
@@ -316,7 +316,7 @@ func (s *ExecSuite) TestContinue(c *check.C) {
 	case <-time.After(5 * time.Second):
 	}
 
-	// Close the continue pipe to signal to Teleport to now execute the
+	// Close the continue pipe to signal to Siriusec to now execute the
 	// requested program.
 	err = ctx.contw.Close()
 	c.Assert(err, check.IsNil)
@@ -383,7 +383,7 @@ func (f *fakeTerminal) TTY() *os.File {
 	return f.f
 }
 
-// PID returns the PID of the Teleport process that was re-execed.
+// PID returns the PID of the Siriusec process that was re-execed.
 func (f *fakeTerminal) PID() int {
 	return 1
 }

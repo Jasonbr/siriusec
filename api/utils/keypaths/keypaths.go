@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package keypaths defines several keypaths used by multiple Teleport services.
+// Package keypaths defines several keypaths used by multiple Siriusec services.
 package keypaths
 
 import (
@@ -55,13 +55,13 @@ const (
 // ├── known_hosts                     --> trusted certificate authorities (their keys) in a format similar to known_hosts
 // └── keys							   --> session keys directory
 //    ├── one.example.com              --> Proxy hostname
-//    │   ├── certs.pem                --> TLS CA certs for the Teleport CA
+//    │   ├── certs.pem                --> TLS CA certs for the Siriusec CA
 //    │   ├── foo                      --> RSA Private Key for user "foo"
 //    │   ├── foo.pub                  --> Public Key
 //    │   ├── foo-x509.pem             --> TLS client certificate for Auth Server
 //    │   ├── foo-ssh                  --> SSH certs for user "foo"
-//    │   │   ├── root-cert.pub        --> SSH cert for Teleport cluster "root"
-//    │   │   └── leaf-cert.pub        --> SSH cert for Teleport cluster "leaf"
+//    │   │   ├── root-cert.pub        --> SSH cert for Siriusec cluster "root"
+//    │   │   └── leaf-cert.pub        --> SSH cert for Siriusec cluster "leaf"
 //    │   ├── foo-app                  --> Database access certs for user "foo"
 //    │   │   ├── root                 --> Database access certs for cluster "root"
 //    │   │   │   ├── appA-x509.pem    --> TLS cert for app service "appA"
@@ -75,12 +75,12 @@ const (
 //    │   │   └── leaf                 --> App access certs for cluster "leaf"
 //    │   │       └── dbC-x509.pem     --> TLS cert for database service "dbC"
 //    │   └── foo-kube                 --> Kubernetes certs for user "foo"
-//    │       ├── root                 --> Kubernetes certs for Teleport cluster "root"
+//    │       ├── root                 --> Kubernetes certs for Siriusec cluster "root"
 //    │       │   ├── kubeA-kubeconfig --> standalone kubeconfig for Kubernetes cluster "kubeA"
 //    │       │   ├── kubeA-x509.pem   --> TLS cert for Kubernetes cluster "kubeA"
 //    │       │   ├── kubeB-kubeconfig --> standalone kubeconfig for Kubernetes cluster "kubeB"
 //    │       │   └── kubeB-x509.pem   --> TLS cert for Kubernetes cluster "kubeB"
-//    │       └── leaf                 --> Kubernetes certs for Teleport cluster "leaf"
+//    │       └── leaf                 --> Kubernetes certs for Siriusec cluster "leaf"
 //    │           ├── kubeC-kubeconfig --> standalone kubeconfig for Kubernetes cluster "kubeC"
 //    │           └── kubeC-x509.pem   --> TLS cert for Kubernetes cluster "kubeC"
 //    └── two.example.com			   --> Additional proxy host entries follow the same format

@@ -178,7 +178,7 @@ type Config struct {
 }
 
 // GetName returns the name of etcd backend as it appears in 'storage/type' section
-// in Teleport YAML file. This function is a part of backend API
+// in Siriusec YAML file. This function is a part of backend API
 func GetName() string {
 	return "etcd"
 }

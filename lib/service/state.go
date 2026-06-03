@@ -34,12 +34,12 @@ type componentStateEnum byte
 // Prometheus metric. Using iota makes it possible to accidentally change the
 // values.
 const (
-	// stateOK means Teleport is operating normally.
+	// stateOK means Siriusec is operating normally.
 	stateOK = componentStateEnum(0)
-	// stateRecovering means Teleport has begun recovering from a degraded state.
+	// stateRecovering means Siriusec has begun recovering from a degraded state.
 	stateRecovering = componentStateEnum(1)
 	// stateDegraded means some kind of connection error has occurred to put
-	// Teleport into a degraded state.
+	// Siriusec into a degraded state.
 	stateDegraded = componentStateEnum(2)
 	// stateStarting means the process is starting but hasn't joined the
 	// cluster yet.
@@ -55,9 +55,9 @@ func init() {
 	stateGauge.Set(float64(stateStarting))
 }
 
-// processState tracks the state of the Teleport process.
+// processState tracks the state of the Siriusec process.
 type processState struct {
-	process *TeleportProcess
+	process *SiriusecProcess
 	mu      sync.Mutex
 	states  map[string]*componentState
 }
@@ -67,8 +67,8 @@ type componentState struct {
 	state        componentStateEnum
 }
 
-// newProcessState returns a new FSM that tracks the state of the Teleport process.
-func newProcessState(process *TeleportProcess) (*processState, error) {
+// newProcessState returns a new FSM that tracks the state of the Siriusec process.
+func newProcessState(process *SiriusecProcess) (*processState, error) {
 	err := utils.RegisterPrometheusCollectors(stateGauge)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -80,7 +80,7 @@ func newProcessState(process *TeleportProcess) (*processState, error) {
 	}, nil
 }
 
-// update the state of a Teleport component.
+// update the state of a Siriusec component.
 func (f *processState) update(event Event) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -88,7 +88,7 @@ func (f *processState) update(event Event) {
 
 	component, ok := event.Payload.(string)
 	if !ok {
-		f.process.log.Errorf("TeleportDegradedEvent broadcasted without component name, this is a bug!")
+		f.process.log.Errorf("SiriusecDegradedEvent broadcasted without component name, this is a bug!")
 		return
 	}
 	s, ok := f.states[component]
@@ -100,27 +100,27 @@ func (f *processState) update(event Event) {
 
 	switch event.Name {
 	// If a degraded event was received, always change the state to degraded.
-	case TeleportDegradedEvent:
+	case SiriusecDegradedEvent:
 		s.state = stateDegraded
-		f.process.log.Infof("Detected Teleport component %q is running in a degraded state.", component)
+		f.process.log.Infof("Detected Siriusec component %q is running in a degraded state.", component)
 	// If the current state is degraded, and a OK event has been
 	// received, change the state to recovering. If the current state is
 	// recovering and a OK events is received, if it's been longer
 	// than the recovery time (2 time the server keep alive ttl), change
 	// state to OK.
-	case TeleportOKEvent:
+	case SiriusecOKEvent:
 		switch s.state {
 		case stateStarting:
 			s.state = stateOK
-			f.process.log.Debugf("Teleport component %q has started.", component)
+			f.process.log.Debugf("Siriusec component %q has started.", component)
 		case stateDegraded:
 			s.state = stateRecovering
 			s.recoveryTime = f.process.Clock.Now()
-			f.process.log.Infof("Teleport component %q is recovering from a degraded state.", component)
+			f.process.log.Infof("Siriusec component %q is recovering from a degraded state.", component)
 		case stateRecovering:
 			if f.process.Clock.Now().Sub(s.recoveryTime) > defaults.HeartbeatCheckPeriod*2 {
 				s.state = stateOK
-				f.process.log.Infof("Teleport component %q has recovered from a degraded state.", component)
+				f.process.log.Infof("Siriusec component %q has recovered from a degraded state.", component)
 			}
 		}
 	}

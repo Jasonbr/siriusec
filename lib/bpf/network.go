@@ -46,7 +46,7 @@ const (
 	network6EventsBuffer = "ipv6_events"
 )
 
-// rawConn4Event is sent by the eBPF program that Teleport pulls off the perf
+// rawConn4Event is sent by the eBPF program that Siriusec pulls off the perf
 // buffer.
 type rawConn4Event struct {
 	// CgroupID is the internal cgroupv2 ID of the event.
@@ -71,7 +71,7 @@ type rawConn4Event struct {
 	Command [CommMax]byte
 }
 
-// rawConn6Event is sent by the eBPF program that Teleport pulls off the perf
+// rawConn6Event is sent by the eBPF program that Siriusec pulls off the perf
 // buffer.
 type rawConn6Event struct {
 	// CgroupID is the internal cgroupv2 ID of the event.

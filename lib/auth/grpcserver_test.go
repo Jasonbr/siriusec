@@ -220,7 +220,7 @@ func TestMFADeviceManagement(t *testing.T) {
 
 					// Respond to challenge using an unregistered TOTP device,
 					// which should fail the auth challenge.
-					badDev, err := totp.Generate(totp.GenerateOpts{Issuer: "Teleport", AccountName: user.GetName()})
+					badDev, err := totp.Generate(totp.GenerateOpts{Issuer: "Siriusec", AccountName: user.GetName()})
 					require.NoError(t, err)
 					code, err := totp.GenerateCode(badDev.Secret(), clock.Now())
 					require.NoError(t, err)
@@ -365,7 +365,7 @@ func TestMFADeviceManagement(t *testing.T) {
 
 					// Respond to challenge using an unregistered TOTP device,
 					// which should fail the auth challenge.
-					badDev, err := totp.Generate(totp.GenerateOpts{Issuer: "Teleport", AccountName: user.GetName()})
+					badDev, err := totp.Generate(totp.GenerateOpts{Issuer: "Siriusec", AccountName: user.GetName()})
 					require.NoError(t, err)
 					code, err := totp.GenerateCode(badDev.Secret(), clock.Now())
 					require.NoError(t, err)

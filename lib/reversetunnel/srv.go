@@ -186,7 +186,7 @@ type Config struct {
 	// Log specifies the logger
 	Log log.FieldLogger
 
-	// FIPS means Teleport was started in a FedRAMP/FIPS 140-2 compliant
+	// FIPS means Siriusec was started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 
@@ -753,11 +753,11 @@ func (s *server) keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (perm *ssh.Pe
 		var ok bool
 		clusterName, ok = cert.Extensions[utils.CertExtensionAuthority]
 		if !ok || clusterName == "" {
-			return nil, trace.BadParameter("certificate missing %q extension; this SSH host certificate was not issued by Teleport or issued by an older version of Teleport; try upgrading your Teleport nodes/proxies", utils.CertExtensionAuthority)
+			return nil, trace.BadParameter("certificate missing %q extension; this SSH host certificate was not issued by Sirius or issued by an older version of Sirius; try upgrading your Sirius nodes/proxies", utils.CertExtensionAuthority)
 		}
 		certRole, ok = cert.Extensions[utils.CertExtensionRole]
 		if !ok || certRole == "" {
-			return nil, trace.BadParameter("certificate missing %q extension; this SSH host certificate was not issued by Teleport or issued by an older version of Teleport; try upgrading your Teleport nodes/proxies", utils.CertExtensionRole)
+			return nil, trace.BadParameter("certificate missing %q extension; this SSH host certificate was not issued by Sirius or issued by an older version of Sirius; try upgrading your Sirius nodes/proxies", utils.CertExtensionRole)
 		}
 		certType = utils.ExtIntCertTypeHost
 		caType = types.HostCA
@@ -769,14 +769,14 @@ func (s *server) keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (perm *ssh.Pe
 		}
 		encRoles, ok := cert.Extensions[teleport.CertExtensionTeleportRoles]
 		if !ok || encRoles == "" {
-			return nil, trace.BadParameter("certificate missing %q extension; this SSH user certificate was not issued by Teleport or issued by an older version of Teleport; try upgrading your Teleport proxies/auth servers and logging in again (or exporting an identity file, if that's what you used)", teleport.CertExtensionTeleportRoles)
+			return nil, trace.BadParameter("certificate missing %q extension; this SSH user certificate was not issued by Sirius or issued by an older version of Sirius; try upgrading your Sirius proxies/auth servers and logging in again (or exporting an identity file, if that's what you used)", teleport.CertExtensionTeleportRoles)
 		}
 		roles, err := services.UnmarshalCertRoles(encRoles)
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
 		if len(roles) == 0 {
-			return nil, trace.BadParameter("certificate missing roles in %q extension; make sure your user has some roles assigned (or ask your Teleport admin to) and log in again (or export an identity file, if that's what you used)", teleport.CertExtensionTeleportRoles)
+			return nil, trace.BadParameter("certificate missing roles in %q extension; make sure your user has some roles assigned (or ask your Sirius admin to) and log in again (or export an identity file, if that's what you used)", teleport.CertExtensionTeleportRoles)
 		}
 		certRole = roles[0]
 		certType = utils.ExtIntCertTypeUser
@@ -1101,7 +1101,7 @@ func isPreV7Cluster(ctx context.Context, conn ssh.Conn) (bool, error) {
 	return false, nil
 }
 
-// sendVersionRequest sends a request for the version remote Teleport cluster.
+// sendVersionRequest sends a request for the version remote Siriusec cluster.
 func sendVersionRequest(ctx context.Context, sconn ssh.Conn) (string, error) {
 	errorCh := make(chan error, 1)
 	versionCh := make(chan string, 1)

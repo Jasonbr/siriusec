@@ -45,7 +45,7 @@ const (
 	diskEventsBuffer = "open_events"
 )
 
-// rawOpenEvent is sent by the eBPF program that Teleport pulls off the perf
+// rawOpenEvent is sent by the eBPF program that Siriusec pulls off the perf
 // buffer.
 type rawOpenEvent struct {
 	// CgroupID is the internal cgroupv2 ID of the event.

@@ -61,7 +61,7 @@ const (
 	// configuring a MongoDB database for mutual TLS authentication.
 	FormatMongo Format = "mongodb"
 
-	// DefaultFormat is what Teleport uses by default
+	// DefaultFormat is what Siriusec uses by default
 	DefaultFormat = FormatFile
 )
 
@@ -214,7 +214,7 @@ func Write(cfg WriteConfig) (filesWritten []string, err error) {
 		}
 
 		if err := kubeconfig.Update(cfg.OutputPath, kubeconfig.Values{
-			TeleportClusterName: cfg.Key.ClusterName,
+			SiriusecClusterName: cfg.Key.ClusterName,
 			ClusterAddr:         cfg.KubeProxyAddr,
 			Credentials:         cfg.Key,
 		}); err != nil {

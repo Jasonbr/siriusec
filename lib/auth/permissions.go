@@ -175,7 +175,7 @@ func (a *authorizer) authorizeRemoteUser(u RemoteUser) (*Context, error) {
 	if len(roleNames) == 0 {
 		return nil, trace.AccessDenied("no roles mapped for remote user %q from cluster %q with remote roles %v", u.Username, u.ClusterName, u.RemoteRoles)
 	}
-	// Set internal traits for the remote user. This allows Teleport to work by
+	// Set internal traits for the remote user. This allows Siriusec to work by
 	// passing exact logins, Kubernetes users/groups and database users/names
 	// to the remote cluster.
 	traits := map[string][]string{
@@ -185,7 +185,7 @@ func (a *authorizer) authorizeRemoteUser(u RemoteUser) (*Context, error) {
 		teleport.TraitDBNames:    u.DatabaseNames,
 		teleport.TraitDBUsers:    u.DatabaseUsers,
 	}
-	// Prior to Teleport 6.2 no user traits were passed to remote clusters
+	// Prior to Siriusec 6.2 no user traits were passed to remote clusters
 	// except for the internal ones specified above.
 	//
 	// To preserve backwards compatible behavior, when applying traits from user
@@ -242,7 +242,7 @@ func (a *authorizer) authorizeRemoteUser(u RemoteUser) (*Context, error) {
 		Principals:       principals,
 		KubernetesGroups: kubeGroups,
 		KubernetesUsers:  kubeUsers,
-		TeleportCluster:  a.clusterName,
+		SiriusecCluster:  a.clusterName,
 		Expires:          time.Now().Add(ttl),
 
 		// These fields are for routing and restrictions, safe to re-use from
@@ -745,7 +745,7 @@ func (i WrapIdentity) GetIdentity() tlsca.Identity {
 	return tlsca.Identity(i)
 }
 
-// BuiltinRole is the role of the Teleport service.
+// BuiltinRole is the role of the Siriusec service.
 type BuiltinRole struct {
 	// Role is the builtin role this username is associated with
 	Role types.SystemRole
@@ -775,7 +775,7 @@ func (r BuiltinRole) IsServer() bool {
 // consist of "<server-id>.<cluster-name>" so strip the cluster name suffix
 // to get the server id.
 //
-// Note that as of right now Teleport expects server id to be a UUID4 but
+// Note that as of right now Siriusec expects server id to be a UUID4 but
 // older Gravity clusters used to override it with strings like
 // "192_168_1_1.<cluster-name>" so this code can't rely on it being
 // UUID4 to account for clusters upgraded from older versions.
@@ -813,7 +813,7 @@ type RemoteUserRoleSet struct {
 }
 
 // RemoteBuiltinRole is the role of the remote (service connecting via trusted cluster link)
-// Teleport service.
+// Siriusec service.
 type RemoteBuiltinRole struct {
 	// Role is the builtin role of the user
 	Role types.SystemRole

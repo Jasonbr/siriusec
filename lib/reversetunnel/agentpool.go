@@ -84,7 +84,7 @@ type AgentPoolConfig struct {
 	// Server is either an SSH or application server. It can handle a connection
 	// (perform handshake and handle request).
 	Server ServerHandler
-	// Component is the Teleport component this agent pool is running in. It can
+	// Component is the Siriusec component this agent pool is running in. It can
 	// either be proxy (trusted clusters) or node (dial back).
 	Component string
 	// ReverseTunnelServer holds all reverse tunnel connections.
@@ -93,7 +93,7 @@ type AgentPoolConfig struct {
 	ProxyAddr string
 	// Cluster is a cluster name of the proxy.
 	Cluster string
-	// FIPS indicates if Teleport was started in FIPS mode.
+	// FIPS indicates if Siriusec was started in FIPS mode.
 	FIPS bool
 }
 

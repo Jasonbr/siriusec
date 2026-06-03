@@ -84,7 +84,7 @@ func (s *Server) GenerateDatabaseCert(ctx context.Context, req *proto.DatabaseCe
 func (s *Server) SignDatabaseCSR(ctx context.Context, req *proto.DatabaseCSRRequest) (*proto.DatabaseCSRResponse, error) {
 	if !modules.GetModules().Features().DB {
 		return nil, trace.AccessDenied(
-			"this Teleport cluster is not licensed for database access, please contact the cluster administrator")
+			"this Siriusec cluster is not licensed for database access, please contact the cluster administrator")
 	}
 
 	log.Debugf("Signing database CSR for cluster %v.", req.ClusterName)
@@ -114,7 +114,7 @@ func (s *Server) SignDatabaseCSR(ctx context.Context, req *proto.DatabaseCSRRequ
 	}
 
 	// Make sure that the CSR originated from the local cluster user.
-	if clusterName.GetClusterName() != id.TeleportCluster {
+	if clusterName.GetClusterName() != id.SiriusecCluster {
 		return nil, trace.AccessDenied("can't sign database CSR for identity %v", id)
 	}
 

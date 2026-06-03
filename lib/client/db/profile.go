@@ -38,7 +38,7 @@ import (
 )
 
 // Add updates database connection profile file.
-func Add(tc *client.TeleportClient, db tlsca.RouteToDatabase, clientProfile client.ProfileStatus) error {
+func Add(tc *client.SiriusecClient, db tlsca.RouteToDatabase, clientProfile client.ProfileStatus) error {
 	// Out of supported databases, only Postgres and MySQL have a concept
 	// of the connection options file.
 	switch db.Protocol {
@@ -57,7 +57,7 @@ func Add(tc *client.TeleportClient, db tlsca.RouteToDatabase, clientProfile clie
 	return nil
 }
 
-func add(tc *client.TeleportClient, db tlsca.RouteToDatabase, clientProfile client.ProfileStatus, profileFile profile.ConnectProfileFile) (*profile.ConnectProfile, error) {
+func add(tc *client.SiriusecClient, db tlsca.RouteToDatabase, clientProfile client.ProfileStatus, profileFile profile.ConnectProfileFile) (*profile.ConnectProfile, error) {
 	var host string
 	var port int
 	switch db.Protocol {
@@ -87,7 +87,7 @@ func add(tc *client.TeleportClient, db tlsca.RouteToDatabase, clientProfile clie
 }
 
 // Env returns environment variables for the specified database profile.
-func Env(tc *client.TeleportClient, db tlsca.RouteToDatabase) (map[string]string, error) {
+func Env(tc *client.SiriusecClient, db tlsca.RouteToDatabase) (map[string]string, error) {
 	profileFile, err := load(db)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -100,7 +100,7 @@ func Env(tc *client.TeleportClient, db tlsca.RouteToDatabase) (map[string]string
 }
 
 // Delete removes the specified database connection profile.
-func Delete(tc *client.TeleportClient, db tlsca.RouteToDatabase) error {
+func Delete(tc *client.SiriusecClient, db tlsca.RouteToDatabase) error {
 	// Out of supported databases, only Postgres and MySQL have a concept
 	// of the connection options file.
 	switch db.Protocol {
@@ -132,7 +132,7 @@ func load(db tlsca.RouteToDatabase) (profile.ConnectProfileFile, error) {
 }
 
 // profileName constructs the Postgres connection service name from the
-// Teleport cluster name and the database service name.
+// Siriusec cluster name and the database service name.
 func profileName(cluster, name string) string {
 	return fmt.Sprintf("%v-%v", cluster, name)
 }

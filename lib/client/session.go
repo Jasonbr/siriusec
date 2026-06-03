@@ -51,7 +51,7 @@ type NodeSession struct {
 	// namespace is a session this namespace belongs to
 	namespace string
 
-	// id is the Teleport session ID
+	// id is the Siriusec session ID
 	id session.ID
 
 	// env is the environment variables that need to be created
@@ -77,7 +77,7 @@ type NodeSession struct {
 	terminal *terminal.Terminal
 }
 
-// newSession creates a new Teleport session with the given remote node
+// newSession creates a new Siriusec session with the given remote node
 // if 'joinSessin' is given, the session will join the existing session
 // of another user
 func newSession(client *NodeClient,
@@ -222,13 +222,13 @@ func (ns *NodeSession) createServerSession() (*ssh.Session, error) {
 
 // selectKeyAgent picks the appropriate key agent for forwarding to the
 // server, if any.
-func selectKeyAgent(tc *TeleportClient) agent.Agent {
+func selectKeyAgent(tc *SiriusecClient) agent.Agent {
 	switch tc.ForwardAgent {
 	case ForwardAgentYes:
 		log.Debugf("Selecting system key agent.")
 		return tc.localAgent.sshAgent
 	case ForwardAgentLocal:
-		log.Debugf("Selecting local Teleport key agent.")
+		log.Debugf("Selecting local Sirius key agent.")
 		return tc.localAgent.Agent
 	default:
 		log.Debugf("No Key Agent selected.")
@@ -499,7 +499,7 @@ func (ns *NodeSession) runCommand(ctx context.Context, cmd []string, callback Sh
 	//  * https://tools.ietf.org/html/rfc4253#section-11.1
 	//  * https://github.com/openssh/openssh-portable/blob/05046d907c211cb9b4cd21b8eff9e7a46cd6c5ab/clientloop.c#L1195-L1444
 	//
-	// Unfortunately at the moment the Go SSH library Teleport uses does not
+	// Unfortunately at the moment the Go SSH library Siriusec uses does not
 	// support sending SSH_MSG_DISCONNECT. Instead we close the SSH channel and
 	// SSH client, and try and exit as gracefully as possible.
 	return ns.regularSession(func(s *ssh.Session) error {

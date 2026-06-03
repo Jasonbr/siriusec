@@ -13,7 +13,7 @@ import (
 	"github.com/siriusec/siriusec/api/types"
 )
 
-// Below is an example of creating a new Teleport Auth client with Profile credentials,
+// Below is an example of creating a new Siriusec Auth client with Profile credentials,
 // and using that client to create, get, and delete a Role resource object.
 //
 // Make sure to look at the Getting Started guide before attempting to run this example.
@@ -25,7 +25,7 @@ func ExampleClient_roleCRUD() {
 		Credentials: []client.Credentials{
 			client.LoadProfile("", ""),
 		},
-		// set to true if your Teleport web proxy doesn't have HTTP/TLS certificate
+		// set to true if your Siriusec web proxy doesn't have HTTP/TLS certificate
 		// configured yet (never use this in production).
 		InsecureAddressDiscovery: false,
 	})
@@ -50,7 +50,7 @@ func ExampleClient_roleCRUD() {
 		},
 	}
 
-	// There are helper functions for creating Teleport resources.
+	// There are helper functions for creating Siriusec resources.
 	role, err := types.NewRole("role1", roleSpec)
 	if err != nil {
 		log.Fatalf("failed to get role: %v", err)

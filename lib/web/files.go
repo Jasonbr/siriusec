@@ -141,7 +141,7 @@ func (f *fileTransfer) upload(req fileTransferRequest, httpReq *http.Request) er
 	return nil
 }
 
-func (f *fileTransfer) createClient(req fileTransferRequest, httpReq *http.Request) (*client.TeleportClient, error) {
+func (f *fileTransfer) createClient(req fileTransferRequest, httpReq *http.Request) (*client.SiriusecClient, error) {
 	if !types.IsValidNamespace(req.namespace) {
 		return nil, trace.BadParameter("invalid namespace %q", req.namespace)
 	}
@@ -160,7 +160,7 @@ func (f *fileTransfer) createClient(req fileTransferRequest, httpReq *http.Reque
 		return nil, trace.BadParameter("invalid server name %q: %v", req.server, err)
 	}
 
-	cfg, err := makeTeleportClientConfig(f.ctx)
+	cfg, err := makeSiriusecClientConfig(f.ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

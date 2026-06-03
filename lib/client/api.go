@@ -163,7 +163,7 @@ type HostKeyCallback func(host string, ip net.Addr, key ssh.PublicKey) error
 
 // Config is a client config
 type Config struct {
-	// Username is the Teleport account username (for logging into Teleport proxies)
+	// Username is the Teleport account username (for logging into Siriusec proxies)
 	Username string
 
 	// Remote host to connect
@@ -209,7 +209,7 @@ type Config struct {
 
 	// SkipLocalAuth tells the client to use AuthMethods parameter for authentication and NOT
 	// use its own SSH agent or ask user for passwords. This is used by external programs linking
-	// against Teleport client and obtaining credentials from elsewhere.
+	// against Siriusec client and obtaining credentials from elsewhere.
 	SkipLocalAuth bool
 
 	// Agent is used when SkipLocalAuth is true
@@ -356,10 +356,10 @@ type ProfileStatus struct {
 	// ProxyURL is the URL the web client is accessible at.
 	ProxyURL url.URL
 
-	// Username is the Teleport username.
+	// Username is the Siriusec username.
 	Username string
 
-	// Roles is a list of Teleport Roles this user has been assigned.
+	// Roles is a list of Siriusec Roles this user has been assigned.
 	Roles []string
 
 	// Logins are the Linux accounts, also known as principals in OpenSSH terminology.
@@ -459,7 +459,7 @@ func (p *ProfileStatus) AppNames() (result []string) {
 
 // RetryWithRelogin is a helper error handling method,
 // attempts to relogin and retry the function once
-func RetryWithRelogin(ctx context.Context, tc *TeleportClient, fn func() error) error {
+func RetryWithRelogin(ctx context.Context, tc *SiriusecClient, fn func() error) error {
 	err := fn()
 	if err == nil {
 		return nil
@@ -576,7 +576,7 @@ func readProfile(profileDir string, profileName string) (*ProfileStatus, error) 
 	}
 	sort.Strings(extensions)
 
-	tlsCert, err := key.TeleportTLSCertificate()
+	tlsCert, err := key.SiriusecTLSCertificate()
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -991,10 +991,10 @@ func (c *Config) ProxySpecified() bool {
 	return c.WebProxyAddr != ""
 }
 
-// TeleportClient is a wrapper around SSH client with teleport specific
+// SiriusecClient is a wrapper around SSH client with teleport specific
 // workflow built in.
-// TeleportClient is NOT safe for concurrent use.
-type TeleportClient struct {
+// SiriusecClient is NOT safe for concurrent use.
+type SiriusecClient struct {
 	Config
 	localAgent *LocalKeyAgent
 
@@ -1007,7 +1007,7 @@ type TeleportClient struct {
 	eventsCh chan events.EventFields
 
 	// Note: there's no mutex guarding this or localAgent, making
-	// TeleportClient NOT safe for concurrent use.
+	// SiriusecClient NOT safe for concurrent use.
 	lastPing *webclient.PingResponse
 }
 
@@ -1018,8 +1018,8 @@ type TeleportClient struct {
 // It allows clients to cancel SSH action
 type ShellCreatedCallback func(s *ssh.Session, c *ssh.Client, terminal io.ReadWriteCloser) (exit bool, err error)
 
-// NewClient creates a TeleportClient object and fully configures it
-func NewClient(c *Config) (tc *TeleportClient, err error) {
+// NewClient creates a SiriusecClient object and fully configures it
+func NewClient(c *Config) (tc *SiriusecClient, err error) {
 	if len(c.JumpHosts) > 1 {
 		return nil, trace.BadParameter("only one jump host is supported, got %v", len(c.JumpHosts))
 	}
@@ -1046,7 +1046,7 @@ func NewClient(c *Config) (tc *TeleportClient, err error) {
 	}
 	c.Namespace = types.ProcessNamespace(c.Namespace)
 
-	tc = &TeleportClient{Config: *c}
+	tc = &SiriusecClient{Config: *c}
 
 	if tc.Stdout == nil {
 		tc.Stdout = os.Stdout
@@ -1109,9 +1109,9 @@ func NewClient(c *Config) (tc *TeleportClient, err error) {
 
 // LoadKeyForCluster fetches a cluster-specific SSH key and loads it into the
 // SSH agent.
-func (tc *TeleportClient) LoadKeyForCluster(clusterName string) error {
+func (tc *SiriusecClient) LoadKeyForCluster(clusterName string) error {
 	if tc.localAgent == nil {
-		return trace.BadParameter("TeleportClient.LoadKeyForCluster called on a client without localAgent")
+		return trace.BadParameter("SiriusecClient.LoadKeyForCluster called on a client without localAgent")
 	}
 	_, err := tc.localAgent.LoadKeyForCluster(clusterName)
 	if err != nil {
@@ -1122,7 +1122,7 @@ func (tc *TeleportClient) LoadKeyForCluster(clusterName string) error {
 
 // LoadKeyForCluster fetches a cluster-specific SSH key and loads it into the
 // SSH agent.  If the key is not found, it is requested to be reissued.
-func (tc *TeleportClient) LoadKeyForClusterWithReissue(ctx context.Context, clusterName string) error {
+func (tc *SiriusecClient) LoadKeyForClusterWithReissue(ctx context.Context, clusterName string) error {
 	err := tc.LoadKeyForCluster(clusterName)
 	if err == nil {
 		return nil
@@ -1139,8 +1139,8 @@ func (tc *TeleportClient) LoadKeyForClusterWithReissue(ctx context.Context, clus
 }
 
 // accessPoint returns access point based on the cache policy
-func (tc *TeleportClient) accessPoint(clt auth.AccessPoint, proxyHostPort string, clusterName string) (auth.AccessPoint, error) {
-	// If no caching policy was set or on Windows (where Teleport does not
+func (tc *SiriusecClient) accessPoint(clt auth.AccessPoint, proxyHostPort string, clusterName string) (auth.AccessPoint, error) {
+	// If no caching policy was set or on Windows (where Siriusec does not
 	// support file locking at the moment), return direct access to the access
 	// point.
 	if tc.CachePolicy == nil || runtime.GOOS == constants.WindowsOS {
@@ -1151,13 +1151,13 @@ func (tc *TeleportClient) accessPoint(clt auth.AccessPoint, proxyHostPort string
 }
 
 // LocalAgent is a getter function for the client's local agent
-func (tc *TeleportClient) LocalAgent() *LocalKeyAgent {
+func (tc *SiriusecClient) LocalAgent() *LocalKeyAgent {
 	return tc.localAgent
 }
 
 // getTargetNodes returns a list of node addresses this SSH command needs to
 // operate on.
-func (tc *TeleportClient) getTargetNodes(ctx context.Context, proxy *ProxyClient) ([]string, error) {
+func (tc *SiriusecClient) getTargetNodes(ctx context.Context, proxy *ProxyClient) ([]string, error) {
 	var (
 		err    error
 		nodes  []types.Server
@@ -1194,7 +1194,7 @@ func (tc *TeleportClient) getTargetNodes(ctx context.Context, proxy *ProxyClient
 
 // ReissueUserCerts issues new user certs based on params and stores them in
 // the local key agent (usually on disk in ~/.tsh).
-func (tc *TeleportClient) ReissueUserCerts(ctx context.Context, cachePolicy CertCachePolicy, params ReissueParams) error {
+func (tc *SiriusecClient) ReissueUserCerts(ctx context.Context, cachePolicy CertCachePolicy, params ReissueParams) error {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1213,7 +1213,7 @@ func (tc *TeleportClient) ReissueUserCerts(ctx context.Context, cachePolicy Cert
 // (according to RBAC), IssueCertsWithMFA will:
 // - for SSH certs, return the existing Key from the keystore.
 // - for TLS certs, fall back to ReissueUserCerts.
-func (tc *TeleportClient) IssueUserCertsWithMFA(ctx context.Context, params ReissueParams) (*Key, error) {
+func (tc *SiriusecClient) IssueUserCertsWithMFA(ctx context.Context, params ReissueParams) (*Key, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1229,7 +1229,7 @@ func (tc *TeleportClient) IssueUserCertsWithMFA(ctx context.Context, params Reis
 }
 
 // CreateAccessRequest registers a new access request with the auth server.
-func (tc *TeleportClient) CreateAccessRequest(ctx context.Context, req types.AccessRequest) error {
+func (tc *SiriusecClient) CreateAccessRequest(ctx context.Context, req types.AccessRequest) error {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1240,7 +1240,7 @@ func (tc *TeleportClient) CreateAccessRequest(ctx context.Context, req types.Acc
 }
 
 // GetAccessRequests loads all access requests matching the supplied filter.
-func (tc *TeleportClient) GetAccessRequests(ctx context.Context, filter types.AccessRequestFilter) ([]types.AccessRequest, error) {
+func (tc *SiriusecClient) GetAccessRequests(ctx context.Context, filter types.AccessRequestFilter) ([]types.AccessRequest, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1251,7 +1251,7 @@ func (tc *TeleportClient) GetAccessRequests(ctx context.Context, filter types.Ac
 }
 
 // GetRole loads a role resource by name.
-func (tc *TeleportClient) GetRole(ctx context.Context, name string) (types.Role, error) {
+func (tc *SiriusecClient) GetRole(ctx context.Context, name string) (types.Role, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1274,7 +1274,7 @@ func (w watchCloser) Close() error {
 }
 
 // NewWatcher sets up a new event watcher.
-func (tc *TeleportClient) NewWatcher(ctx context.Context, watch types.Watch) (types.Watcher, error) {
+func (tc *SiriusecClient) NewWatcher(ctx context.Context, watch types.Watch) (types.Watcher, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1294,7 +1294,7 @@ func (tc *TeleportClient) NewWatcher(ctx context.Context, watch types.Watch) (ty
 
 // WithRootClusterClient provides a functional interface for making calls
 // against the root cluster's auth server.
-func (tc *TeleportClient) WithRootClusterClient(ctx context.Context, do func(clt auth.ClientI) error) error {
+func (tc *SiriusecClient) WithRootClusterClient(ctx context.Context, do func(clt auth.ClientI) error) error {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1314,7 +1314,7 @@ func (tc *TeleportClient) WithRootClusterClient(ctx context.Context, do func(clt
 // otherwise runs interactive shell
 //
 // Returns nil if successful, or (possibly) *exec.ExitError
-func (tc *TeleportClient) SSH(ctx context.Context, command []string, runLocally bool) error {
+func (tc *SiriusecClient) SSH(ctx context.Context, command []string, runLocally bool) error {
 	// connect to proxy first:
 	if !tc.Config.ProxySpecified() {
 		return trace.BadParameter("proxy server is not specified")
@@ -1390,7 +1390,7 @@ func (tc *TeleportClient) SSH(ctx context.Context, command []string, runLocally 
 	return tc.runShell(nodeClient, nil)
 }
 
-func (tc *TeleportClient) startPortForwarding(ctx context.Context, nodeClient *NodeClient) {
+func (tc *SiriusecClient) startPortForwarding(ctx context.Context, nodeClient *NodeClient) {
 	if len(tc.Config.LocalForwardPorts) > 0 {
 		for _, fp := range tc.Config.LocalForwardPorts {
 			addr := net.JoinHostPort(fp.SrcIP, strconv.Itoa(fp.SrcPort))
@@ -1416,7 +1416,7 @@ func (tc *TeleportClient) startPortForwarding(ctx context.Context, nodeClient *N
 }
 
 // Join connects to the existing/active SSH session
-func (tc *TeleportClient) Join(ctx context.Context, namespace string, sessionID session.ID, input io.Reader) (err error) {
+func (tc *SiriusecClient) Join(ctx context.Context, namespace string, sessionID session.ID, input io.Reader) (err error) {
 	if namespace == "" {
 		return trace.BadParameter(auth.MissingNamespaceError)
 	}
@@ -1501,7 +1501,7 @@ func (tc *TeleportClient) Join(ctx context.Context, namespace string, sessionID 
 }
 
 // Play replays the recorded session
-func (tc *TeleportClient) Play(ctx context.Context, namespace, sessionID string) (err error) {
+func (tc *SiriusecClient) Play(ctx context.Context, namespace, sessionID string) (err error) {
 	var sessionEvents []events.EventFields
 	var stream []byte
 	if namespace == "" {
@@ -1571,7 +1571,7 @@ func PlayFile(ctx context.Context, tarFile io.Reader, sid string) error {
 
 // ExecuteSCP executes SCP command. It executes scp.Command using
 // lower-level API integrations that mimic SCP CLI command behavior
-func (tc *TeleportClient) ExecuteSCP(ctx context.Context, cmd scp.Command) (err error) {
+func (tc *SiriusecClient) ExecuteSCP(ctx context.Context, cmd scp.Command) (err error) {
 	// connect to proxy first:
 	if !tc.Config.ProxySpecified() {
 		return trace.BadParameter("proxy server is not specified")
@@ -1622,7 +1622,7 @@ func (tc *TeleportClient) ExecuteSCP(ctx context.Context, cmd scp.Command) (err 
 }
 
 // SCP securely copies file(s) from one SSH server to another
-func (tc *TeleportClient) SCP(ctx context.Context, args []string, port int, flags scp.Flags, quiet bool) (err error) {
+func (tc *SiriusecClient) SCP(ctx context.Context, args []string, port int, flags scp.Flags, quiet bool) (err error) {
 	if len(args) < 2 {
 		return trace.Errorf("need at least two arguments for scp")
 	}
@@ -1701,7 +1701,7 @@ func (tc *TeleportClient) SCP(ctx context.Context, args []string, port int, flag
 	return onError(client.ExecuteSCP(ctx, config.cmd))
 }
 
-func (tc *TeleportClient) uploadConfig(ctx context.Context, tpl scp.Config, port int, args []string) (config *scpConfig, err error) {
+func (tc *SiriusecClient) uploadConfig(ctx context.Context, tpl scp.Config, port int, args []string) (config *scpConfig, err error) {
 	// args are guaranteed to have len(args) > 1
 	filesToUpload := args[:len(args)-1]
 	// copy everything except the last arg (the destination)
@@ -1735,7 +1735,7 @@ func (tc *TeleportClient) uploadConfig(ctx context.Context, tpl scp.Config, port
 	}, nil
 }
 
-func (tc *TeleportClient) downloadConfig(ctx context.Context, tpl scp.Config, port int, args []string) (config *scpConfig, err error) {
+func (tc *SiriusecClient) downloadConfig(ctx context.Context, tpl scp.Config, port int, args []string) (config *scpConfig, err error) {
 	// args are guaranteed to have len(args) > 1
 	src, addr, err := getSCPDestination(args[0], port)
 	if err != nil {
@@ -1777,7 +1777,7 @@ func isRemoteDest(name string) bool {
 }
 
 // ListNodes returns a list of nodes connected to a proxy
-func (tc *TeleportClient) ListNodes(ctx context.Context) ([]types.Server, error) {
+func (tc *SiriusecClient) ListNodes(ctx context.Context) ([]types.Server, error) {
 	var err error
 	// userhost is specified? that must be labels
 	if tc.Host != "" {
@@ -1798,7 +1798,7 @@ func (tc *TeleportClient) ListNodes(ctx context.Context) ([]types.Server, error)
 }
 
 // ListAppServers returns a list of application servers.
-func (tc *TeleportClient) ListAppServers(ctx context.Context) ([]types.Server, error) {
+func (tc *SiriusecClient) ListAppServers(ctx context.Context) ([]types.Server, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1809,7 +1809,7 @@ func (tc *TeleportClient) ListAppServers(ctx context.Context) ([]types.Server, e
 }
 
 // CreateAppSession creates a new application access session.
-func (tc *TeleportClient) CreateAppSession(ctx context.Context, req types.CreateAppSessionRequest) (types.WebSession, error) {
+func (tc *SiriusecClient) CreateAppSession(ctx context.Context, req types.CreateAppSessionRequest) (types.WebSession, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1819,7 +1819,7 @@ func (tc *TeleportClient) CreateAppSession(ctx context.Context, req types.Create
 }
 
 // DeleteAppSession removes the specified application access session.
-func (tc *TeleportClient) DeleteAppSession(ctx context.Context, sessionID string) error {
+func (tc *SiriusecClient) DeleteAppSession(ctx context.Context, sessionID string) error {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1829,7 +1829,7 @@ func (tc *TeleportClient) DeleteAppSession(ctx context.Context, sessionID string
 }
 
 // ListDatabaseServers returns all registered database proxy servers.
-func (tc *TeleportClient) ListDatabaseServers(ctx context.Context) ([]types.DatabaseServer, error) {
+func (tc *SiriusecClient) ListDatabaseServers(ctx context.Context) ([]types.DatabaseServer, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1839,7 +1839,7 @@ func (tc *TeleportClient) ListDatabaseServers(ctx context.Context) ([]types.Data
 }
 
 // ListAllNodes is the same as ListNodes except that it ignores labels.
-func (tc *TeleportClient) ListAllNodes(ctx context.Context) ([]types.Server, error) {
+func (tc *SiriusecClient) ListAllNodes(ctx context.Context) ([]types.Server, error) {
 	proxyClient, err := tc.ConnectToProxy(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -1850,7 +1850,7 @@ func (tc *TeleportClient) ListAllNodes(ctx context.Context) ([]types.Server, err
 }
 
 // runCommandOnNodes executes a given bash command on a bunch of remote nodes.
-func (tc *TeleportClient) runCommandOnNodes(
+func (tc *SiriusecClient) runCommandOnNodes(
 	ctx context.Context, siteName string, nodeAddresses []string, proxyClient *ProxyClient, command []string) error {
 
 	resultsC := make(chan error, len(nodeAddresses))
@@ -1887,7 +1887,7 @@ func (tc *TeleportClient) runCommandOnNodes(
 }
 
 // runCommand executes a given bash command on an established NodeClient.
-func (tc *TeleportClient) runCommand(ctx context.Context, nodeClient *NodeClient, command []string) error {
+func (tc *SiriusecClient) runCommand(ctx context.Context, nodeClient *NodeClient, command []string) error {
 	nodeSession, err := newSession(nodeClient, nil, tc.Config.Env, tc.Stdin, tc.Stdout, tc.Stderr, tc.useLegacyID(nodeClient), tc.EnableEscapeSequences)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1915,7 +1915,7 @@ func (tc *TeleportClient) runCommand(ctx context.Context, nodeClient *NodeClient
 
 // runShell starts an interactive SSH session/shell.
 // sessionID : when empty, creates a new shell. otherwise it tries to join the existing session.
-func (tc *TeleportClient) runShell(nodeClient *NodeClient, sessToJoin *session.Session) error {
+func (tc *SiriusecClient) runShell(nodeClient *NodeClient, sessToJoin *session.Session) error {
 	nodeSession, err := newSession(nodeClient, sessToJoin, tc.Env, tc.Stdin, tc.Stdout, tc.Stderr, tc.useLegacyID(nodeClient), tc.EnableEscapeSequences)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1939,7 +1939,7 @@ func (tc *TeleportClient) runShell(nodeClient *NodeClient, sessToJoin *session.S
 }
 
 // getProxyLogin determines which SSH principal to use when connecting to proxy.
-func (tc *TeleportClient) getProxySSHPrincipal() string {
+func (tc *SiriusecClient) getProxySSHPrincipal() string {
 	proxyPrincipal := tc.Config.HostLogin
 	if tc.DefaultPrincipal != "" {
 		proxyPrincipal = tc.DefaultPrincipal
@@ -1965,7 +1965,7 @@ func (tc *TeleportClient) getProxySSHPrincipal() string {
 // ConnectToProxy will dial to the proxy server and return a ProxyClient when
 // successful. If the passed in context is canceled, this function will return
 // a trace.ConnectionProblem right away.
-func (tc *TeleportClient) ConnectToProxy(ctx context.Context) (*ProxyClient, error) {
+func (tc *SiriusecClient) ConnectToProxy(ctx context.Context) (*ProxyClient, error) {
 	var err error
 	var proxyClient *ProxyClient
 
@@ -1990,7 +1990,7 @@ func (tc *TeleportClient) ConnectToProxy(ctx context.Context) (*ProxyClient, err
 
 // connectToProxy will dial to the proxy server and return a ProxyClient when
 // successful.
-func (tc *TeleportClient) connectToProxy(ctx context.Context) (*ProxyClient, error) {
+func (tc *SiriusecClient) connectToProxy(ctx context.Context) (*ProxyClient, error) {
 	sshProxyAddr := tc.Config.SSHProxyAddr
 
 	hostKeyCallback := tc.HostKeyCallback
@@ -2075,7 +2075,7 @@ func (tc *TeleportClient) connectToProxy(ctx context.Context) (*ProxyClient, err
 	}, nil
 }
 
-func (tc *TeleportClient) rootClusterName() (string, error) {
+func (tc *SiriusecClient) rootClusterName() (string, error) {
 	if tc.localAgent == nil {
 		return "", trace.NotFound("cannot load root cluster name without local agent")
 	}
@@ -2129,8 +2129,8 @@ func (g *proxyClusterGuesser) authMethod(ctx context.Context) ssh.AuthMethod {
 	})
 }
 
-func (tc *TeleportClient) signersForCluster(ctx context.Context, clusterName string) ([]ssh.Signer, error) {
-	err := tc.WithoutJumpHosts(func(tc *TeleportClient) error {
+func (tc *SiriusecClient) signersForCluster(ctx context.Context, clusterName string) ([]ssh.Signer, error) {
+	err := tc.WithoutJumpHosts(func(tc *SiriusecClient) error {
 		return tc.LoadKeyForClusterWithReissue(ctx, clusterName)
 	})
 	if err != nil {
@@ -2140,10 +2140,10 @@ func (tc *TeleportClient) signersForCluster(ctx context.Context, clusterName str
 	return tc.localAgent.certsForCluster(clusterName)
 }
 
-// WithoutJumpHosts executes the given function with a Teleport client that has
+// WithoutJumpHosts executes the given function with a Siriusec client that has
 // no JumpHosts set, i.e. presumably falling back to the proxy specified in the
 // profile.
-func (tc *TeleportClient) WithoutJumpHosts(fn func(tcNoJump *TeleportClient) error) error {
+func (tc *SiriusecClient) WithoutJumpHosts(fn func(tcNoJump *SiriusecClient) error) error {
 	storedJumpHosts := tc.JumpHosts
 	tc.JumpHosts = nil
 	err := fn(tc)
@@ -2153,7 +2153,7 @@ func (tc *TeleportClient) WithoutJumpHosts(fn func(tcNoJump *TeleportClient) err
 
 // Logout removes certificate and key for the currently logged in user from
 // the filesystem and agent.
-func (tc *TeleportClient) Logout() error {
+func (tc *SiriusecClient) Logout() error {
 	if tc.localAgent == nil {
 		return nil
 	}
@@ -2161,7 +2161,7 @@ func (tc *TeleportClient) Logout() error {
 }
 
 // LogoutDatabase removes certificate for a particular database.
-func (tc *TeleportClient) LogoutDatabase(dbName string) error {
+func (tc *SiriusecClient) LogoutDatabase(dbName string) error {
 	if tc.localAgent == nil {
 		return nil
 	}
@@ -2175,7 +2175,7 @@ func (tc *TeleportClient) LogoutDatabase(dbName string) error {
 }
 
 // LogoutApp removes certificate for the specified app.
-func (tc *TeleportClient) LogoutApp(appName string) error {
+func (tc *SiriusecClient) LogoutApp(appName string) error {
 	if tc.localAgent == nil {
 		return nil
 	}
@@ -2190,7 +2190,7 @@ func (tc *TeleportClient) LogoutApp(appName string) error {
 
 // LogoutAll removes all certificates for all users from the filesystem
 // and agent.
-func (tc *TeleportClient) LogoutAll() error {
+func (tc *SiriusecClient) LogoutAll() error {
 	if tc.localAgent == nil {
 		return nil
 	}
@@ -2200,12 +2200,12 @@ func (tc *TeleportClient) LogoutAll() error {
 	return nil
 }
 
-// Login logs the user into a Teleport cluster by talking to a Teleport proxy.
+// Login logs the user into a Teleport cluster by talking to a Siriusec proxy.
 //
 // The returned Key should typically be passed to ActivateKey in order to
 // update local agent state.
 //
-func (tc *TeleportClient) Login(ctx context.Context) (*Key, error) {
+func (tc *SiriusecClient) Login(ctx context.Context) (*Key, error) {
 	// Ping the endpoint to see if it's up and find the type of authentication
 	// supported.
 	pr, err := tc.Ping(ctx)
@@ -2298,7 +2298,7 @@ func (tc *TeleportClient) Login(ctx context.Context) (*Key, error) {
 
 // ActivateKey saves the target session cert into the local
 // keystore (and into the ssh-agent) for future use.
-func (tc *TeleportClient) ActivateKey(ctx context.Context, key *Key) error {
+func (tc *SiriusecClient) ActivateKey(ctx context.Context, key *Key) error {
 	if tc.localAgent == nil {
 		// skip activation if no local agent is present
 		return nil
@@ -2331,7 +2331,7 @@ func (tc *TeleportClient) ActivateKey(ctx context.Context, key *Key) error {
 		// If JumpHosts was pointing at the leaf cluster (e.g. during 'tsh ssh
 		// -J leaf.example.com'), this could've caused the above error. Try to
 		// fetch CAs without JumpHosts to force it to use the root cluster.
-		if err := tc.WithoutJumpHosts(func(tc *TeleportClient) error {
+		if err := tc.WithoutJumpHosts(func(tc *SiriusecClient) error {
 			return tc.UpdateTrustedCA(ctx, rootClusterName)
 		}); err != nil {
 			return trace.NewAggregate(errViaJumphost, err)
@@ -2347,7 +2347,7 @@ func (tc *TeleportClient) ActivateKey(ctx context.Context, key *Key) error {
 //
 // Ping can be called for its side-effect of applying the proxy-provided
 // settings (such as various listening addresses).
-func (tc *TeleportClient) Ping(ctx context.Context) (*webclient.PingResponse, error) {
+func (tc *SiriusecClient) Ping(ctx context.Context) (*webclient.PingResponse, error) {
 	// If, at some point, there's a need to bypass this caching, consider
 	// adding a bool argument. At the time of writing this we always want to
 	// cache.
@@ -2389,7 +2389,7 @@ func (tc *TeleportClient) Ping(ctx context.Context) (*webclient.PingResponse, er
 
 // ShowMOTD fetches the cluster MotD, displays it (if any) and waits for
 // confirmation from the user.
-func (tc *TeleportClient) ShowMOTD(ctx context.Context) error {
+func (tc *SiriusecClient) ShowMOTD(ctx context.Context) error {
 	motd, err := webclient.GetMOTD(
 		ctx,
 		tc.WebProxyAddr,
@@ -2417,7 +2417,7 @@ func (tc *TeleportClient) ShowMOTD(ctx context.Context) error {
 
 // GetTrustedCA returns a list of host certificate authorities
 // trusted by the cluster client is authenticated with.
-func (tc *TeleportClient) GetTrustedCA(ctx context.Context, clusterName string) ([]types.CertAuthority, error) {
+func (tc *SiriusecClient) GetTrustedCA(ctx context.Context, clusterName string) ([]types.CertAuthority, error) {
 	// Connect to the proxy.
 	if !tc.Config.ProxySpecified() {
 		return nil, trace.BadParameter("proxy server is not specified")
@@ -2440,9 +2440,9 @@ func (tc *TeleportClient) GetTrustedCA(ctx context.Context, clusterName string) 
 
 // UpdateTrustedCA connects to the Auth Server and fetches all host certificates
 // and updates ~/.tsh/keys/proxy/certs.pem and ~/.tsh/known_hosts.
-func (tc *TeleportClient) UpdateTrustedCA(ctx context.Context, clusterName string) error {
+func (tc *SiriusecClient) UpdateTrustedCA(ctx context.Context, clusterName string) error {
 	if tc.localAgent == nil {
-		return trace.BadParameter("TeleportClient.UpdateTrustedCA called on a client without localAgent")
+		return trace.BadParameter("SiriusecClient.UpdateTrustedCA called on a client without localAgent")
 	}
 	// Get the list of host certificates that this cluster knows about.
 	hostCerts, err := tc.GetTrustedCA(ctx, clusterName)
@@ -2469,7 +2469,7 @@ func (tc *TeleportClient) UpdateTrustedCA(ctx context.Context, clusterName strin
 
 // applyProxySettings updates configuration changes based on the advertised
 // proxy settings, overriding existing fields in tc.
-func (tc *TeleportClient) applyProxySettings(proxySettings webclient.ProxySettings) error {
+func (tc *SiriusecClient) applyProxySettings(proxySettings webclient.ProxySettings) error {
 	// Kubernetes proxy settings.
 	if proxySettings.Kube.Enabled {
 		switch {
@@ -2529,7 +2529,7 @@ func (tc *TeleportClient) applyProxySettings(proxySettings webclient.ProxySettin
 	// Read in settings for the SSH endpoint of the proxy.
 	//
 	// If listen_addr is set, take host from ProxyWebHost and port from what
-	// was set. This is to maintain backward compatibility when Teleport only
+	// was set. This is to maintain backward compatibility when Siriusec only
 	// supported public_addr.
 	if proxySettings.SSH.ListenAddr != "" {
 		addr, err := utils.ParseAddr(proxySettings.SSH.ListenAddr)
@@ -2587,7 +2587,7 @@ func (tc *TeleportClient) applyProxySettings(proxySettings webclient.ProxySettin
 	return nil
 }
 
-func (tc *TeleportClient) localLogin(ctx context.Context, secondFactor constants.SecondFactorType, pub []byte) (*auth.SSHLoginResponse, error) {
+func (tc *SiriusecClient) localLogin(ctx context.Context, secondFactor constants.SecondFactorType, pub []byte) (*auth.SSHLoginResponse, error) {
 	var err error
 	var response *auth.SSHLoginResponse
 
@@ -2613,9 +2613,9 @@ func (tc *TeleportClient) localLogin(ctx context.Context, secondFactor constants
 }
 
 // AddTrustedCA adds a new CA as trusted CA for this client, used in tests
-func (tc *TeleportClient) AddTrustedCA(ca types.CertAuthority) error {
+func (tc *SiriusecClient) AddTrustedCA(ca types.CertAuthority) error {
 	if tc.localAgent == nil {
-		return trace.BadParameter("TeleportClient.AddTrustedCA called on a client without localAgent")
+		return trace.BadParameter("SiriusecClient.AddTrustedCA called on a client without localAgent")
 	}
 	err := tc.localAgent.AddHostSignersToCache(auth.AuthoritiesToTrustedCerts([]types.CertAuthority{ca}))
 	if err != nil {
@@ -2635,9 +2635,9 @@ func (tc *TeleportClient) AddTrustedCA(ca types.CertAuthority) error {
 }
 
 // AddKey adds a key to the client's local agent, used in tests.
-func (tc *TeleportClient) AddKey(key *Key) (*agent.AddedKey, error) {
+func (tc *SiriusecClient) AddKey(key *Key) (*agent.AddedKey, error) {
 	if tc.localAgent == nil {
-		return nil, trace.BadParameter("TeleportClient.AddKey called on a client without localAgent")
+		return nil, trace.BadParameter("SiriusecClient.AddKey called on a client without localAgent")
 	}
 	if key.ClusterName == "" {
 		key.ClusterName = tc.SiteName
@@ -2646,7 +2646,7 @@ func (tc *TeleportClient) AddKey(key *Key) (*agent.AddedKey, error) {
 }
 
 // directLogin asks for a password + HOTP token, makes a request to CA via proxy
-func (tc *TeleportClient) directLogin(ctx context.Context, secondFactorType constants.SecondFactorType, pub []byte) (*auth.SSHLoginResponse, error) {
+func (tc *SiriusecClient) directLogin(ctx context.Context, secondFactorType constants.SecondFactorType, pub []byte) (*auth.SSHLoginResponse, error) {
 	password, err := tc.AskPassword()
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -2685,7 +2685,7 @@ func (tc *TeleportClient) directLogin(ctx context.Context, secondFactorType cons
 type SSOLoginFunc func(ctx context.Context, connectorID string, pub []byte, protocol string) (*auth.SSHLoginResponse, error)
 
 // samlLogin opens browser window and uses OIDC or SAML redirect cycle with browser
-func (tc *TeleportClient) ssoLogin(ctx context.Context, connectorID string, pub []byte, protocol string) (*auth.SSHLoginResponse, error) {
+func (tc *SiriusecClient) ssoLogin(ctx context.Context, connectorID string, pub []byte, protocol string) (*auth.SSHLoginResponse, error) {
 	if tc.MockSSOLogin != nil {
 		// sso login response is being mocked for testing purposes
 		return tc.MockSSOLogin(ctx, connectorID, pub, protocol)
@@ -2711,7 +2711,7 @@ func (tc *TeleportClient) ssoLogin(ctx context.Context, connectorID string, pub 
 }
 
 // mfaLocalLogin asks for a password and performs the challenge-response authentication
-func (tc *TeleportClient) mfaLocalLogin(ctx context.Context, pub []byte) (*auth.SSHLoginResponse, error) {
+func (tc *SiriusecClient) mfaLocalLogin(ctx context.Context, pub []byte) (*auth.SSHLoginResponse, error) {
 	password, err := tc.AskPassword()
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -2736,7 +2736,7 @@ func (tc *TeleportClient) mfaLocalLogin(ctx context.Context, pub []byte) (*auth.
 }
 
 // SendEvent adds a events.EventFields to the channel.
-func (tc *TeleportClient) SendEvent(ctx context.Context, e events.EventFields) error {
+func (tc *SiriusecClient) SendEvent(ctx context.Context, e events.EventFields) error {
 	// Try and send the event to the eventsCh. If blocking, keep blocking until
 	// the passed in context in canceled.
 	select {
@@ -2749,7 +2749,7 @@ func (tc *TeleportClient) SendEvent(ctx context.Context, e events.EventFields) e
 
 // EventsChannel returns a channel that can be used to listen for events that
 // occur for this session.
-func (tc *TeleportClient) EventsChannel() <-chan events.EventFields {
+func (tc *SiriusecClient) EventsChannel() <-chan events.EventFields {
 	return tc.eventsCh
 }
 
@@ -2821,7 +2821,7 @@ func Username() (string, error) {
 }
 
 // AskOTP prompts the user to enter the OTP token.
-func (tc *TeleportClient) AskOTP() (token string, err error) {
+func (tc *SiriusecClient) AskOTP() (token string, err error) {
 	fmt.Printf("Enter your OTP token:\n")
 	token, err = lineFromConsole()
 	if err != nil {
@@ -2832,8 +2832,8 @@ func (tc *TeleportClient) AskOTP() (token string, err error) {
 }
 
 // AskPassword prompts the user to enter the password
-func (tc *TeleportClient) AskPassword() (pwd string, err error) {
-	fmt.Printf("Enter password for Teleport user %v:\n", tc.Config.Username)
+func (tc *SiriusecClient) AskPassword() (pwd string, err error) {
+	fmt.Printf("Enter password for Sirius user %v:\n", tc.Config.Username)
 	pwd, err = passwordFromConsole()
 	if err != nil {
 		fmt.Fprintln(tc.Stderr, err)
@@ -2847,7 +2847,7 @@ func (tc *TeleportClient) AskPassword() (pwd string, err error) {
 //
 // useLegacyID returns true if an old style (UUIDv1) session ID should be
 // generated because the client is talking with a older server.
-func (tc *TeleportClient) useLegacyID(nodeClient *NodeClient) bool {
+func (tc *SiriusecClient) useLegacyID(nodeClient *NodeClient) bool {
 	_, err := tc.getServerVersion(nodeClient)
 	return trace.IsNotFound(err)
 }
@@ -2859,7 +2859,7 @@ type serverResponse struct {
 
 // getServerVersion makes a SSH global request to the server to request the
 // version.
-func (tc *TeleportClient) getServerVersion(nodeClient *NodeClient) (string, error) {
+func (tc *SiriusecClient) getServerVersion(nodeClient *NodeClient) (string, error) {
 	responseCh := make(chan serverResponse)
 
 	go func() {

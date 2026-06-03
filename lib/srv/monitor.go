@@ -80,8 +80,8 @@ type MonitorConfig struct {
 	Context context.Context
 	// Login is linux box login
 	Login string
-	// TeleportUser is a teleport user name
-	TeleportUser string
+	// SiriusecUser is a teleport user name
+	SiriusecUser string
 	// ServerID is a session server ID
 	ServerID string
 	// Emitter is events emitter
@@ -275,7 +275,7 @@ func (w *Monitor) emitDisconnectEvent(reason string) error {
 		},
 		UserMetadata: apievents.UserMetadata{
 			Login: w.Login,
-			User:  w.TeleportUser,
+			User:  w.SiriusecUser,
 		},
 		ConnectionMetadata: apievents.ConnectionMetadata{
 			LocalAddr:  w.Conn.LocalAddr().String(),

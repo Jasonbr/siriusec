@@ -18,10 +18,10 @@ limitations under the License.
 //
 // It has the following components:
 //
-// * Proxy. Runs inside Teleport proxy and proxies connections from MySQL
-//   clients to appropriate Teleport database services over reverse tunnel.
+// * Proxy. Runs inside Siriusec proxy and proxies connections from MySQL
+//   clients to appropriate Siriusec database services over reverse tunnel.
 //
-// * Engine. Runs inside Teleport database service, accepts connections coming
+// * Engine. Runs inside Siriusec database service, accepts connections coming
 //   from proxy over reverse tunnel and proxies them to MySQL databases.
 //
 // Protocol

@@ -117,7 +117,7 @@ type WebSuite struct {
 
 var _ = Suite(&WebSuite{})
 
-// TestMain will re-execute Teleport to run a command if "exec" is passed to
+// TestMain will re-execute Siriusec to run a command if "exec" is passed to
 // it as an argument. Otherwise it will run tests as normal.
 func TestMain(m *testing.M) {
 	utils.InitLoggerForTests()
@@ -294,7 +294,7 @@ func (s *WebSuite) SetUpTest(c *C) {
 
 	// Expired sessions are purged immediately
 	var sessionLingeringThreshold time.Duration = 0
-	fs, err := NewDebugFileSystem("../../webassets/teleport")
+	fs, err := NewDebugFileSystem("../../webassets/siriusec")
 	c.Assert(err, IsNil)
 	handler, err := NewHandler(Config{
 		Proxy:                           revTunServer,
@@ -1653,7 +1653,7 @@ func (s *WebSuite) TestEmptyMotD(c *C) {
 // TestMotD ensures that a response is returned by both /webapi/ping and /webapi/motd
 // and that that the response bodies contain their MOTD components
 func (s *WebSuite) TestMotD(c *C) {
-	const motd = "Hello. I'm a Teleport cluster!"
+	const motd = "Hello. I'm a Siriusec cluster!"
 
 	ctx := context.Background()
 	wc := s.client()
@@ -2131,7 +2131,7 @@ func TestApplicationAccessDisabled(t *testing.T) {
 		ClusterName: "localhost",
 	})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "this Teleport cluster is not licensed for application access")
+	require.Contains(t, err.Error(), "this Siriusec cluster is not licensed for application access")
 }
 
 // TestCreateAppSession verifies that an existing session to the Web UI can
@@ -2849,7 +2849,7 @@ func createProxy(ctx context.Context, t *testing.T, proxyID string, node *regula
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, proxyServer.Close()) })
 
-	fs, err := NewDebugFileSystem("../../webassets/teleport")
+	fs, err := NewDebugFileSystem("../../webassets/siriusec")
 	require.NoError(t, err)
 	handler, err := NewHandler(Config{
 		Proxy:            revTunServer,

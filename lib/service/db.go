@@ -30,7 +30,7 @@ import (
 	"github.com/gravitational/trace"
 )
 
-func (process *TeleportProcess) initDatabases() {
+func (process *SiriusecProcess) initDatabases() {
 	if len(process.Config.Databases.Databases) == 0 {
 		return
 	}
@@ -38,7 +38,7 @@ func (process *TeleportProcess) initDatabases() {
 	process.RegisterCriticalFunc("db.init", process.initDatabaseService)
 }
 
-func (process *TeleportProcess) initDatabaseService() (retErr error) {
+func (process *SiriusecProcess) initDatabaseService() (retErr error) {
 	log := process.log.WithField(trace.Component, teleport.Component(
 		teleport.ComponentDatabase, process.id))
 
@@ -171,9 +171,9 @@ func (process *TeleportProcess) initDatabaseService() (retErr error) {
 		Servers:     databaseServers,
 		OnHeartbeat: func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentDatabase})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentDatabase})
 			} else {
-				process.BroadcastEvent(Event{Name: TeleportOKEvent, Payload: teleport.ComponentDatabase})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentDatabase})
 			}
 		},
 		LockWatcher: lockWatcher,

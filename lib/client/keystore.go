@@ -273,11 +273,11 @@ func (fs *FSLocalKeyStore) GetKey(idx KeyIndex, opts ...CertOption) (*Key, error
 		AppTLSCerts:  make(map[string][]byte),
 	}
 
-	tlsCertExpiration, err := key.TeleportTLSCertValidBefore()
+	tlsCertExpiration, err := key.SiriusecTLSCertValidBefore()
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	fs.log.Debugf("Returning Teleport TLS certificate %q valid until %q.", tlsCertFile, tlsCertExpiration)
+	fs.log.Debugf("Returning Sirius TLS certificate %q valid until %q.", tlsCertFile, tlsCertExpiration)
 
 	for _, o := range opts {
 		if err := fs.updateKeyWithCerts(o, key); err != nil && !trace.IsNotFound(err) {
@@ -287,7 +287,7 @@ func (fs *FSLocalKeyStore) GetKey(idx KeyIndex, opts ...CertOption) (*Key, error
 	}
 
 	// Note, we may be returning expired certificates here, that is okay. If a
-	// certificate is expired, it's the responsibility of the TeleportClient to
+	// certificate is expired, it's the responsibility of the SiriusecClient to
 	// perform cleanup of the certificates and the profile.
 
 	return key, nil
@@ -546,7 +546,7 @@ func (fs *fsLocalNonSessionKeyStore) AddKnownHostKeys(hostname, proxyHost string
 		// duplicates will be pruned below.
 		// We include both the proxy server and original hostname as well as the
 		// root domain wildcard. OpenSSH clients match against both the proxy
-		// host and nodes (via the wildcard). Teleport itself occasionally uses
+		// host and nodes (via the wildcard). Siriusec itself occasionally uses
 		// the root cluster name.
 		line := fmt.Sprintf(
 			"@cert-authority %s,%s,*.%s %s type=host",
@@ -791,11 +791,11 @@ func (s *MemLocalKeyStore) GetKey(idx KeyIndex, opts ...CertOption) (*Key, error
 	// It is not necessary to handle opts because all the optional certs are
 	// already part of the Key struct as stored in memory.
 
-	tlsCertExpiration, err := key.TeleportTLSCertValidBefore()
+	tlsCertExpiration, err := key.SiriusecTLSCertValidBefore()
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	s.log.Debugf("Returning Teleport TLS certificate from memory, valid until %q.", tlsCertExpiration)
+	s.log.Debugf("Returning Sirius TLS certificate from memory, valid until %q.", tlsCertExpiration)
 
 	// Validate the SSH certificate.
 	if err := key.CheckCert(); err != nil {

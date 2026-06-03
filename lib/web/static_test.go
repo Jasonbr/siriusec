@@ -32,7 +32,7 @@ type StaticSuite struct {
 var _ = check.Suite(&StaticSuite{})
 
 func (s *StaticSuite) TestLocalFS(c *check.C) {
-	fs, err := NewDebugFileSystem("../../webassets/teleport")
+	fs, err := NewDebugFileSystem("../../webassets/siriusec")
 	c.Assert(err, check.IsNil)
 	c.Assert(fs, check.NotNil)
 

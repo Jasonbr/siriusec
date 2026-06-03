@@ -422,7 +422,7 @@ func TestWebProxyHostPort(t *testing.T) {
 }
 
 // TestApplyProxySettings validates that settings received from the proxy's
-// ping endpoint are correctly applied to Teleport client.
+// ping endpoint are correctly applied to Siriusec client.
 func TestApplyProxySettings(t *testing.T) {
 	tests := []struct {
 		desc        string
@@ -493,7 +493,7 @@ func TestApplyProxySettings(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			tc := &TeleportClient{Config: test.tcConfigIn}
+			tc := &SiriusecClient{Config: test.tcConfigIn}
 			err := tc.applyProxySettings(test.settingsIn)
 			require.NoError(t, err)
 			require.EqualValues(t, test.tcConfigOut, tc.Config)

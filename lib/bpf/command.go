@@ -46,7 +46,7 @@ const (
 	commandEventsBuffer = "execve_events"
 )
 
-// rawExecEvent is sent by the eBPF program that Teleport pulls off the perf
+// rawExecEvent is sent by the eBPF program that Siriusec pulls off the perf
 // buffer.
 type rawExecEvent struct {
 	// PID is the ID of the process.

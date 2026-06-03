@@ -17,7 +17,7 @@ limitations under the License.
 package common
 
 const (
-	GlobalHelpString = "CLI Admin tool for the Teleport Auth service. Runs on a host where Teleport Auth is running."
+	GlobalHelpString = "CLI Admin tool for the Sirius Auth service. Runs on a host where Sirius Auth is running."
 
 	AddUserHelp = `Notes:
 

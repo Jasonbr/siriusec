@@ -83,7 +83,7 @@ func ValidateSAMLConnector(sc types.SAMLConnector) error {
 
 	if sc.GetSigningKeyPair() == nil {
 		keyPEM, certPEM, err := utils.GenerateSelfSignedSigningCert(pkix.Name{
-			Organization: []string{"Teleport OSS"},
+			Organization: []string{"Sirius OSS"},
 			CommonName:   "teleport.localhost.localdomain",
 		}, nil, 10*365*24*time.Hour)
 		if err != nil {

@@ -36,7 +36,7 @@ import (
 )
 
 // Proxy proxies connections from MySQL clients to database services
-// over reverse tunnel. It runs inside Teleport proxy service.
+// over reverse tunnel. It runs inside Siriusec proxy service.
 //
 // Implements common.Proxy.
 type Proxy struct {
@@ -136,7 +136,7 @@ func (p *Proxy) performHandshake(conn *multiplexer.Conn, server *server.Conn) (*
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	// See if we need to read the proxy-line which could happen if Teleport
+	// See if we need to read the proxy-line which could happen if Siriusec
 	// is running behind a load balancer with proxy protocol enabled.
 	err = p.maybeReadProxyLine(conn)
 	if err != nil {
@@ -158,7 +158,7 @@ func (p *Proxy) performHandshake(conn *multiplexer.Conn, server *server.Conn) (*
 }
 
 // maybeReadProxyLine peeks into the connection to see if instead of regular
-// MySQL protocol we were sent a proxy-line. This usually happens when Teleport
+// MySQL protocol we were sent a proxy-line. This usually happens when Siriusec
 // is running behind a load balancer with proxy protocol enabled.
 func (p *Proxy) maybeReadProxyLine(conn *multiplexer.Conn) error {
 	proto, err := conn.Detect()

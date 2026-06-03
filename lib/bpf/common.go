@@ -67,11 +67,11 @@ type SessionContext struct {
 	// Login is the Unix login for this session.
 	Login string
 
-	// User is the Teleport user.
+	// User is the Siriusec user.
 	User string
 
-	// PID is the process ID of Teleport when it re-executes itself. This is
-	// used by Teleport to find itself by cgroup.
+	// PID is the process ID of Siriusec when it re-executes itself. This is
+	// used by Siriusec to find itself by cgroup.
 	PID int
 
 	// Emitter is used to record events for a particular session

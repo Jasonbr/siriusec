@@ -98,7 +98,7 @@ type CLIConf struct {
 	MyRequests bool
 	// Approve/Deny indicates the desired review kind.
 	Approve, Deny bool
-	// Username is the Teleport user's username (to login into proxies)
+	// Username is the Siriusec user's username (to login into proxies)
 	Username string
 	// Proxy keeps the hostname:port of the SSH proxy to use
 	Proxy string
@@ -236,7 +236,7 @@ type CLIConf struct {
 	// executablePath is the absolute path to the current executable.
 	executablePath string
 
-	// unsetEnvironment unsets Teleport related environment variables.
+	// unsetEnvironment unsets Siriusec related environment variables.
 	unsetEnvironment bool
 
 	// mockSSOLogin used in tests to override sso login handler in teleport client.
@@ -283,7 +283,7 @@ const (
 	addKeysToAgentEnvVar   = "TELEPORT_ADD_KEYS_TO_AGENT"
 	useLocalSSHAgentEnvVar = "TELEPORT_USE_LOCAL_SSH_AGENT"
 
-	clusterHelp = "Specify the Teleport cluster to connect"
+	clusterHelp = "Specify the Sirius cluster to connect"
 	browserHelp = "Set to 'none' to suppress browser opening on login"
 
 	// proxyDefaultResolutionTimeout is how long to wait for an unknown proxy
@@ -307,7 +307,7 @@ func Run(args []string, opts ...cliOption) error {
 	moduleCfg := modules.GetModules()
 
 	// configure CLI argument parser:
-	app := utils.InitCLIParser("tsh", "TSH: Teleport Authentication Gateway Client").Interspersed(false)
+	app := utils.InitCLIParser("tsh", "TSH: Sirius Authentication Gateway Client").Interspersed(false)
 	app.Flag("login", "Remote host login").Short('l').Envar(loginEnvVar).StringVar(&cf.NodeLogin)
 	localUser, _ := client.Username()
 	app.Flag("proxy", "SSH proxy address").Envar(proxyEnvVar).StringVar(&cf.Proxy)
@@ -426,7 +426,7 @@ func Run(args []string, opts ...cliOption) error {
 	ls.Flag("verbose", "One-line output (for text format), including node UUIDs").Short('v').BoolVar(&cf.Verbose)
 	ls.Flag("format", "Format output (text, json, names)").Short('f').Default(teleport.Text).StringVar(&cf.Format)
 	// clusters
-	clusters := app.Command("clusters", "List available Teleport clusters")
+	clusters := app.Command("clusters", "List available Sirius clusters")
 	clusters.Flag("quiet", "Quiet mode").Short('q').BoolVar(&cf.Quiet)
 
 	// login logs in with remote proxy and obtains a "session certificate" which gets
@@ -477,8 +477,8 @@ func Run(args []string, opts ...cliOption) error {
 	// The environment command prints out environment variables for the configured
 	// proxy and cluster. Can be used to create sessions "sticky" to a terminal
 	// even if the user runs "tsh login" again in another window.
-	environment := app.Command("env", "Print commands to set Teleport session environment variables")
-	environment.Flag("unset", "Print commands to clear Teleport session environment variables").BoolVar(&cf.unsetEnvironment)
+	environment := app.Command("env", "Print commands to set Sirius session environment variables")
+	environment.Flag("unset", "Print commands to clear Sirius session environment variables").BoolVar(&cf.unsetEnvironment)
 
 	req := app.Command("request", "Manage access requests").Alias("requests")
 
@@ -869,7 +869,7 @@ func onLogin(cf *CLIConf) error {
 			return trace.NewAggregate(err, logoutErr)
 		}
 		// load all roles from root cluster and collect relevant options.
-		// the normal one-off TeleportClient methods don't re-use the auth server
+		// the normal one-off SiriusecClient methods don't re-use the auth server
 		// connection, so we use WithRootClusterClient to speed things up.
 		err = tc.WithRootClusterClient(cf.Context, func(clt auth.ClientI) error {
 			for _, roleName := range roleNames {
@@ -928,7 +928,7 @@ func onLogin(cf *CLIConf) error {
 
 // setupNoninteractiveClient sets up existing client to use
 // non-interactive authentication methods
-func setupNoninteractiveClient(tc *client.TeleportClient, key *client.Key) error {
+func setupNoninteractiveClient(tc *client.SiriusecClient, key *client.Key) error {
 	certUsername, err := key.CertUsername()
 	if err != nil {
 		return trace.Wrap(err)
@@ -951,7 +951,7 @@ func setupNoninteractiveClient(tc *client.TeleportClient, key *client.Key) error
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	tc.TLS, err = key.TeleportClientTLSConfig(nil)
+	tc.TLS, err = key.SiriusecClientTLSConfig(nil)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -1071,8 +1071,8 @@ func onLogout(cf *CLIConf) error {
 			clusterName = fmt.Sprintf("%v.%v", tc.SiteName, clusterName)
 		}
 
-		// Remove Teleport related entries from kubeconfig.
-		log.Debugf("Removing Teleport related entries for '%v' from kubeconfig.", clusterName)
+		// Remove Siriusec related entries from kubeconfig.
+		log.Debugf("Removing Sirius related entries for '%v' from kubeconfig.", clusterName)
 		err = kubeconfig.Remove("", clusterName)
 		if err != nil {
 			return trace.Wrap(err)
@@ -1083,16 +1083,16 @@ func onLogout(cf *CLIConf) error {
 	case proxyHost == "" && cf.Username == "":
 		// The makeClient function requires a proxy. However this value is not used
 		// because the user will be logged out from all proxies. Pass a dummy value
-		// to allow creation of the TeleportClient.
+		// to allow creation of the SiriusecClient.
 		cf.Proxy = "dummy:1234"
 		tc, err := makeClient(cf, true)
 		if err != nil {
 			return trace.Wrap(err)
 		}
 
-		// Remove Teleport related entries from kubeconfig for all clusters.
+		// Remove Siriusec related entries from kubeconfig for all clusters.
 		for _, profile := range profiles {
-			log.Debugf("Removing Teleport related entries for '%v' from kubeconfig.", profile.Cluster)
+			log.Debugf("Removing Sirius related entries for '%v' from kubeconfig.", profile.Cluster)
 			err = kubeconfig.Remove("", profile.Cluster)
 			if err != nil {
 				return trace.Wrap(err)
@@ -1152,7 +1152,7 @@ func onListNodes(cf *CLIConf) error {
 	return nil
 }
 
-func executeAccessRequest(cf *CLIConf, tc *client.TeleportClient) error {
+func executeAccessRequest(cf *CLIConf, tc *client.SiriusecClient) error {
 	if cf.DesiredRoles == "" && cf.RequestID == "" {
 		return trace.BadParameter("at least one role or a request ID must be specified")
 	}
@@ -1638,8 +1638,8 @@ func onSCP(cf *CLIConf) error {
 }
 
 // makeClient takes the command-line configuration and constructs & returns
-// a fully configured TeleportClient object
-func makeClient(cf *CLIConf, useProfileLogin bool) (*client.TeleportClient, error) {
+// a fully configured SiriusecClient object
+func makeClient(cf *CLIConf, useProfileLogin bool) (*client.SiriusecClient, error) {
 	// Parse OpenSSH style options.
 	options, err := parseOptions(cf.Options)
 	if err != nil {
@@ -1755,7 +1755,7 @@ func makeClient(cf *CLIConf, useProfileLogin bool) (*client.TeleportClient, erro
 		}
 
 		if len(key.TLSCert) > 0 {
-			c.TLS, err = key.TeleportClientTLSConfig(nil)
+			c.TLS, err = key.SiriusecClientTLSConfig(nil)
 			if err != nil {
 				return nil, trace.Wrap(err)
 			}
@@ -2133,7 +2133,7 @@ func host(in string) string {
 // waitForRequestResolution waits for an access request to be resolved. On
 // approval, returns the updated request. `clt` must be a client to the root
 // cluster, such as the one returned by
-// `(*TeleportClient).WithRootClusterClient`. `ready` will be closed when the
+// `(*SiriusecClient).WithRootClusterClient`. `ready` will be closed when the
 // event watcher used to wait for the request updates is ready.
 func waitForRequestResolution(cf *CLIConf, clt auth.ClientI, req types.AccessRequest, ready chan<- struct{}) (types.AccessRequest, error) {
 	filter := types.AccessRequestFilter{
@@ -2184,7 +2184,7 @@ Loop:
 	}
 }
 
-func onRequestResolution(cf *CLIConf, tc *client.TeleportClient, req types.AccessRequest) error {
+func onRequestResolution(cf *CLIConf, tc *client.SiriusecClient, req types.AccessRequest) error {
 	if !req.GetState().IsApproved() {
 		msg := fmt.Sprintf("request %s has been set to %s", req.GetName(), req.GetState().String())
 		if reason := req.GetResolveReason(); reason != "" {
@@ -2205,7 +2205,7 @@ func onRequestResolution(cf *CLIConf, tc *client.TeleportClient, req types.Acces
 
 // reissueWithRequests handles a certificate reissue, applying new requests by ID,
 // and saving the updated profile.
-func reissueWithRequests(cf *CLIConf, tc *client.TeleportClient, reqIDs ...string) error {
+func reissueWithRequests(cf *CLIConf, tc *client.SiriusecClient, reqIDs ...string) error {
 	profile, err := client.StatusCurrent(cf.HomePath, cf.Proxy)
 	if err != nil {
 		return trace.Wrap(err)
@@ -2319,7 +2319,7 @@ func setSiteNameFromEnv(cf *CLIConf, fn envGetter) {
 	}
 }
 
-// setTeleportHomeFromEnv sets home directory from environment if configured.
+// setSiriusecHomeFromEnv sets home directory from environment if configured.
 func setTeleportHomeFromEnv(cf *CLIConf, fn envGetter) {
 	if homeDir := fn(homeEnvVar); homeDir != "" {
 		cf.HomePath = path.Clean(homeDir)

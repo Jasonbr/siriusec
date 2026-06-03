@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package services implements API services exposed by Teleport:
+// Package services implements API services exposed by Siriusec:
 // * presence service that takes care of heartbeats
 // * web service that takes care of web logins
 // * ca service - certificate authorities
@@ -268,7 +268,7 @@ type GithubAuthRequest struct {
 	Compatibility string `json:"compatibility,omitempty"`
 	// Expires is a global expiry time header can be set on any resource in the system.
 	Expires *time.Time `json:"expires,omitempty"`
-	// RouteToCluster is the name of Teleport cluster to issue credentials for.
+	// RouteToCluster is the name of Siriusec cluster to issue credentials for.
 	RouteToCluster string `json:"route_to_cluster,omitempty"`
 	// KubernetesCluster is the name of Kubernetes cluster to issue credentials for.
 	KubernetesCluster string `json:"kubernetes_cluster,omitempty"`
@@ -348,7 +348,7 @@ type OIDCAuthRequest struct {
 	// Compatibility specifies OpenSSH compatibility flags.
 	Compatibility string `json:"compatibility,omitempty"`
 
-	// RouteToCluster is the name of Teleport cluster to issue credentials for.
+	// RouteToCluster is the name of Siriusec cluster to issue credentials for.
 	RouteToCluster string `json:"route_to_cluster,omitempty"`
 
 	// KubernetesCluster is the name of Kubernetes cluster to issue credentials for.
@@ -416,7 +416,7 @@ type SAMLAuthRequest struct {
 	// Compatibility specifies OpenSSH compatibility flags.
 	Compatibility string `json:"compatibility,omitempty"`
 
-	// RouteToCluster is the name of Teleport cluster to issue credentials for.
+	// RouteToCluster is the name of Siriusec cluster to issue credentials for.
 	RouteToCluster string `json:"route_to_cluster,omitempty"`
 
 	// KubernetesCluster is the name of Kubernetes cluster to issue credentials for.

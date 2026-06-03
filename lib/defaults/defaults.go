@@ -108,7 +108,7 @@ const (
 	// the browser
 	WebHeadersTimeout = 10 * time.Second
 
-	// DefaultIdleConnectionDuration indicates for how long Teleport will hold
+	// DefaultIdleConnectionDuration indicates for how long Siriusec will hold
 	// the SSH connection open if there are no reads/writes happening over it.
 	// 15 minutes default is compliant with PCI DSS standards
 	DefaultIdleConnectionDuration = 15 * time.Minute
@@ -234,7 +234,7 @@ const (
 	// PlaybackRecycleTTL is the TTL for unpacked session playback files
 	PlaybackRecycleTTL = 3 * time.Hour
 
-	// WaitCopyTimeout is how long Teleport will wait for a session to finish
+	// WaitCopyTimeout is how long Siriusec will wait for a session to finish
 	// copying data from the PTY after "exit-status" has been received.
 	WaitCopyTimeout = 5 * time.Second
 
@@ -395,7 +395,7 @@ var (
 	MaxConnectionErrorsBeforeRestart = 5
 )
 
-// Default connection limits, they can be applied separately on any of the Teleport
+// Default connection limits, they can be applied separately on any of the Siriusec
 // services (SSH, auth, proxy)
 const (
 	// Number of max. simultaneous connections to a service
@@ -501,7 +501,7 @@ var (
 	ConfigEnvar = "TELEPORT_CONFIG"
 
 	// ConfigFileEnvar is the name of the environment variable used to specify a path to
-	// the Teleport configuration file that tctl reads on use
+	// the Siriusec configuration file that tctl reads on use
 	ConfigFileEnvar = "TELEPORT_CONFIG_FILE"
 
 	// LicenseFile is the default name of the license file
@@ -618,7 +618,7 @@ const (
 	WebsocketU2FChallenge = "u"
 )
 
-// The following are cryptographic primitives Teleport does not support in
+// The following are cryptographic primitives Siriusec does not support in
 // it's default configuration.
 const (
 	DiffieHellmanGroup14SHA1 = "diffie-hellman-group14-sha1"
@@ -713,7 +713,7 @@ func Transport() (*http.Transport, error) {
 	tr := defaultTransport.Clone()
 
 	// Increase the size of the transport's connection pool. This substantially
-	// improves the performance of Teleport under load as it reduces the number
+	// improves the performance of Siriusec under load as it reduces the number
 	// of TLS handshakes performed.
 	tr.MaxIdleConns = HTTPMaxIdleConns
 	tr.MaxIdleConnsPerHost = HTTPMaxIdleConnsPerHost

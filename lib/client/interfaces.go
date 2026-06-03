@@ -72,7 +72,7 @@ type Key struct {
 	// Cert is an SSH client certificate
 	Cert []byte `json:"Cert,omitempty"`
 	// TLSCert is a PEM encoded client TLS x509 certificate.
-	// It's used to authenticate to the Teleport APIs.
+	// It's used to authenticate to the Siriusec APIs.
 	TLSCert []byte `json:"TLSCert,omitempty"`
 	// KubeTLSCerts are TLS certificates (PEM-encoded) for individual
 	// kubernetes clusters. Map key is a kubernetes cluster name.
@@ -89,7 +89,7 @@ type Key struct {
 }
 
 // NewKey generates a new unsigned key. Such key must be signed by a
-// Teleport CA (auth server) before it becomes useful.
+// Siriusec CA (auth server) before it becomes useful.
 func NewKey() (key *Key, err error) {
 	priv, pub, err := native.GenerateKeyPair("")
 	if err != nil {
@@ -186,9 +186,9 @@ func (k *Key) KubeClientTLSConfig(cipherSuites []uint16, kubeClusterName string)
 	return k.clientTLSConfig(cipherSuites, tlsCert)
 }
 
-// TeleportClientTLSConfig returns client TLS configuration used
+// SiriusecClientTLSConfig returns client TLS configuration used
 // to authenticate against API servers.
-func (k *Key) TeleportClientTLSConfig(cipherSuites []uint16) (*tls.Config, error) {
+func (k *Key) SiriusecClientTLSConfig(cipherSuites []uint16) (*tls.Config, error) {
 	return k.clientTLSConfig(cipherSuites, k.TLSCert)
 }
 
@@ -237,7 +237,7 @@ func (k *Key) ProxyClientSSHConfig(keyStore LocalKeyStore) (*ssh.ClientConfig, e
 	return sshConfig, nil
 }
 
-// CertUsername returns the name of the Teleport user encoded in the SSH certificate.
+// CertUsername returns the name of the Siriusec user encoded in the SSH certificate.
 func (k *Key) CertUsername() (string, error) {
 	cert, err := k.SSHCert()
 	if err != nil {
@@ -283,9 +283,9 @@ func (k *Key) AsAgentKeys() ([]agent.AddedKey, error) {
 	return sshutils.AsAgentKeys(cert, k.Priv)
 }
 
-// TeleportTLSCertificate returns the parsed x509 certificate for
-// authentication against Teleport APIs.
-func (k *Key) TeleportTLSCertificate() (*x509.Certificate, error) {
+// SiriusecTLSCertificate returns the parsed x509 certificate for
+// authentication against Siriusec APIs.
+func (k *Key) SiriusecTLSCertificate() (*x509.Certificate, error) {
 	return tlsca.ParseCertificatePEM(k.TLSCert)
 }
 
@@ -323,9 +323,9 @@ func (k *Key) AppTLSCertificates() (certs []x509.Certificate, err error) {
 	return certs, nil
 }
 
-// TeleportTLSCertValidBefore returns the time of the TLS cert expiration
-func (k *Key) TeleportTLSCertValidBefore() (t time.Time, err error) {
-	cert, err := k.TeleportTLSCertificate()
+// SiriusecTLSCertValidBefore returns the time of the TLS cert expiration
+func (k *Key) SiriusecTLSCertValidBefore() (t time.Time, err error) {
+	cert, err := k.SiriusecTLSCertificate()
 	if err != nil {
 		return t, trace.Wrap(err)
 	}
@@ -426,15 +426,15 @@ func (k *Key) HostKeyCallback(withHostKeyFallback bool) (ssh.HostKeyCallback, er
 }
 
 // RootClusterName extracts the root cluster name from the issuer
-// of the Teleport TLS certificate.
+// of the Siriusec TLS certificate.
 func (k *Key) RootClusterName() (string, error) {
-	cert, err := k.TeleportTLSCertificate()
+	cert, err := k.SiriusecTLSCertificate()
 	if err != nil {
 		return "", trace.Wrap(err)
 	}
 	clusterName := cert.Issuer.CommonName
 	if clusterName == "" {
-		return "", trace.NotFound("failed to extract root cluster name from Teleport TLS cert")
+		return "", trace.NotFound("failed to extract root cluster name from Sirius TLS cert")
 	}
 	return clusterName, nil
 }

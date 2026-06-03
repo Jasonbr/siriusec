@@ -51,7 +51,7 @@ import (
 
 // Server is a forwarding server. Server is used to create a single in-memory
 // SSH server that will forward connections to a remote server. It's used along
-// with the recording proxy to allow Teleport to record sessions with OpenSSH
+// with the recording proxy to allow Siriusec to record sessions with OpenSSH
 // nodes at the proxy level.
 //
 // To create a forwarding server and serve a single SSH connection on it:
@@ -97,7 +97,7 @@ type Server struct {
 	connectionContext *sshutils.ConnectionContext
 
 	// identityContext holds identity information about the user that has
-	// authenticated on sconn (like system login, Teleport username, roles).
+	// authenticated on sconn (like system login, Siriusec username, roles).
 	identityContext srv.IdentityContext
 
 	// userAgent is the SSH user agent that was forwarded to the proxy.
@@ -190,7 +190,7 @@ type ServerConfig struct {
 	// Clock is an optoinal clock to override default real time clock
 	Clock clockwork.Clock
 
-	// FIPS mode means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// FIPS mode means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 
@@ -637,7 +637,7 @@ func (s *Server) rejectChannel(chans <-chan ssh.NewChannel, errMessage string) {
 }
 
 func (s *Server) handleGlobalRequest(req *ssh.Request) {
-	// Version requests are internal Teleport requests, they should not be
+	// Version requests are internal Siriusec requests, they should not be
 	// forwarded to the remote server.
 	if req.Type == teleport.VersionRequest {
 		err := req.Reply(true, []byte(teleport.Version))
@@ -739,7 +739,7 @@ func (s *Server) handleDirectTCPIPRequest(ctx context.Context, ch ssh.Channel, r
 		},
 		UserMetadata: apievents.UserMetadata{
 			Login:        s.identityContext.Login,
-			User:         s.identityContext.TeleportUser,
+			User:         s.identityContext.SiriusecUser,
 			Impersonator: s.identityContext.Impersonator,
 		},
 		ConnectionMetadata: apievents.ConnectionMetadata{
@@ -1077,7 +1077,7 @@ func (s *Server) handleX11Forward(ctx context.Context, ch ssh.Channel, req *ssh.
 		},
 		UserMetadata: apievents.UserMetadata{
 			Login:        s.identityContext.Login,
-			User:         s.identityContext.TeleportUser,
+			User:         s.identityContext.SiriusecUser,
 			Impersonator: s.identityContext.Impersonator,
 		},
 		ConnectionMetadata: apievents.ConnectionMetadata{

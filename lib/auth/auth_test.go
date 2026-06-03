@@ -296,7 +296,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 		KubernetesGroups: []string{"system:masters"},
 		Expires:          gotTLSCert.NotAfter,
 		RouteToCluster:   s.clusterName.GetClusterName(),
-		TeleportCluster:  s.clusterName.GetClusterName(),
+		SiriusecCluster:  s.clusterName.GetClusterName(),
 	}
 	gotID, err := tlsca.FromSubject(gotTLSCert.Subject, gotTLSCert.NotAfter)
 	c.Assert(err, IsNil)
@@ -328,7 +328,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 		KubernetesCluster: "leaf-kube-cluster",
 		Expires:           gotTLSCert.NotAfter,
 		RouteToCluster:    "leaf.localhost",
-		TeleportCluster:   s.clusterName.GetClusterName(),
+		SiriusecCluster:   s.clusterName.GetClusterName(),
 	}
 	gotID, err = tlsca.FromSubject(gotTLSCert.Subject, gotTLSCert.NotAfter)
 	c.Assert(err, IsNil)
@@ -370,7 +370,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 		KubernetesCluster: "root-kube-cluster",
 		Expires:           gotTLSCert.NotAfter,
 		RouteToCluster:    s.clusterName.GetClusterName(),
-		TeleportCluster:   s.clusterName.GetClusterName(),
+		SiriusecCluster:   s.clusterName.GetClusterName(),
 	}
 	gotID, err = tlsca.FromSubject(gotTLSCert.Subject, gotTLSCert.NotAfter)
 	c.Assert(err, IsNil)
@@ -403,7 +403,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 		KubernetesCluster: "root-kube-cluster",
 		Expires:           gotTLSCert.NotAfter,
 		RouteToCluster:    s.clusterName.GetClusterName(),
-		TeleportCluster:   s.clusterName.GetClusterName(),
+		SiriusecCluster:   s.clusterName.GetClusterName(),
 	}
 	gotID, err = tlsca.FromSubject(gotTLSCert.Subject, gotTLSCert.NotAfter)
 	c.Assert(err, IsNil)
@@ -445,7 +445,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 		KubernetesCluster: "root-kube-cluster",
 		Expires:           gotTLSCert.NotAfter,
 		RouteToCluster:    s.clusterName.GetClusterName(),
-		TeleportCluster:   s.clusterName.GetClusterName(),
+		SiriusecCluster:   s.clusterName.GetClusterName(),
 	}
 	gotID, err = tlsca.FromSubject(gotTLSCert.Subject, gotTLSCert.NotAfter)
 	c.Assert(err, IsNil)
@@ -478,7 +478,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 		KubernetesCluster: "root-kube-cluster",
 		Expires:           gotTLSCert.NotAfter,
 		RouteToCluster:    s.clusterName.GetClusterName(),
-		TeleportCluster:   s.clusterName.GetClusterName(),
+		SiriusecCluster:   s.clusterName.GetClusterName(),
 	}
 	gotID, err = tlsca.FromSubject(gotTLSCert.Subject, gotTLSCert.NotAfter)
 	c.Assert(err, IsNil)

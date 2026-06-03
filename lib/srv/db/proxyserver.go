@@ -48,7 +48,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// ProxyServer runs inside Teleport proxy and is responsible to accepting
+// ProxyServer runs inside Siriusec proxy and is responsible to accepting
 // connections coming from the database clients (via a multiplexer) and
 // dispatching them to appropriate database services over reverse tunnel.
 type ProxyServer struct {
@@ -326,7 +326,7 @@ func (s *ProxyServer) Connect(ctx context.Context, user, database string) (net.C
 }
 
 // Proxy starts proxying all traffic received from database client between
-// this proxy and Teleport database service over reverse tunnel.
+// this proxy and Siriusec database service over reverse tunnel.
 //
 // Implements common.Service.
 func (s *ProxyServer) Proxy(ctx context.Context, authContext *auth.Context, clientConn, serviceConn net.Conn) error {
@@ -438,7 +438,7 @@ func monitorConn(ctx context.Context, cfg monitorConnConfig) (net.Conn, error) {
 		Context:               cfg.ctx,
 		Clock:                 cfg.clock,
 		ServerID:              cfg.serverID,
-		TeleportUser:          cfg.teleportUser,
+		SiriusecUser:          cfg.teleportUser,
 		Emitter:               cfg.emitter,
 		Entry:                 cfg.log,
 	})

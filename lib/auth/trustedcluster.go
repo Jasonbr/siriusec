@@ -70,7 +70,7 @@ func (a *Server) UpsertTrustedCluster(ctx context.Context, trustedCluster types.
 
 		if err := a.activateCertAuthority(trustedCluster); err != nil {
 			if trace.IsNotFound(err) {
-				return nil, trace.BadParameter("enable only supported for Trusted Clusters created with Teleport 2.3 and above")
+				return nil, trace.BadParameter("enable only supported for Trusted Clusters created with Siriusec 2.3 and above")
 			}
 			return nil, trace.Wrap(err)
 		}
@@ -83,7 +83,7 @@ func (a *Server) UpsertTrustedCluster(ctx context.Context, trustedCluster types.
 
 		if err := a.deactivateCertAuthority(trustedCluster); err != nil {
 			if trace.IsNotFound(err) {
-				return nil, trace.BadParameter("enable only supported for Trusted Clusters created with Teleport 2.3 and above")
+				return nil, trace.BadParameter("enable only supported for Trusted Clusters created with Siriusec 2.3 and above")
 			}
 			return nil, trace.Wrap(err)
 		}
@@ -556,7 +556,7 @@ func (a *Server) sendValidateRequestToProxy(host string, validateRequest *Valida
 	}
 
 	if lib.IsInsecureDevMode() {
-		log.Warn("The setting insecureSkipVerify is used to communicate with proxy. Make sure you intend to run Teleport in insecure mode!")
+		log.Warn("The setting insecureSkipVerify is used to communicate with proxy. Make sure you intend to run Siriusec in insecure mode!")
 
 		// Get the default transport, this allows picking up proxy from the
 		// environment.

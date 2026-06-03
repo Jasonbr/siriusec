@@ -88,7 +88,7 @@ func (m *cloudModules) BuildType() string {
 }
 
 func (m *cloudModules) PrintVersion() {
-	fmt.Println("Teleport Cloud")
+	fmt.Println("Sirius Cloud")
 }
 
 func (m *cloudModules) IsBoringBinary() bool {

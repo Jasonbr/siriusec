@@ -77,13 +77,13 @@ type Exec interface {
 	// pre-processing routine (placed in a cgroup).
 	Continue()
 
-	// PID returns the PID of the Teleport process that was re-execed.
+	// PID returns the PID of the Siriusec process that was re-execed.
 	PID() int
 }
 
 // NewExecRequest creates a new local or remote Exec.
 func NewExecRequest(ctx *ServerContext, command string) (Exec, error) {
-	// It doesn't matter what mode the cluster is in, if this is a Teleport node
+	// It doesn't matter what mode the cluster is in, if this is a Siriusec node
 	// return a local *localExec.
 	if ctx.srv.Component() == teleport.ComponentNode {
 		return &localExec{
@@ -103,7 +103,7 @@ func NewExecRequest(ctx *ServerContext, command string) (Exec, error) {
 	}
 
 	// Otherwise return a *localExec which will execute locally on the server.
-	// used by the regular Teleport nodes.
+	// used by the regular Siriusec nodes.
 	return &localExec{
 		Ctx:     ctx,
 		Command: command,
@@ -218,7 +218,7 @@ func (e *localExec) Continue() {
 	e.Ctx.contw = nil
 }
 
-// PID returns the PID of the Teleport process that was re-execed.
+// PID returns the PID of the Siriusec process that was re-execed.
 func (e *localExec) PID() int {
 	return e.Cmd.Process.Pid
 }
@@ -372,7 +372,7 @@ func emitExecAuditEvent(ctx *ServerContext, cmd string, execErr error) {
 	}
 
 	userMeta := apievents.UserMetadata{
-		User:         ctx.Identity.TeleportUser,
+		User:         ctx.Identity.SiriusecUser,
 		Login:        ctx.Identity.Login,
 		Impersonator: ctx.Identity.Impersonator,
 	}
@@ -533,7 +533,7 @@ func parseSecureCopy(path string) (string, string, bool, error) {
 		action = events.SCPActionUpload
 	}
 
-	// Exract the name of the Teleport executable on disk.
+	// Exract the name of the Siriusec executable on disk.
 	teleportPath, err := os.Executable()
 	if err != nil {
 		return "", "", false, trace.Wrap(err)

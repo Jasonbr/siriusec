@@ -109,7 +109,7 @@ const (
 	// which takes any size message and writes it out. [2]
 	//
 	// However, rather than accepting a message of unknown size from C code,
-	// increase the maximum size to about 1 MB. This will allow Teleport to
+	// increase the maximum size to about 1 MB. This will allow Siriusec to
 	// print even long MOTD messages while not allowing C code to allocate
 	// unbound memory in Go.
 	//
@@ -176,7 +176,7 @@ func readCallback(index C.int, e C.int) *C.char {
 		return nil
 	}
 
-	// Return one less than PAM_MAX_RESP_SIZE to prevent a Teleport user from
+	// Return one less than PAM_MAX_RESP_SIZE to prevent a Siriusec user from
 	// sending more than a PAM module can handle and to allow space for \0.
 	//
 	// Note: The function C.CString allocates memory using malloc. The memory is
@@ -236,7 +236,7 @@ func init() {
 	// Obtain a handle to the PAM library at runtime. The package level variable
 	// SystemHasPAM is updated to true if a handle is obtained.
 	//
-	// Note: Since this handle is needed the entire time Teleport runs, dlclose()
+	// Note: Since this handle is needed the entire time Siriusec runs, dlclose()
 	// is never called. The OS will cleanup when the process exits.
 	pamHandle = C.dlopen(C.library_name(), C.RTLD_NOW)
 	if pamHandle != nil {
@@ -251,7 +251,7 @@ type PAM struct {
 	pamh *C.pam_handle_t
 
 	// conv is the PAM conversation function for communication between
-	// Teleport and the PAM module.
+	// Siriusec and the PAM module.
 	conv *C.struct_pam_conv
 
 	// retval holds the value returned by the last PAM call.

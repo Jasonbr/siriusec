@@ -41,7 +41,7 @@ import (
 func (s *Server) CreateAppSession(ctx context.Context, req types.CreateAppSessionRequest, user types.User, identity tlsca.Identity, checker services.AccessChecker) (types.WebSession, error) {
 	if !modules.GetModules().Features().App {
 		return nil, trace.AccessDenied(
-			"this Teleport cluster is not licensed for application access, please contact the cluster administrator")
+			"this Siriusec cluster is not licensed for application access, please contact the cluster administrator")
 	}
 
 	// Don't let the app session go longer than the identity expiration,

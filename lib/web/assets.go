@@ -33,7 +33,7 @@ import (
 // NewDebugFileSystem returns the HTTP file system implementation rooted
 // at the specified assetsPath.
 func NewDebugFileSystem(assetsPath string) (http.FileSystem, error) {
-	assetsToCheck := []string{"index.html", "/app"}
+	assetsToCheck := []string{"index.html", "assets"}
 	if assetsPath == "" {
 		exePath, err := osext.ExecutableFolder()
 		if err != nil {
@@ -45,10 +45,10 @@ func NewDebugFileSystem(assetsPath string) (http.FileSystem, error) {
 
 		if isEnterprise {
 			// enterprise web assets
-			assetsPath = path.Join(exePath, "../../webassets/e/teleport")
+			assetsPath = path.Join(exePath, "../../webassets/e/siriusec")
 		} else {
 			// community web assets
-			assetsPath = path.Join(exePath, "../webassets/teleport")
+			assetsPath = path.Join(exePath, "../webassets/siriusec")
 		}
 	}
 
@@ -63,14 +63,14 @@ func NewDebugFileSystem(assetsPath string) (http.FileSystem, error) {
 }
 
 const (
-	webAssetsMissingError = "the teleport binary was built without web assets, try building with `make release`"
+	webAssetsMissingError = "the siriusec binary was built without web assets, try building with `make release`"
 	webAssetsReadError    = "failure reading web assets from the binary"
 )
 
 func readZipArchive(r io.ReaderAt, size int64) (ResourceMap, error) {
 	zreader, err := zip.NewReader(r, size)
 	if err != nil {
-		// this often happens when teleport is launched without the web assets
+		// this often happens when siriusec is launched without the web assets
 		// zip file attached to the binary. for launching it in such mode
 		// set DEBUG environment variable to 1
 		if err == zip.ErrFormat {

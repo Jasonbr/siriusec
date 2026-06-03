@@ -72,7 +72,7 @@ type Terminal interface {
 	// TTY returns the TTY backing the terminal.
 	TTY() *os.File
 
-	// PID returns the PID of the Teleport process that was re-execed.
+	// PID returns the PID of the Siriusec process that was re-execed.
 	PID() int
 
 	// Close will free resources associated with the terminal.
@@ -101,13 +101,13 @@ type Terminal interface {
 // NewTerminal returns a new terminal. Terminal can be local or remote
 // depending on cluster configuration.
 func NewTerminal(ctx *ServerContext) (Terminal, error) {
-	// It doesn't matter what mode the cluster is in, if this is a Teleport node
+	// It doesn't matter what mode the cluster is in, if this is a Siriusec node
 	// return a local terminal.
 	if ctx.srv.Component() == teleport.ComponentNode {
 		return newLocalTerminal(ctx)
 	}
 
-	// If this is not a Teleport node, find out what mode the cluster is in and
+	// If this is not a Siriusec node, find out what mode the cluster is in and
 	// return the correct terminal.
 	if services.IsRecordAtProxy(ctx.SessionRecordingConfig.GetMode()) {
 		return newRemoteTerminal(ctx)
@@ -115,7 +115,7 @@ func NewTerminal(ctx *ServerContext) (Terminal, error) {
 	return newLocalTerminal(ctx)
 }
 
-// terminal is a local PTY created by Teleport nodes.
+// terminal is a local PTY created by Siriusec nodes.
 type terminal struct {
 	wg sync.WaitGroup
 	mu sync.Mutex
@@ -152,7 +152,7 @@ func newLocalTerminal(ctx *ServerContext) (*terminal, error) {
 		return nil, err
 	}
 
-	// Set the TTY owner. Failure is not fatal, for example Teleport is running
+	// Set the TTY owner. Failure is not fatal, for example Siriusec is running
 	// on a read-only filesystem, but logging is useful for diagnostic purposes.
 	err = t.setOwner()
 	if err != nil {
@@ -194,7 +194,7 @@ func (t *terminal) Run() error {
 		return trace.Wrap(err)
 	}
 
-	// Save off the PID of the Teleport process under which the shell is executing.
+	// Save off the PID of the Siriusec process under which the shell is executing.
 	t.pid = t.cmd.Process.Pid
 
 	return nil
@@ -255,7 +255,7 @@ func (t *terminal) TTY() *os.File {
 	return t.tty
 }
 
-// PID returns the PID of the Teleport process that was re-execed.
+// PID returns the PID of the Siriusec process that was re-execed.
 func (t *terminal) PID() int {
 	return t.pid
 }
@@ -549,7 +549,7 @@ func (t *remoteTerminal) TTY() *os.File {
 	return nil
 }
 
-// PID returns the PID of the Teleport process that was re-execed. Always
+// PID returns the PID of the Siriusec process that was re-execed. Always
 // returns 0 for remote terminals.
 func (t *remoteTerminal) PID() int {
 	return 0
@@ -631,10 +631,10 @@ func (t *remoteTerminal) windowChange(w int, h int) error {
 // prepareRemoteSession prepares the more session for execution.
 func (t *remoteTerminal) prepareRemoteSession(session *ssh.Session, ctx *ServerContext) {
 	envs := map[string]string{
-		teleport.SSHTeleportUser:        ctx.Identity.TeleportUser,
+		teleport.SSHSiriusecUser:        ctx.Identity.SiriusecUser,
 		teleport.SSHSessionWebproxyAddr: ctx.ProxyPublicAddress(),
 		teleport.SSHTeleportHostUUID:    ctx.srv.ID(),
-		teleport.SSHTeleportClusterName: ctx.ClusterName,
+		teleport.SSHSiriusecClusterName: ctx.ClusterName,
 		teleport.SSHSessionID:           string(ctx.SessionID()),
 	}
 

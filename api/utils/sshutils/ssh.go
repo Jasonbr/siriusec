@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package sshutils defines several functions and types used across the
-// Teleport API and other Teleport packages when working with SSH.
+// Teleport API and other Siriusec packages when working with SSH.
 package sshutils
 
 import (
@@ -174,7 +174,7 @@ func AsAgentKeys(sshCert *ssh.Certificate, privKey []byte) ([]agent.AddedKey, er
 	// (2016-08-01) have a bug in how they use certificates that have been loaded
 	// in an agent. Specifically when you add a certificate to an agent, you can't
 	// just embed the private key within the certificate, you have to add the
-	// certificate and private key to the agent separately. Teleport works around
+	// certificate and private key to the agent separately. Siriusec works around
 	// this behavior to ensure OpenSSH interoperability.
 	//
 	// For more details see the following: https://bugzilla.mindrot.org/show_bug.cgi?id=2550

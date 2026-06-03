@@ -33,7 +33,7 @@ import (
 )
 
 func NewInsecureWebClient() *http.Client {
-	// Because Teleport clients can't be configured (yet), they take the default
+	// Because Siriusec clients can't be configured (yet), they take the default
 	// list of cipher suites from Go.
 	tlsConfig := utils.TLSConfig(nil)
 	tlsConfig.InsecureSkipVerify = true
@@ -46,7 +46,7 @@ func NewInsecureWebClient() *http.Client {
 }
 
 func newClientWithPool(pool *x509.CertPool) *http.Client {
-	// Because Teleport clients can't be configured (yet), they take the default
+	// Because Siriusec clients can't be configured (yet), they take the default
 	// list of cipher suites from Go.
 	tlsConfig := utils.TLSConfig(nil)
 	tlsConfig.RootCAs = pool

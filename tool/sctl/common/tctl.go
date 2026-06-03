@@ -46,9 +46,9 @@ import (
 type GlobalCLIFlags struct {
 	// Debug enables verbose logging mode to the console
 	Debug bool
-	// ConfigFile is the path to the Teleport configuration file
+	// ConfigFile is the path to the Siriusec configuration file
 	ConfigFile string
-	// ConfigString is the base64-encoded string with Teleport configuration
+	// ConfigString is the base64-encoded string with Siriusec configuration
 	ConfigString string
 	// AuthServerAddr lists addresses of auth or proxy servers to connect to,
 	AuthServerAddr []string
@@ -61,7 +61,7 @@ type GlobalCLIFlags struct {
 
 // CLICommand interface must be implemented by every CLI command
 //
-// This allows OSS and Enterprise Teleport editions to plug their own
+// This allows OSS and Enterprise Siriusec editions to plug their own
 // implementations of different CLI commands into the common execution
 // framework
 //
@@ -78,7 +78,7 @@ type CLICommand interface {
 // Run is the same as 'make'. It helps to share the code between different
 // "distributions" like OSS or Enterprise
 //
-// distribution: name of the Teleport distribution
+// distribution: name of the Siriusec distribution
 func Run(commands []CLICommand) {
 	utils.InitLogger(utils.LoggingForCLI, log.WarnLevel)
 
@@ -143,7 +143,7 @@ func Run(commands []CLICommand) {
 		return
 	}
 
-	// configure all commands with Teleport configuration (they share 'cfg')
+	// configure all commands with Siriusec configuration (they share 'cfg')
 	clientConfig, err := applyConfig(&ccf, cfg)
 	if err != nil {
 		utils.FatalError(err)
@@ -341,7 +341,7 @@ func applyConfig(ccf *GlobalCLIFlags, cfg *service.Config) (*AuthServiceClientCo
 			return nil, trace.Wrap(err)
 		}
 
-		authConfig.TLS, err = key.TeleportClientTLSConfig(cfg.CipherSuites)
+		authConfig.TLS, err = key.SiriusecClientTLSConfig(cfg.CipherSuites)
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
@@ -427,7 +427,7 @@ func loadConfigFromProfile(ccf *GlobalCLIFlags, cfg *service.Config) (*AuthServi
 	}
 
 	authConfig := &AuthServiceClientConfig{}
-	authConfig.TLS, err = key.TeleportClientTLSConfig(cfg.CipherSuites)
+	authConfig.TLS, err = key.SiriusecClientTLSConfig(cfg.CipherSuites)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

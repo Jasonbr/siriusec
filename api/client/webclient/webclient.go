@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package webclient provides a client for the Teleport Proxy API endpoints.
+// Package webclient provides a client for the Siriusec Proxy API endpoints.
 package webclient
 
 import (
@@ -114,7 +114,7 @@ func Find(ctx context.Context, proxyAddr string, insecure bool, pool *x509.CertP
 }
 
 // Ping serves two purposes. The first is to validate the HTTP endpoint of a
-// Teleport proxy. This leads to better user experience: users get connection
+// Siriusec proxy. This leads to better user experience: users get connection
 // errors before being asked for passwords. The second is to return the form
 // of authentication that the server supports. This also leads to better user
 // experience: users only get prompted for the type of authentication the server supports.
@@ -190,14 +190,14 @@ type MotD struct {
 	Text string
 }
 
-// PingResponse contains data about the Teleport server like supported
+// PingResponse contains data about the Siriusec server like supported
 // authentication types, server version, etc.
 type PingResponse struct {
 	// Auth contains the forms of authentication the auth server supports.
 	Auth AuthenticationSettings `json:"auth"`
 	// Proxy contains the proxy settings.
 	Proxy ProxySettings `json:"proxy"`
-	// ServerVersion is the version of Teleport that is running.
+	// ServerVersion is the version of Siriusec that is running.
 	ServerVersion string `json:"server_version"`
 	// MinClientVersion is the minimum client version required by the server.
 	MinClientVersion string `json:"min_client_version"`

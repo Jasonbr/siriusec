@@ -29,7 +29,7 @@ func (s *AuthSuite) TestProcessKubeCSR(c *check.C) {
 		Principals:       []string{"principal a", "principal b"},
 		KubernetesGroups: []string{"k8s group a", "k8s group b"},
 		Traits:           map[string][]string{"trait a": []string{"b", "c"}},
-		TeleportCluster:  s.clusterName.GetClusterName(),
+		SiriusecCluster:  s.clusterName.GetClusterName(),
 	}
 	subj, err := userID.Subject()
 	c.Assert(err, check.IsNil)

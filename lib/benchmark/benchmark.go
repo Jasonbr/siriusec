@@ -86,7 +86,7 @@ func Run(ctx context.Context, lg *Linear, cmd, host, login, proxy string) ([]Res
 	if err := validateConfig(lg); err != nil {
 		return nil, trace.Wrap(err)
 	}
-	tc, err := makeTeleportClient(host, login, proxy)
+	tc, err := makeSiriusecClient(host, login, proxy)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -156,7 +156,7 @@ func ExportLatencyProfile(path string, h *hdrhistogram.Histogram, ticks int32, v
 // Benchmark connects to remote server and executes requests in parallel according
 // to benchmark spec. It returns benchmark result when completed.
 // This is a blocking function that can be cancelled via context argument.
-func (c *Config) Benchmark(ctx context.Context, tc *client.TeleportClient) (Result, error) {
+func (c *Config) Benchmark(ctx context.Context, tc *client.SiriusecClient) (Result, error) {
 	tc.Stdout = ioutil.Discard
 	tc.Stderr = ioutil.Discard
 	tc.Stdin = &bytes.Buffer{}
@@ -227,7 +227,7 @@ type benchMeasure struct {
 	ResponseStart time.Time
 	End           time.Time
 	Error         error
-	client        *client.TeleportClient
+	client        *client.SiriusecClient
 	command       []string
 	interactive   bool
 }
@@ -269,8 +269,8 @@ func execute(m benchMeasure) error {
 	return nil
 }
 
-// makeTeleportClient creates an instance of a teleport client
-func makeTeleportClient(host, login, proxy string) (*client.TeleportClient, error) {
+// makeSiriusecClient creates an instance of a teleport client
+func makeSiriusecClient(host, login, proxy string) (*client.SiriusecClient, error) {
 	c := client.Config{Host: host}
 	path := profile.FullProfilePath("")
 	if login != "" {

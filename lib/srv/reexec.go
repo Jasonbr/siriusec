@@ -52,16 +52,16 @@ type ExecCommand struct {
 	// DestinationAddress is the target address to dial to.
 	DestinationAddress string `json:"dst_addr"`
 
-	// Username is the username associated with the Teleport identity.
+	// Username is the username associated with the Siriusec identity.
 	Username string `json:"username"`
 
 	// Login is the local *nix account.
 	Login string `json:"login"`
 
-	// Roles is the list of Teleport roles assigned to the Teleport identity.
+	// Roles is the list of Teleport roles assigned to the Siriusec identity.
 	Roles []string `json:"roles"`
 
-	// ClusterName is the name of the Teleport cluster.
+	// ClusterName is the name of the Siriusec cluster.
 	ClusterName string `json:"cluster_name"`
 
 	// Terminal indicates if a TTY has been allocated for the session. This is
@@ -198,7 +198,7 @@ func RunCommand() (io.Writer, int, error) {
 			ServiceName: c.PAMConfig.ServiceName,
 			UsePAMAuth:  c.PAMConfig.UsePAMAuth,
 			Login:       c.Login,
-			// Set Teleport specific environment variables that PAM modules
+			// Set Siriusec specific environment variables that PAM modules
 			// like pam_script.so can pick up to potentially customize the
 			// account/session.
 			Env:    c.PAMConfig.Environment,
@@ -221,7 +221,7 @@ func RunCommand() (io.Writer, int, error) {
 		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
 	}
 
-	// Wait until the continue signal is received from Teleport signaling that
+	// Wait until the continue signal is received from Siriusec signaling that
 	// the child process has been placed in a cgroup.
 	err = waitForContinue(contfd)
 	if err != nil {
@@ -287,7 +287,7 @@ func RunForward() (io.Writer, int, error) {
 			Stdin:       os.Stdin,
 			Stdout:      ioutil.Discard,
 			Stderr:      ioutil.Discard,
-			// Set Teleport specific environment variables that PAM modules
+			// Set Siriusec specific environment variables that PAM modules
 			// like pam_script.so can pick up to potentially customize the
 			// account/session.
 			Env: c.PAMConfig.Environment,
@@ -358,7 +358,7 @@ func RunAndExit(commandType string) {
 }
 
 // buildCommand constructs a command that will execute the users shell. This
-// function is run by Teleport while it's re-executing.
+// function is run by Siriusec while it's re-executing.
 func buildCommand(c *ExecCommand, tty *os.File, pty *os.File, pamEnvironment []string) (*exec.Cmd, error) {
 	var cmd exec.Cmd
 
@@ -432,7 +432,7 @@ func buildCommand(c *ExecCommand, tty *os.File, pty *os.File, pamEnvironment []s
 		"SHELL=" + shellPath,
 	}
 
-	// Add in Teleport specific environment variables.
+	// Add in Siriusec specific environment variables.
 	cmd.Env = append(cmd.Env, c.Environment...)
 
 	// If the server allows reading in of ~/.tsh/environment read it in
@@ -477,12 +477,12 @@ func buildCommand(c *ExecCommand, tty *os.File, pty *os.File, pamEnvironment []s
 	}
 
 	// Only set process credentials if the UID/GID of the requesting user are
-	// different than the process (Teleport).
+	// different than the process (Siriusec).
 	//
 	// Note, the above is important because setting the credentials struct
 	// triggers calling of the SETUID and SETGID syscalls during process start.
 	// If the caller does not have permission to call those two syscalls (for
-	// example, if Teleport is started from a shell), this will prevent the
+	// example, if Siriusec is started from a shell), this will prevent the
 	// process from spawning shells with the error: "operation not permitted". To
 	// workaround this, the credentials struct is only set if the credentials
 	// are different from the process itself. If the credentials are not, simply
@@ -508,12 +508,12 @@ func buildCommand(c *ExecCommand, tty *os.File, pty *os.File, pamEnvironment []s
 }
 
 // ConfigureCommand creates a command fully configured to execute. This
-// function is used by Teleport to re-execute itself and pass whatever data
+// function is used by Siriusec to re-execute itself and pass whatever data
 // is need to the child to actually execute the shell.
 func ConfigureCommand(ctx *ServerContext) (*exec.Cmd, error) {
 	// Create a os.Pipe and start copying over the payload to execute. While the
 	// pipe buffer is quite large (64k) some users have run into the pipe
-	// blocking writes on much smaller buffers (7k) leading to Teleport being
+	// blocking writes on much smaller buffers (7k) leading to Siriusec being
 	// unable to run some exec commands.
 	//
 	// To not depend on the OS implementation of a pipe, instead the copy should
@@ -534,7 +534,7 @@ func ConfigureCommand(ctx *ServerContext) (*exec.Cmd, error) {
 	}
 	go copyCommand(ctx, cmdbytes)
 
-	// Find the Teleport executable and its directory on disk.
+	// Find the Siriusec executable and its directory on disk.
 	executable, err := os.Executable()
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -548,8 +548,8 @@ func ConfigureCommand(ctx *ServerContext) (*exec.Cmd, error) {
 		subCommand = teleport.ForwardSubCommand
 	}
 
-	// Build the list of arguments to have Teleport re-exec itself. The "-d" flag
-	// is appended if Teleport is running in debug mode.
+	// Build the list of arguments to have Siriusec re-exec itself. The "-d" flag
+	// is appended if Siriusec is running in debug mode.
 	args := []string{executable, subCommand}
 
 	// Build the "teleport exec" command.

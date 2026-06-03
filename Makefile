@@ -23,10 +23,10 @@ endif
 BUILDDIR ?= build
 ASSETS_BUILDDIR ?= lib/web/build
 BINDIR ?= /usr/local/bin
-DATADIR ?= /usr/local/share/teleport
+DATADIR ?= /usr/local/share/siriusec
 ADDFLAGS ?=
 PWD ?= `pwd`
-GOPKGDIR ?= `go env GOPATH`/pkg/`go env GOHOSTOS`_`go env GOARCH`/github.com/gravitational/teleport*
+GOPKGDIR ?= `go env GOPATH`/pkg/`go env GOHOSTOS`_`go env GOARCH`/github.com/siriusec/siriusec*
 TELEPORT_DEBUG ?= no
 GITTAG=v$(VERSION)
 BUILDFLAGS ?= $(ADDFLAGS) -ldflags '-w -s'
@@ -118,9 +118,9 @@ ifneq ("$(OS)","linux")
 REPRODUCIBLE = no
 endif
 
-# On Windows only build tsh. On all other platforms build teleport, tctl,
+# On Windows only build tsh. On all other platforms build siriusec, tctl,
 # and tsh.
-BINARIES=$(BUILDDIR)/teleport $(BUILDDIR)/tctl $(BUILDDIR)/tsh
+BINARIES=$(BUILDDIR)/siriusec $(BUILDDIR)/tctl $(BUILDDIR)/tsh
 RELEASE_MESSAGE := "Building with GOOS=$(OS) GOARCH=$(ARCH) REPRODUCIBLE=$(REPRODUCIBLE) and $(PAM_MESSAGE) and $(FIPS_MESSAGE) and $(BPF_MESSAGE)."
 ifeq ("$(OS)","windows")
 BINARIES=$(BUILDDIR)/tsh
@@ -141,7 +141,7 @@ export
 #
 # 'make all' builds all 3 executables and places them in the current directory.
 #
-# IMPORTANT: the binaries will not contain the web UI assets and `teleport`
+# IMPORTANT: the binaries will not contain the web UI assets and `siriusec`
 #            won't start without setting the environment variable DEBUG=1
 #            This is the default build target for convenience of working on
 #            a web UI.
@@ -150,7 +150,7 @@ all: version
 	@echo "---> Building OSS binaries."
 	$(MAKE) $(BINARIES)
 
-# By making these 3 targets below (tsh, tctl and teleport) PHONY we are solving
+# By making these 3 targets below (tsh, tctl and siriusec) PHONY we are solving
 # several problems:
 # * Build will rely on go build internal caching https://golang.org/doc/go1.10 at all times
 # * Manual change detection was broken on a large dependency tree
@@ -240,7 +240,7 @@ clean:
 	rm -rf $(RS_BPF_BUILDDIR)
 	-go clean -cache
 	rm -rf $(GOPKGDIR)
-	rm -rf teleport
+	rm -rf siriusec
 	rm -rf *.gz
 	rm -rf *.zip
 	rm -f gitref.go
@@ -276,22 +276,22 @@ release-arm64:
 	$(MAKE) release ARCH=arm64
 
 #
-# make release-unix - Produces a binary release tarball containing teleport,
+# make release-unix - Produces a binary release tarball containing siriusec,
 # tctl, and tsh.
 #
 .PHONY:
 release-unix: clean full
 	@echo "---> Creating OSS release archive."
-	mkdir teleport
+	mkdir siriusec
 	cp -rf $(BUILDDIR)/* \
 		examples \
 		build.assets/install\
 		README.md \
 		CHANGELOG.md \
-		teleport/
-	echo $(GITTAG) > teleport/VERSION
-	tar $(TAR_FLAGS) -c teleport | gzip -n > $(RELEASE).tar.gz
-	rm -rf teleport
+		siriusec/
+	echo $(GITTAG) > siriusec/VERSION
+	tar $(TAR_FLAGS) -c siriusec | gzip -n > $(RELEASE).tar.gz
+	rm -rf siriusec
 	@echo "---> Created $(RELEASE).tar.gz."
 	@if [ -f e/Makefile ]; then \
 		rm -fr $(ASSETS_BUILDDIR)/webassets; \
@@ -304,15 +304,15 @@ release-unix: clean full
 .PHONY: release-windows-unsigned
 release-windows-unsigned: clean all
 	@echo "---> Creating OSS release archive."
-	mkdir teleport
+	mkdir siriusec
 	cp -rf $(BUILDDIR)/* \
 		README.md \
 		CHANGELOG.md \
-		teleport/
-	mv teleport/tsh teleport/tsh-unsigned.exe
-	echo $(GITTAG) > teleport/VERSION
-	zip -9 -y -r -q $(RELEASE)-unsigned.zip teleport/
-	rm -rf teleport/
+		siriusec/
+	mv siriusec/tsh siriusec/tsh-unsigned.exe
+	echo $(GITTAG) > siriusec/VERSION
+	zip -9 -y -r -q $(RELEASE)-unsigned.zip siriusec/
+	rm -rf siriusec/
 	@echo "---> Created $(RELEASE)-unsigned.zip."
 
 #
@@ -326,7 +326,7 @@ release-windows: release-windows-unsigned
 		exit 1; \
 	fi
 
-	rm -rf teleport
+	rm -rf siriusec
 	@echo "---> Extracting $(RELEASE)-unsigned.zip"
 	unzip $(RELEASE)-unsigned.zip
 	
@@ -334,20 +334,20 @@ release-windows: release-windows-unsigned
 	@osslsigncode sign \
 		-pkcs12 "windows-signing-cert.pfx" \
 		-n "Teleport" \
-		-i https://goteleport.com \
+		-i https://siriusec.com \
 		-t http://timestamp.digicert.com \
 		-h sha2 \
-		-in teleport/tsh-unsigned.exe \
-		-out teleport/tsh.exe; \
+		-in siriusec/tsh-unsigned.exe \
+		-out siriusec/tsh.exe; \
 	success=$$?; \
-	rm -f teleport/tsh-unsigned.exe; \
+	rm -f siriusec/tsh-unsigned.exe; \
 	if [ "$${success}" -ne 0 ]; then \
 		echo "Failed to sign tsh.exe, aborting."; \
 		exit 1; \
 	fi
 
-	zip -9 -y -r -q $(RELEASE).zip teleport/
-	rm -rf teleport/
+	zip -9 -y -r -q $(RELEASE).zip siriusec/
+	rm -rf siriusec/
 	@echo "---> Created $(RELEASE).zip."
 
 #
@@ -358,8 +358,8 @@ release-windows: release-windows-unsigned
 #
 .PHONY:docs-fix-whitespace
 docs-fix-whitespace:
-	docker run --rm -v $(PWD):/teleport busybox \
-		find /teleport/docs/ -type f -name '*.md' -exec sed -E -i 's/\s+$$//g' '{}' \;
+	docker run --rm -v $(PWD):/siriusec busybox \
+		find /siriusec/docs/ -type f -name '*.md' -exec sed -E -i 's/\s+$$//g' '{}' \;
 
 #
 # Test docs for trailing whitespace and broken links
@@ -468,7 +468,7 @@ lint-go: GO_LINT_FLAGS ?=
 lint-go:
 	golangci-lint run -c .golangci.yml $(GO_LINT_FLAGS)
 
-# api is no longer part of the teleport package, so golangci-lint skips it by default
+# api is no longer part of the siriusec package, so golangci-lint skips it by default
 # GOMODCACHE needs to be set here as api downloads dependencies and cannot write to /go/pkg/mod/cache
 .PHONY: lint-api
 lint-api: GO_LINT_API_FLAGS ?=
@@ -544,13 +544,13 @@ tag:
 
 
 # build/webassets directory contains the web assets (UI) which get
-# embedded in the teleport binary
+# embedded in the siriusec binary
 $(ASSETS_BUILDDIR)/webassets: ensure-webassets $(ASSETS_BUILDDIR)
 ifneq ("$(OS)", "windows")
 	@echo "---> Copying OSS web assets."; \
 	rm -rf $(ASSETS_BUILDDIR)/webassets; \
 	mkdir $(ASSETS_BUILDDIR)/webassets; \
-	cd webassets/teleport/ ; cp -r . ../../$@
+	cd webassets/siriusec/ ; cp -r . ../../$@
 endif
 
 $(ASSETS_BUILDDIR):
@@ -754,19 +754,19 @@ deb:
 # dash (-) must be the last character for this to work as expected
 .PHONY: update-helm-charts
 update-helm-charts:
-	sed -i -E "s/^  tag: [a-z0-9.-]+$$/  tag: $(VERSION)/" examples/chart/teleport/values.yaml
-	sed -i -E "s/^  tag: [a-z0-9.-]+$$/  tag: $(VERSION)/" examples/chart/teleport-auto-trustedcluster/values.yaml
-	sed -i -E "s/^  tag: [a-z0-9.-]+$$/  tag: $(VERSION)/" examples/chart/teleport-daemonset/values.yaml
+	sed -i -E "s/^  tag: [a-z0-9.-]+$$/  tag: $(VERSION)/" examples/chart/siriusec/values.yaml
+	sed -i -E "s/^  tag: [a-z0-9.-]+$$/  tag: $(VERSION)/" examples/chart/siriusec-auto-trustedcluster/values.yaml
+	sed -i -E "s/^  tag: [a-z0-9.-]+$$/  tag: $(VERSION)/" examples/chart/siriusec-daemonset/values.yaml
 
 .PHONY: ensure-webassets
 ensure-webassets:
-	@if [ ! -d $(shell pwd)/webassets/teleport/ ]; then \
+	@if [ ! -d $(shell pwd)/webassets/siriusec/ ]; then \
 		$(MAKE) init-webapps-submodules; \
 	fi;
 
 .PHONY: ensure-webassets-e
 ensure-webassets-e:
-	@if [ ! -d $(shell pwd)/webassets/e/teleport ]; then \
+	@if [ ! -d $(shell pwd)/webassets/e/siriusec ]; then \
 		$(MAKE) init-webapps-submodules-e; \
 	fi;
 
@@ -794,16 +794,16 @@ update-vendor:
 	go mod vendor
 	# delete the vendored api package. In its place
 	# create a symlink to the the original api package
-	rm -r vendor/github.com/gravitational/teleport/api
+	rm -r vendor/github.com/gravitational/siriusec/api
 	ln -s -r $(shell readlink -f api) vendor/github.com/gravitational/teleport
 
 # update-webassets updates the minified code in the webassets repo using the latest webapps
-# repo and creates a PR in the teleport repo to update webassets submodule.
+# repo and creates a PR in the siriusec repo to update webassets submodule.
 .PHONY: update-webassets
 update-webassets: WEBAPPS_BRANCH ?= 'master'
 update-webassets: TELEPORT_BRANCH ?= 'master'
 update-webassets:
-	build.assets/webapps/update-teleport-webassets.sh -w $(WEBAPPS_BRANCH) -t $(TELEPORT_BRANCH)
+	build.assets/webapps/update-siriusec-webassets.sh -w $(WEBAPPS_BRANCH) -t $(TELEPORT_BRANCH)
 
 # dronegen generates .drone.yml config
 .PHONY: dronegen

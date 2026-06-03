@@ -142,7 +142,7 @@ func (s *SessionRegistry) emitSessionJoinEvent(ctx *ServerContext) {
 			SessionID: string(ctx.SessionID()),
 		},
 		UserMetadata: apievents.UserMetadata{
-			User:         ctx.Identity.TeleportUser,
+			User:         ctx.Identity.SiriusecUser,
 			Login:        ctx.Identity.Login,
 			Impersonator: ctx.Identity.Impersonator,
 		},
@@ -412,7 +412,7 @@ func (s *SessionRegistry) NotifyWinChange(params rsession.TerminalParams, ctx *S
 			SessionID: string(sid),
 		},
 		UserMetadata: apievents.UserMetadata{
-			User:         ctx.Identity.TeleportUser,
+			User:         ctx.Identity.SiriusecUser,
 			Login:        ctx.Identity.Login,
 			Impersonator: ctx.Identity.Impersonator,
 		},
@@ -614,7 +614,7 @@ func (s *session) ID() string {
 	return s.id.String()
 }
 
-// PID returns the PID of the Teleport process under which the shell is running.
+// PID returns the PID of the Siriusec process under which the shell is running.
 func (s *session) PID() int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -725,7 +725,7 @@ func (s *session) startInteractive(ch ssh.Channel, ctx *ServerContext) error {
 		SessionID: s.id.String(),
 		ServerID:  ctx.srv.HostUUID(),
 		Login:     ctx.Identity.Login,
-		User:      ctx.Identity.TeleportUser,
+		User:      ctx.Identity.SiriusecUser,
 		Events:    ctx.Identity.RoleSet.EnhancedRecordingSet(),
 	}
 	cgroupID, err := ctx.srv.GetBPF().OpenSession(sessionContext)
@@ -762,7 +762,7 @@ func (s *session) startInteractive(ch ssh.Channel, ctx *ServerContext) error {
 			SessionID: string(s.id),
 		},
 		UserMetadata: apievents.UserMetadata{
-			User:         ctx.Identity.TeleportUser,
+			User:         ctx.Identity.SiriusecUser,
 			Login:        ctx.Identity.Login,
 			Impersonator: ctx.Identity.Impersonator,
 		},
@@ -910,7 +910,7 @@ func (s *session) startExec(channel ssh.Channel, ctx *ServerContext) error {
 			SessionID: string(s.id),
 		},
 		UserMetadata: apievents.UserMetadata{
-			User:         ctx.Identity.TeleportUser,
+			User:         ctx.Identity.SiriusecUser,
 			Login:        ctx.Identity.Login,
 			Impersonator: ctx.Identity.Impersonator,
 		},
@@ -929,7 +929,7 @@ func (s *session) startExec(channel ssh.Channel, ctx *ServerContext) error {
 	}
 
 	// Start execution. If the program failed to start, send that result back.
-	// Note this is a partial start. Teleport will have re-exec'ed itself and
+	// Note this is a partial start. Siriusec will have re-exec'ed itself and
 	// wait until it's been placed in a cgroup and told to continue.
 	result, err := ctx.ExecRequest.Start(channel)
 	if err != nil {
@@ -950,7 +950,7 @@ func (s *session) startExec(channel ssh.Channel, ctx *ServerContext) error {
 		SessionID: string(s.id),
 		ServerID:  ctx.srv.HostUUID(),
 		Login:     ctx.Identity.Login,
-		User:      ctx.Identity.TeleportUser,
+		User:      ctx.Identity.SiriusecUser,
 		Events:    ctx.Identity.RoleSet.EnhancedRecordingSet(),
 	}
 	cgroupID, err := ctx.srv.GetBPF().OpenSession(sessionContext)
@@ -1011,14 +1011,14 @@ func (s *session) startExec(channel ssh.Channel, ctx *ServerContext) error {
 				SessionID: string(s.id),
 			},
 			UserMetadata: apievents.UserMetadata{
-				User:         ctx.Identity.TeleportUser,
+				User:         ctx.Identity.SiriusecUser,
 				Login:        ctx.Identity.Login,
 				Impersonator: ctx.Identity.Impersonator,
 			},
 			EnhancedRecording: s.hasEnhancedRecording,
 			Interactive:       false,
 			Participants: []string{
-				ctx.Identity.TeleportUser,
+				ctx.Identity.SiriusecUser,
 			},
 			StartTime:        start,
 			EndTime:          end,
@@ -1377,7 +1377,7 @@ func newParty(s *session, ch ssh.Channel, ctx *ServerContext) *party {
 		log: logrus.WithFields(logrus.Fields{
 			trace.Component: teleport.Component(teleport.ComponentSession, ctx.srv.Component()),
 		}),
-		user:      ctx.Identity.TeleportUser,
+		user:      ctx.Identity.SiriusecUser,
 		login:     ctx.Identity.Login,
 		serverID:  s.registry.srv.ID(),
 		site:      ctx.ServerConn.RemoteAddr().String(),

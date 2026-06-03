@@ -231,7 +231,7 @@ func writeReply(conn net.Conn) error {
 	}
 
 	// Reply also requires BND.ADDR and BDN.PORT even though they are ignored
-	// because Teleport only supports CONNECT.
+	// because Siriusec only supports CONNECT.
 	message = []byte{0, 0, 0, 0, 0, 0}
 	n, err = conn.Write(message)
 	if err != nil {

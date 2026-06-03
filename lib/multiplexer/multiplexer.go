@@ -343,7 +343,7 @@ var (
 	tlsPrefix   = []byte{0x16}
 )
 
-// This section defines Postgres wire protocol messages detected by Teleport:
+// This section defines Postgres wire protocol messages detected by Siriusec:
 //
 // https://www.postgresql.org/docs/13/protocol-message-formats.html
 var (

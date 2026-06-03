@@ -38,7 +38,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// LocalKeyAgent holds Teleport certificates for a user connected to a cluster.
+// LocalKeyAgent holds Siriusec certificates for a user connected to a cluster.
 type LocalKeyAgent struct {
 	// log holds the structured logger.
 	log *logrus.Entry
@@ -59,7 +59,7 @@ type LocalKeyAgent struct {
 	// function which asks a user to trust host/key combination (during host auth)
 	hostPromptFunc func(host string, k ssh.PublicKey) error
 
-	// username is the Teleport username for who the keys will be loaded in the
+	// username is the Siriusec username for who the keys will be loaded in the
 	// local agent.
 	username string
 
@@ -73,7 +73,7 @@ type LocalKeyAgent struct {
 // NewKeyStoreCertChecker returns a new certificate checker
 // using trusted certs from key store
 func NewKeyStoreCertChecker(keyStore LocalKeyStore) ssh.HostKeyCallback {
-	// CheckHostSignature checks if the given host key was signed by a Teleport
+	// CheckHostSignature checks if the given host key was signed by a Siriusec
 	// certificate authority (CA) or a host certificate the user has seen before.
 	return func(addr string, remote net.Addr, key ssh.PublicKey) error {
 		certChecker := sshutils.CertChecker{
@@ -173,7 +173,7 @@ func (a *LocalKeyAgent) LoadKeyForCluster(clusterName string) (*agent.AddedKey, 
 	return a.LoadKey(*key)
 }
 
-// LoadKey adds a key into the Teleport ssh agent as well as the system ssh
+// LoadKey adds a key into the Siriusec ssh agent as well as the system ssh
 // agent.
 func (a *LocalKeyAgent) LoadKey(key Key) (*agent.AddedKey, error) {
 	a.log.Infof("Loading SSH key for user %q and cluster %q.", a.username, key.ClusterName)
@@ -240,7 +240,7 @@ func (a *LocalKeyAgent) UnloadKey() error {
 	return nil
 }
 
-// UnloadKeys will unload all Teleport keys from the teleport agent as well as
+// UnloadKeys will unload all Siriusec keys from the teleport agent as well as
 // the system agent.
 func (a *LocalKeyAgent) UnloadKeys() error {
 	agents := []agent.Agent{a.Agent}
@@ -278,7 +278,7 @@ func (a *LocalKeyAgent) GetKey(clusterName string, opts ...CertOption) (*Key, er
 }
 
 // GetCoreKey returns the key without any cluster-dependent certificates,
-// i.e. including only the RSA keypair and the Teleport TLS certificate.
+// i.e. including only the RSA keypair and the Siriusec TLS certificate.
 func (a *LocalKeyAgent) GetCoreKey() (*Key, error) {
 	return a.GetKey("")
 }
@@ -289,7 +289,7 @@ func (a *LocalKeyAgent) GetCoreKey() (*Key, error) {
 // Every time we connect to a new host, we'll request its certificate to be signed by one
 // of these trusted CAs.
 //
-// Why do we trust these CAs? Because we received them from a trusted Teleport Proxy.
+// Why do we trust these CAs? Because we received them from a trusted Siriusec Proxy.
 // Why do we trust the proxy? Because we've connected to it via HTTPS + username + Password + HOTP.
 func (a *LocalKeyAgent) AddHostSignersToCache(certAuthorities []auth.TrustedCerts) error {
 	for _, ca := range certAuthorities {
@@ -324,7 +324,7 @@ func (a *LocalKeyAgent) UserRefusedHosts() bool {
 	return len(a.noHosts) > 0
 }
 
-// CheckHostSignature checks if the given host key was signed by a Teleport
+// CheckHostSignature checks if the given host key was signed by a Siriusec
 // certificate authority (CA) or a host certificate the user has seen before.
 func (a *LocalKeyAgent) CheckHostSignature(addr string, remote net.Addr, key ssh.PublicKey) error {
 	certChecker := sshutils.CertChecker{
@@ -348,7 +348,7 @@ func (a *LocalKeyAgent) CheckHostSignature(addr string, remote net.Addr, key ssh
 // ~/.tsh/known_hosts cache and if not found, prompts the user to accept
 // or reject.
 func (a *LocalKeyAgent) checkHostCertificate(key ssh.PublicKey, addr string) bool {
-	// Check the local cache (where all Teleport CAs are placed upon login) to
+	// Check the local cache (where all Siriusec CAs are placed upon login) to
 	// see if any of them match.
 	keys, err := a.keyStore.GetKnownHostKeys("")
 	if err != nil {
@@ -374,13 +374,13 @@ func (a *LocalKeyAgent) checkHostKey(addr string, remote net.Addr, key ssh.Publi
 	var err error
 
 	// Unless --insecure flag was given, prohibit public keys or host certs
-	// not signed by Teleport.
+	// not signed by Siriusec.
 	if !a.insecure {
-		a.log.Debugf("Host %s presented a public key not signed by Teleport. Rejecting due to insecure mode being OFF.", addr)
-		return trace.BadParameter("host %s presented a public key not signed by Teleport", addr)
+		a.log.Debugf("Host %s presented a public key not signed by Sirius. Rejecting due to insecure mode being OFF.", addr)
+		return trace.BadParameter("host %s presented a public key not signed by Sirius", addr)
 	}
 
-	a.log.Warnf("Host %s presented a public key not signed by Teleport. Proceeding due to insecure mode being ON.", addr)
+	a.log.Warnf("Host %s presented a public key not signed by Sirius. Proceeding due to insecure mode being ON.", addr)
 
 	// Check if this exact host is in the local cache.
 	keys, _ := a.keyStore.GetKnownHostKeys(addr)
@@ -506,7 +506,7 @@ func (a *LocalKeyAgent) DeleteKeys() error {
 		return trace.Wrap(err)
 	}
 
-	// Remove all keys from the Teleport and system agents.
+	// Remove all keys from the Siriusec and system agents.
 	err = a.UnloadKeys()
 	if err != nil {
 		return trace.Wrap(err)

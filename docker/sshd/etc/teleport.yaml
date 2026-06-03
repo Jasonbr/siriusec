@@ -1,6 +1,6 @@
 siriusec:
   nodename: luna.teleport
-  data_dir: /var/lib/teleport
+  data_dir: /var/lib/siriusec
   log:
     output: stderr
     severity: INFO

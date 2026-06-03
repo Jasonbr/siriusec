@@ -40,7 +40,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Options combines init/start teleport options
+// Options combines init/start siriusec options
 type Options struct {
 	// Args is a list of command-line args passed from main()
 	Args []string
@@ -61,7 +61,7 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	// configure logger for a typical CLI scenario until configuration file is
 	// parsed
 	utils.InitLogger(utils.LoggingForDaemon, log.ErrorLevel)
-	app = utils.InitCLIParser("teleport", "Clustered SSH service. Learn more at https://siriusec.com/teleport")
+	app = utils.InitCLIParser("siriusec", "Clustered SSH service. Learn more at https://siriusec.com/siriusec")
 
 	// define global flags:
 	var ccf config.CommandLineFlags
@@ -69,13 +69,13 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	var dumpFlags dumpFlags
 
 	// define commands:
-	start := app.Command("start", "Starts the Teleport service.")
+	start := app.Command("start", "Starts the Siriusec service.")
 	status := app.Command("status", "Print the status of the current SSH session.")
 	dump := app.Command("configure", "Generate a simple config file to get started.")
 	ver := app.Command("version", "Print the version.")
 	scpc := app.Command("scp", "Server-side implementation of SCP.").Hidden()
-	exec := app.Command("exec", "Used internally by Teleport to re-exec itself to run a command.").Hidden()
-	forward := app.Command("forward", "Used internally by Teleport to re-exec itself to port forward.").Hidden()
+	exec := app.Command("exec", "Used internally by Siriusec to re-exec itself to run a command.").Hidden()
+	forward := app.Command("forward", "Used internally by Siriusec to re-exec itself to port forward.").Hidden()
 	app.HelpFlag.Short('h')
 
 	// define start flags:
@@ -125,11 +125,11 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	start.Flag("insecure",
 		"Insecure mode disables certificate validation").BoolVar(&ccf.InsecureMode)
 	start.Flag("fips",
-		"Start Teleport in FedRAMP/FIPS 140-2 mode.").
+		"Start Siriusec in FedRAMP/FIPS 140-2 mode.").
 		Default("false").
 		BoolVar(&ccf.FIPS)
 	// All top-level --app-XXX flags are deprecated in favor of
-	// "teleport start app" subcommand.
+	// "siriusec start app" subcommand.
 	start.Flag("app-name",
 		"Name of the application to start").Hidden().
 		StringVar(&ccf.AppName)
@@ -140,7 +140,7 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 		"Public address of the application to proxy.").Hidden().
 		StringVar(&ccf.AppPublicAddr)
 	// All top-level --db-XXX flags are deprecated in favor of
-	// "teleport start db" subcommand.
+	// "siriusec start db" subcommand.
 	start.Flag("db-name",
 		"Name of the proxied database.").Hidden().
 		StringVar(&ccf.DatabaseName)
@@ -160,7 +160,7 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	// define start's usage info (we use kingpin's "alias" field for this)
 	start.Alias(usageNotes + usageExamples)
 
-	// "teleport app" command and its subcommands
+	// "siriusec app" command and its subcommands
 	appCmd := app.Command("app", "Application proxy service commands.")
 	appStartCmd := appCmd.Command("start", "Start application proxy service.")
 	appStartCmd.Flag("debug", "Enable verbose logging to stderr.").Short('d').BoolVar(&ccf.Debug)
@@ -171,13 +171,13 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	appStartCmd.Flag("config", fmt.Sprintf("Path to a configuration file [%v].", defaults.ConfigFilePath)).Short('c').ExistingFileVar(&ccf.ConfigFile)
 	appStartCmd.Flag("config-string", "Base64 encoded configuration string.").Hidden().Envar(defaults.ConfigEnvar).StringVar(&ccf.ConfigString)
 	appStartCmd.Flag("labels", "Comma-separated list of labels for this node, for example env=dev,app=web.").StringVar(&ccf.Labels)
-	appStartCmd.Flag("fips", "Start Teleport in FedRAMP/FIPS 140-2 mode.").Default("false").BoolVar(&ccf.FIPS)
+	appStartCmd.Flag("fips", "Start Siriusec in FedRAMP/FIPS 140-2 mode.").Default("false").BoolVar(&ccf.FIPS)
 	appStartCmd.Flag("name", "Name of the application to start.").StringVar(&ccf.AppName)
 	appStartCmd.Flag("uri", "Internal address of the application to proxy.").StringVar(&ccf.AppURI)
 	appStartCmd.Flag("public-addr", "Public address of the application to proxy.").StringVar(&ccf.AppPublicAddr)
 	appStartCmd.Alias(appUsageExamples) // We're using "alias" section to display usage examples.
 
-	// "teleport db" command and its subcommands
+	// "siriusec db" command and its subcommands
 	dbCmd := app.Command("db", "Database proxy service commands.")
 	dbStartCmd := dbCmd.Command("start", "Start database proxy service.")
 	dbStartCmd.Flag("debug", "Enable verbose logging to stderr.").Short('d').BoolVar(&ccf.Debug)
@@ -188,7 +188,7 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	dbStartCmd.Flag("config", fmt.Sprintf("Path to a configuration file [%v].", defaults.ConfigFilePath)).Short('c').ExistingFileVar(&ccf.ConfigFile)
 	dbStartCmd.Flag("config-string", "Base64 encoded configuration string.").Hidden().Envar(defaults.ConfigEnvar).StringVar(&ccf.ConfigString)
 	dbStartCmd.Flag("labels", "Comma-separated list of labels for this node, for example env=dev,app=web.").StringVar(&ccf.Labels)
-	dbStartCmd.Flag("fips", "Start Teleport in FedRAMP/FIPS 140-2 mode.").Default("false").BoolVar(&ccf.FIPS)
+	dbStartCmd.Flag("fips", "Start Siriusec in FedRAMP/FIPS 140-2 mode.").Default("false").BoolVar(&ccf.FIPS)
 	dbStartCmd.Flag("name", "Name of the proxied database.").StringVar(&ccf.DatabaseName)
 	dbStartCmd.Flag("description", "Description of the proxied database.").StringVar(&ccf.DatabaseDescription)
 	dbStartCmd.Flag("protocol", fmt.Sprintf("Proxied database protocol. Supported are: %v.", defaults.DatabaseProtocols)).StringVar(&ccf.DatabaseProtocol)
@@ -287,14 +287,14 @@ func OnStart(config *service.Config) error {
 func onStatus() error {
 	sshClient := os.Getenv("SSH_CLIENT")
 	systemUser := os.Getenv("USER")
-	teleportUser := os.Getenv(teleport.SSHTeleportUser)
+	teleportUser := os.Getenv(teleport.SSHSiriusecUser)
 	proxyHost := os.Getenv(teleport.SSHSessionWebproxyAddr)
-	clusterName := os.Getenv(teleport.SSHTeleportClusterName)
+	clusterName := os.Getenv(teleport.SSHSiriusecClusterName)
 	hostUUID := os.Getenv(teleport.SSHTeleportHostUUID)
 	sid := os.Getenv(teleport.SSHSessionID)
 
 	if sid == "" || proxyHost == "" {
-		fmt.Println("You are not inside of a Teleport SSH session")
+		fmt.Println("You are not inside of a Sirius SSH session")
 		return nil
 	}
 
@@ -383,9 +383,9 @@ func onConfigDump(flags dumpFlags) error {
 			return trace.Wrap(err, "could not close file %v", uri.Path)
 		}
 		if modules.GetModules().BuildType() == modules.BuildOSS {
-			fmt.Printf("Wrote config to file %q. Now you can start the server. Happy Teleporting!\n", uri.Path)
+			fmt.Printf("Wrote config to file %q. Now you can start the server. Happy Sirius!\n", uri.Path)
 		} else {
-			fmt.Printf("Wrote config to file %q. Add your license file to %v and start the server. Happy Teleporting!\n", uri.Path, flags.LicensePath)
+			fmt.Printf("Wrote config to file %q. Add your license file to %v and start the server. Happy Sirius!\n", uri.Path, flags.LicensePath)
 		}
 	default:
 		return trace.BadParameter(
@@ -442,15 +442,15 @@ func onSCP(scpFlags *scp.Flags) (err error) {
 	return trace.Wrap(cmd.Execute(&StdReadWriter{}))
 }
 
-// onExec is a subcommand used to re-execute Teleport for execution. Used for
-// "exec" or "shell" requests over a "session" channel on Teleport nodes.
+// onExec is a subcommand used to re-execute Siriusec for execution. Used for
+// "exec" or "shell" requests over a "session" channel on Siriusec nodes.
 func onExec() error {
 	srv.RunAndExit(teleport.ExecSubCommand)
 	return nil
 }
 
-// onForward is a subcommand used to re-execute Teleport for port forwarding.
-// Used with "direct-tcpip" channel on Teleport nodes.
+// onForward is a subcommand used to re-execute Siriusec for port forwarding.
+// Used with "direct-tcpip" channel on Siriusec nodes.
 func onForward() error {
 	srv.RunAndExit(teleport.ForwardSubCommand)
 	return nil

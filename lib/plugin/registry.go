@@ -34,11 +34,11 @@ type Plugin interface {
 type Registry interface {
 	// Add adds plugin to the registry
 	Add(plugin Plugin) error
-	// RegisterProxyWebHandlers registers Teleport Proxy web handlers
+	// RegisterProxyWebHandlers registers Siriusec Proxy web handlers
 	RegisterProxyWebHandlers(hander interface{}) error
-	// RegisterAuthWebHandlers registers Teleport Auth web handlers
+	// RegisterAuthWebHandlers registers Siriusec Auth web handlers
 	RegisterAuthWebHandlers(handler interface{}) error
-	// RegisterAuthServices registerse Teleport AuthServer services
+	// RegisterAuthServices registerse Siriusec AuthServer services
 	RegisterAuthServices(server interface{}) error
 }
 
@@ -74,7 +74,7 @@ func (r *registry) Add(p Plugin) error {
 	return nil
 }
 
-// RegisterProxyWebHandlers registers Teleport Proxy web handlers
+// RegisterProxyWebHandlers registers Siriusec Proxy web handlers
 func (r *registry) RegisterProxyWebHandlers(hander interface{}) error {
 	for _, p := range r.plugins {
 		if err := p.RegisterProxyWebHandlers(hander); err != nil {
@@ -85,7 +85,7 @@ func (r *registry) RegisterProxyWebHandlers(hander interface{}) error {
 	return nil
 }
 
-// RegisterAuthWebHandlers registers Teleport Auth web handlers
+// RegisterAuthWebHandlers registers Siriusec Auth web handlers
 func (r *registry) RegisterAuthWebHandlers(handler interface{}) error {
 	for _, p := range r.plugins {
 		if err := p.RegisterAuthWebHandlers(handler); err != nil {
@@ -96,7 +96,7 @@ func (r *registry) RegisterAuthWebHandlers(handler interface{}) error {
 	return nil
 }
 
-// RegisterAuthServices registerse Teleport AuthServer services
+// RegisterAuthServices registerse Siriusec AuthServer services
 func (r *registry) RegisterAuthServices(server interface{}) error {
 	for _, p := range r.plugins {
 		if err := p.RegisterAuthServices(server); err != nil {

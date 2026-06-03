@@ -59,14 +59,14 @@ fi
 LINUX_BINARY_DIR=/usr/local/bin
 LINUX_SYSTEMD_DIR=/lib/systemd/system
 LINUX_CONFIG_DIR=/etc
-LINUX_DATA_DIR=/var/lib/teleport
+LINUX_DATA_DIR=/var/lib/siriusec
 
 # extra package information for linux
-MAINTAINER="info@goteleport.com"
+MAINTAINER="info@siriusec.com"
 LICENSE="Apache-2.0"
 VENDOR="Gravitational"
 DESCRIPTION="Teleport is a gateway for managing access to clusters of Linux servers via SSH or the Kubernetes API"
-DOCS_URL="https://goteleport.com/docs"
+DOCS_URL="https://siriusec.com/docs"
 
 # SHA1 fingerprints of certificates used for signing mac artifacts (certificates must be pre-loaded into the keychain on the build box)
 DEVELOPER_ID_APPLICATION="0FFD3E3413AB4C599C53FBB1D8CA690915E33D83" # used for signing binaries
@@ -199,24 +199,24 @@ fi
 
 # set variables appropriately depending on type of package being built
 if [[ "${TELEPORT_TYPE}" == "ent" ]]; then
-    TARBALL_FILENAME="teleport-ent-v${TELEPORT_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
+    TARBALL_FILENAME="siriusec-ent-v${TELEPORT_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
     URL="${DOWNLOAD_ROOT}/${TARBALL_FILENAME}"
-    TAR_PATH="teleport-ent"
-    RPM_NAME="teleport-ent"
+    TAR_PATH="siriusec-ent"
+    RPM_NAME="siriusec-ent"
     if [[ "${RUNTIME}" == "fips" ]]; then
         TYPE_DESCRIPTION="[${TEXT_ARCH} Enterprise edition, built with FIPS support]"
-        RPM_NAME="teleport-ent-fips"
+        RPM_NAME="siriusec-ent-fips"
     else
         TYPE_DESCRIPTION="[${TEXT_ARCH} Enterprise edition]"
     fi
 else
-    TARBALL_FILENAME="teleport-v${TELEPORT_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
+    TARBALL_FILENAME="siriusec-v${TELEPORT_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
     URL="${DOWNLOAD_ROOT}/${TARBALL_FILENAME}"
-    TAR_PATH="teleport"
-    RPM_NAME="teleport"
+    TAR_PATH="siriusec"
+    RPM_NAME="siriusec"
     if [[ "${RUNTIME}" == "fips" ]]; then
         TYPE_DESCRIPTION="[${TEXT_ARCH} Open source edition, built with FIPS support]"
-        RPM_NAME="teleport-fips"
+        RPM_NAME="siriusec-fips"
     else
         TYPE_DESCRIPTION="[${TEXT_ARCH} Open source edition]"
     fi
@@ -229,11 +229,11 @@ if [[ "${PACKAGE_TYPE}" == "pkg" ]]; then
     # handle mac client-only builds
     if [[ "${BUILD_MODE}" == "tsh" ]]; then
         FILE_LIST="${TAR_PATH}/tsh"
-        BUNDLE_ID="com.gravitational.teleport.tsh"
+        BUNDLE_ID="com.siriusec.siriusec.tsh"
         PKG_FILENAME="tsh-${TELEPORT_VERSION}.${PACKAGE_TYPE}"
     else
         FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/teleport"
-        BUNDLE_ID="com.gravitational.teleport"
+        BUNDLE_ID="com.siriusec.siriusec"
         if [[ "${TELEPORT_TYPE}" == "ent" ]]; then
             PKG_FILENAME="teleport-ent-${TELEPORT_VERSION}.${PACKAGE_TYPE}"
         else
@@ -241,15 +241,15 @@ if [[ "${PACKAGE_TYPE}" == "pkg" ]]; then
         fi
     fi
 else
-    FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/teleport ${TAR_PATH}/examples/systemd/teleport.service"
+    FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/teleport ${TAR_PATH}/examples/systemd/siriusec.service"
     LINUX_BINARY_FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/teleport"
-    LINUX_SYSTEMD_FILE_LIST="${TAR_PATH}/examples/systemd/teleport.service"
+    LINUX_SYSTEMD_FILE_LIST="${TAR_PATH}/examples/systemd/siriusec.service"
     EXTRA_DOCKER_OPTIONS=""
     RPM_SIGN_STANZA=""
     if [[ "${PACKAGE_TYPE}" == "rpm" ]]; then
         OUTPUT_FILENAME="${TAR_PATH}-${TELEPORT_VERSION}-1${OPTIONAL_RUNTIME_SECTION}.${ARCH}.rpm"
         FILE_PERMISSIONS_STANZA="--rpm-user root --rpm-group root --rpm-use-file-permissions "
-        # the rpm/rpmmacros file suppresses the creation of .build-id files (see https://github.com/gravitational/teleport/issues/7040)
+        # the rpm/rpmmacros file suppresses the creation of .build-id files (see https://github.com.siriusec.siriusec/issues/7040)
         EXTRA_DOCKER_OPTIONS="-v $(pwd)/rpm/rpmmacros:/root/.rpmmacros"
         # if we set this environment variable, don't sign RPMs (can be useful for building test RPMs
         # without having the signing keys)
@@ -309,7 +309,7 @@ if [[ "${PACKAGE_TYPE}" != "pkg" ]]; then
         mv -v ${LINUX_CONFIG_FILE} ${PACKAGE_TEMPDIR}/buildroot${LINUX_CONFIG_DIR}
         CONFIG_FILE_STANZA="--config-files /src/buildroot${LINUX_CONFIG_DIR}/${LINUX_CONFIG_FILE} "
     fi
-    # /var/lib/teleport
+    # /var/lib/siriusec
     # shellcheck disable=SC2174
     mkdir -p -m0700 ${PACKAGE_TEMPDIR}/buildroot${LINUX_DATA_DIR}
 fi
@@ -396,7 +396,7 @@ else
         --package ${OUTPUT_FILENAME} \
         --chdir /src/buildroot \
         --directories ${LINUX_DATA_DIR} \
-        --provides teleport \
+        --provides siriusec \
         --prefix / \
         --verbose \
         ${CONFIG_FILE_STANZA} \

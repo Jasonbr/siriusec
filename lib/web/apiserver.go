@@ -72,7 +72,7 @@ import (
 
 const (
 	// ssoLoginConsoleErr is a generic error message to hide revealing sso login failure msgs.
-	ssoLoginConsoleErr = "Failed to login. Please check Teleport's log for more details."
+	ssoLoginConsoleErr = "Failed to login. Please check Siriusec's log for more details."
 	metaRedirectHTML   = `
 <!DOCTYPE html>
 <html lang="en">
@@ -152,13 +152,13 @@ type Config struct {
 	// ProxyPublicAddr contains web proxy public addresses.
 	ProxyPublicAddrs []utils.NetAddr
 
-	// CipherSuites is the list of cipher suites Teleport suppports.
+	// CipherSuites is the list of cipher suites Siriusec suppports.
 	CipherSuites []uint16
 
 	// ProxySettings is a settings communicated to proxy
 	ProxySettings webclient.ProxySettings
 
-	// FIPS mode means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// FIPS mode means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 
@@ -1503,7 +1503,7 @@ type AuthParams struct {
 	HostSigners []types.CertAuthority
 	// ClientRedirectURL is a URL to redirect client to
 	ClientRedirectURL string
-	// FIPS mode means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// FIPS mode means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 }
@@ -1587,7 +1587,7 @@ func ConstructSSHResponse(response AuthParams) (*url.URL, error) {
 // CreateSessionReq is a request to create session from username, password and
 // second factor token.
 type CreateSessionReq struct {
-	// User is the Teleport username.
+	// User is the Siriusec username.
 	User string `json:"user"`
 	// Pass is the password.
 	Pass string `json:"pass"`
@@ -2807,9 +2807,9 @@ func makeResponse(items interface{}) (interface{}, error) {
 	return responseData{Items: items}, nil
 }
 
-// makeTeleportClientConfig creates default teleport client configuration
+// makeSiriusecClientConfig creates default teleport client configuration
 // that is used to initiate an SSH terminal session or SCP file transfer
-func makeTeleportClientConfig(ctx *SessionContext) (*client.Config, error) {
+func makeSiriusecClientConfig(ctx *SessionContext) (*client.Config, error) {
 	agent, cert, err := ctx.GetAgent()
 	if err != nil {
 		return nil, trace.BadParameter("failed to get user credentials: %v", err)

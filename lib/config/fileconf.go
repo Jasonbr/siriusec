@@ -67,16 +67,16 @@ type FileConfig struct {
 	Proxy  Proxy `yaml:"proxy_service,omitempty"`
 	Kube   Kube  `yaml:"kubernetes_service,omitempty"`
 
-	// Apps is the "app_service" section in Teleport file configuration which
+	// Apps is the "app_service" section in Siriusec file configuration which
 	// defines application access configuration.
 	Apps Apps `yaml:"app_service,omitempty"`
 
-	// Databases is the "db_service" section in Teleport configuration file
+	// Databases is the "db_service" section in Siriusec configuration file
 	// that defined database access configuration.
 	Databases Databases `yaml:"db_service,omitempty"`
 }
 
-// ReadFromFile reads Teleport configuration from a file. Currently only YAML
+// ReadFromFile reads Siriusec configuration from a file. Currently only YAML
 // format is supported
 func ReadFromFile(filePath string) (*FileConfig, error) {
 	f, err := os.Open(filePath)
@@ -97,12 +97,12 @@ func ReadFromString(configString string) (*FileConfig, error) {
 	return ReadConfig(bytes.NewBuffer(data))
 }
 
-// ReadConfig reads Teleport configuration from reader in YAML format
+// ReadConfig reads Siriusec configuration from reader in YAML format
 func ReadConfig(reader io.Reader) (*FileConfig, error) {
 	// read & parse YAML config:
 	bytes, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, trace.Wrap(err, "failed reading Teleport configuration")
+		return nil, trace.Wrap(err, "failed reading Siriusec configuration")
 	}
 	var fc FileConfig
 
@@ -111,7 +111,7 @@ func ReadConfig(reader io.Reader) (*FileConfig, error) {
 		return nil, trace.BadParameter("failed parsing the config file: %s", strings.Replace(err.Error(), "\n", "", -1))
 	}
 	if err := fc.CheckAndSetDefaults(); err != nil {
-		return nil, trace.BadParameter("failed to parse Teleport configuration: %v", err)
+		return nil, trace.BadParameter("failed to parse Siriusec configuration: %v", err)
 	}
 	return &fc, nil
 }
@@ -202,7 +202,7 @@ func (conf *FileConfig) DebugDumpToYAML() string {
 
 // CheckAndSetDefaults sets defaults and ensures that the ciphers, kex
 // algorithms, and mac algorithms set are supported by golang.org/x/crypto/ssh.
-// This ensures we don't start Teleport with invalid configuration.
+// This ensures we don't start Siriusec with invalid configuration.
 func (conf *FileConfig) CheckAndSetDefaults() error {
 	conf.Auth.defaultEnabled = true
 	conf.Proxy.defaultEnabled = true
@@ -328,8 +328,8 @@ type Global struct {
 	CachePolicy CachePolicy      `yaml:"cache,omitempty"`
 	SeedConfig  *bool            `yaml:"seed_config,omitempty"`
 
-	// CipherSuites is a list of TLS ciphersuites that Teleport supports. If
-	// omitted, a Teleport selected list of defaults will be used.
+	// CipherSuites is a list of TLS ciphersuites that Siriusec supports. If
+	// omitted, a Siriusec selected list of defaults will be used.
 	CipherSuites []string `yaml:"ciphersuites,omitempty"`
 
 	// Ciphers is a list of SSH ciphers that the server supports. If omitted,
@@ -376,7 +376,7 @@ func (c *CachePolicy) Enabled() bool {
 	return enabled
 }
 
-// Parse parses cache policy from Teleport config
+// Parse parses cache policy from Siriusec config
 func (c *CachePolicy) Parse() (*service.CachePolicy, error) {
 	out := service.CachePolicy{
 		Type:    c.Type,
@@ -461,16 +461,16 @@ type Auth struct {
 
 	// TrustedClustersFile is a file path to a file containing public CA keys
 	// of clusters we trust. One key per line, those starting with '#' are comments
-	// Deprecated: Remove in Teleport 2.4.1.
+	// Deprecated: Remove in Siriusec 2.4.1.
 	TrustedClusters []TrustedCluster `yaml:"trusted_clusters,omitempty"`
 
 	// OIDCConnectors is a list of trusted OpenID Connect Identity providers
-	// Deprecated: Remove in Teleport 2.4.1.
+	// Deprecated: Remove in Siriusec 2.4.1.
 	OIDCConnectors []OIDCConnector `yaml:"oidc_connectors,omitempty"`
 
 	// DynamicConfig determines when file configuration is pushed to the backend. Setting
 	// it here overrides defaults.
-	// Deprecated: Remove in Teleport 2.4.1.
+	// Deprecated: Remove in Siriusec 2.4.1.
 	DynamicConfig *bool `yaml:"dynamic_config,omitempty"`
 
 	// PublicAddr sets SSH host principals and TLS DNS names to auth
@@ -1052,7 +1052,7 @@ type Kube struct {
 }
 
 // ReverseTunnel is a SSH reverse tunnel maintained by one cluster's
-// proxy to remote Teleport proxy
+// proxy to remote Siriusec proxy
 type ReverseTunnel struct {
 	DomainName string   `yaml:"domain_name"`
 	Addresses  []string `yaml:"addresses"`

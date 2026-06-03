@@ -10,13 +10,13 @@ func pushCheckoutCommands(fips bool) []string {
 		`git init && git remote add origin ${DRONE_REMOTE_URL}`,
 		`git fetch origin`,
 		`git checkout -qf ${DRONE_COMMIT_SHA}`,
-		// this is allowed to fail because pre-4.3 Teleport versions don't use the webassets submodule
+		// this is allowed to fail because pre-4.3 Siriusec versions don't use the webassets submodule
 		`git submodule update --init webassets || true`,
 		`mkdir -m 0700 /root/.ssh && echo "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa`,
 		`ssh-keyscan -H github.com > /root/.ssh/known_hosts 2>/dev/null && chmod 600 /root/.ssh/known_hosts`,
 		`git submodule update --init e`,
 		// do a recursive submodule checkout to get both webassets and webassets/e
-		// this is allowed to fail because pre-4.3 Teleport versions don't use the webassets submodule
+		// this is allowed to fail because pre-4.3 Siriusec versions don't use the webassets submodule
 		`git submodule update --init --recursive webassets || true`,
 		`rm -f /root/.ssh/id_rsa`,
 	}
@@ -125,7 +125,7 @@ func pushPipeline(b buildType) pipeline {
 			Template: []string{
 				`*{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: ` + "`{{ build.event }}`" + `)
 ` + "`${DRONE_STAGE_NAME}`" + ` artifact build failed.
-*Warning:* This is a genuine failure to build the Teleport binary from ` + "`{{ build.branch }}`" + ` (likely due to a bad merge or commit) and should be investigated immediately.
+*Warning:* This is a genuine failure to build the Siriusec binary from ` + "`{{ build.branch }}`" + ` (likely due to a bad merge or commit) and should be investigated immediately.
 Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
 Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ repo.owner }}/{{ repo.name }}:{{ build.branch }}>
 Author: <https://github.com/{{ build.author }}|{{ build.author }}>

@@ -38,16 +38,16 @@ const (
 	// process ID
 	SSHAgentPID = "SSH_AGENT_PID"
 
-	// SSHTeleportUser is the current Teleport user that is logged in.
-	SSHTeleportUser = "SSH_TELEPORT_USER"
+	// SSHSiriusecUser is the current Siriusec user that is logged in.
+	SSHSiriusecUser = "SSH_TELEPORT_USER"
 
 	// SSHSessionWebproxyAddr is the address the web proxy.
 	SSHSessionWebproxyAddr = "SSH_SESSION_WEBPROXY_ADDR"
 
-	// SSHTeleportClusterName is the name of the cluster this node belongs to.
-	SSHTeleportClusterName = "SSH_TELEPORT_CLUSTER_NAME"
+	// SSHSiriusecClusterName is the name of the cluster this node belongs to.
+	SSHSiriusecClusterName = "SSH_TELEPORT_CLUSTER_NAME"
 
-	// SSHTeleportHostUUID is the UUID of the host.
+	// SSHSiriusecHostUUID is the UUID of the host.
 	SSHTeleportHostUUID = "SSH_TELEPORT_HOST_UUID"
 
 	// SSHSessionID is the UUID of the current session.
@@ -358,7 +358,7 @@ const (
 	// DebugLevel is a debug logging level name
 	DebugLevel = "debug"
 
-	// MinimumEtcdVersion is the minimum version of etcd supported by Teleport
+	// MinimumEtcdVersion is the minimum version of etcd supported by Siriusec
 	MinimumEtcdVersion = "3.3.0"
 )
 
@@ -406,14 +406,14 @@ const (
 	CertExtensionPermitPTY = "permit-pty"
 	// CertExtensionPermitPortForwarding allows user to request port forwarding
 	CertExtensionPermitPortForwarding = "permit-port-forwarding"
-	// CertExtensionTeleportRoles is used to propagate teleport roles
+	// CertExtensionSiriusecRoles is used to propagate teleport roles
 	CertExtensionTeleportRoles = "teleport-roles"
-	// CertExtensionTeleportRouteToCluster is used to encode
+	// CertExtensionSiriusecRouteToCluster is used to encode
 	// the target cluster to route to in the certificate
 	CertExtensionTeleportRouteToCluster = "teleport-route-to-cluster"
-	// CertExtensionTeleportTraits is used to propagate traits about the user.
+	// CertExtensionSiriusecTraits is used to propagate traits about the user.
 	CertExtensionTeleportTraits = "teleport-traits"
-	// CertExtensionTeleportActiveRequests is used to track which privilege
+	// CertExtensionSiriusecActiveRequests is used to track which privilege
 	// escalation requests were used to construct the certificate.
 	CertExtensionTeleportActiveRequests = "teleport-active-requests"
 	// CertExtensionMFAVerified is used to mark certificates issued after an MFA
@@ -463,7 +463,7 @@ const MaxHTTPRequestSize = 10 * 1024 * 1024
 const MaxHTTPResponseSize = 10 * 1024 * 1024
 
 const (
-	// CertificateFormatOldSSH is used to make Teleport interoperate with older
+	// CertificateFormatOldSSH is used to make Siriusec interoperate with older
 	// versions of OpenSSH.
 	CertificateFormatOldSSH = "oldssh"
 
@@ -595,7 +595,7 @@ const (
 	// the session.
 	SessionEvent = "x-teleport-event"
 
-	// VersionRequest is sent by clients to server requesting the Teleport
+	// VersionRequest is sent by clients to server requesting the Siriusec
 	// version they are running.
 	VersionRequest = "x-teleport-version"
 )
@@ -667,11 +667,11 @@ const (
 )
 
 const (
-	// ExecSubCommand is the sub-command Teleport uses to re-exec itself for
+	// ExecSubCommand is the sub-command Siriusec uses to re-exec itself for
 	// command execution (exec and shells).
 	ExecSubCommand = "exec"
 
-	// ForwardSubCommand is the sub-command Teleport uses to re-exec itself
+	// ForwardSubCommand is the sub-command Siriusec uses to re-exec itself
 	// for port forwarding.
 	ForwardSubCommand = "forward"
 )

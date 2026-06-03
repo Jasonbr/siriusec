@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package sshutils contains contains the implementations of the base SSH
-// server used throughout Teleport.
+// server used throughout Siriusec.
 package sshutils
 
 import (
@@ -49,7 +49,7 @@ var proxyConnectionLimitHitCount = prometheus.NewCounter(
 	},
 )
 
-// Server is a generic implementation of an SSH server. All Teleport
+// Server is a generic implementation of an SSH server. All Siriusec
 // services (auth, proxy, ssh) use this as a base to accept SSH connections.
 type Server struct {
 	sync.RWMutex
@@ -86,7 +86,7 @@ type Server struct {
 	// they are a valid certificate. Used in tests.
 	insecureSkipHostValidation bool
 
-	// fips means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// fips means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	fips bool
 }
@@ -97,9 +97,9 @@ const (
 	// https://tools.ietf.org/html/rfc4253#page-4
 	SSHVersionPrefix = "SSH-2.0-Teleport"
 
-	// ProxyHelloSignature is a string which Teleport proxy will send
+	// ProxyHelloSignature is a string which Siriusec proxy will send
 	// right after the initial SSH "handshake/version" message if it detects
-	// talking to a Teleport server.
+	// talking to a Siriusec server.
 	ProxyHelloSignature = "Teleport-Proxy"
 
 	// MaxVersionStringBytes is the maximum number of bytes allowed for a
@@ -196,7 +196,7 @@ func NewServer(
 	s.cfg.PasswordCallback = ah.Password
 	s.cfg.NoClientAuth = ah.NoClient
 
-	// Teleport servers need to identify as such to allow passing of the client
+	// Siriusec servers need to identify as such to allow passing of the client
 	// IP from the client to the proxy to the destination node.
 	s.cfg.ServerVersion = SSHVersionPrefix
 
@@ -407,7 +407,7 @@ func (s *Server) trackUserConnections(delta int32) int32 {
 // HandleConnection is called every time an SSH server accepts a new
 // connection from a client.
 //
-// this is the foundation of all SSH connections in Teleport (between clients
+// this is the foundation of all SSH connections in Siriusec (between clients
 // and proxies, proxies and servers, servers and auth, etc).
 //
 func (s *Server) HandleConnection(conn net.Conn) {
@@ -438,7 +438,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 
 	// create a new SSH server which handles the handshake (and pass the custom
 	// payload structure which will be populated only when/if this connection
-	// comes from another Teleport proxy):
+	// comes from another Siriusec proxy):
 	sconn, chans, reqs, err := ssh.NewServerConn(wrapConnection(wconn), &s.cfg)
 	if err != nil {
 		conn.SetDeadline(time.Time{})
@@ -628,7 +628,7 @@ type (
 )
 
 // HandshakePayload structure is sent as a JSON blob by the teleport
-// proxy to every SSH server who identifies itself as Teleport server
+// proxy to every SSH server who identifies itself as Siriusec server
 //
 // It allows teleport proxies to communicate additional data to server
 type HandshakePayload struct {
@@ -681,7 +681,7 @@ func (c *connectionWrapper) Read(b []byte) (int, error) {
 	buff = buff[:n]
 	skip := 0
 
-	// are we reading from a Teleport proxy?
+	// are we reading from a Siriusec proxy?
 	if bytes.HasPrefix(buff, []byte(ProxyHelloSignature)) {
 		// the JSON paylaod ends with a binary zero:
 		payloadBoundary := bytes.IndexByte(buff, 0x00)

@@ -44,13 +44,13 @@ const (
 	LoginFailedBadCallbackRedirectURL = "/web/msg/error/login/callback"
 )
 
-// Redirector handles SSH redirect flow with the Teleport server
+// Redirector handles SSH redirect flow with the Siriusec server
 type Redirector struct {
 	// SSHLoginSSO contains SSH login parameters
 	SSHLoginSSO
 	server *httptest.Server
 	mux    *http.ServeMux
-	// redirectURL will be set based on the response from the Teleport
+	// redirectURL will be set based on the response from the Siriusec
 	// proxy server, will contain target redirect URL
 	// to launch SSO workflow
 	redirectURL utils.SyncString
@@ -67,9 +67,9 @@ type Redirector struct {
 	responseC chan *auth.SSHLoginResponse
 	// errorC will contain errors
 	errorC chan error
-	// proxyClient is HTTP client to the Teleport Proxy
+	// proxyClient is HTTP client to the Siriusec Proxy
 	proxyClient *WebClient
-	// proxyURL is a URL to the Teleport Proxy
+	// proxyURL is a URL to the Siriusec Proxy
 	proxyURL *url.URL
 	// context is a close context
 	context context.Context
@@ -105,12 +105,12 @@ func NewRedirector(ctx context.Context, login SSHLoginSSO) (*Redirector, error) 
 		errorC:      make(chan error, 1),
 	}
 
-	// callback is a callback URL communicated to the Teleport proxy,
+	// callback is a callback URL communicated to the Siriusec proxy,
 	// after SAML/OIDC login, the teleport will redirect user's browser
 	// to this laptop-local URL
 	rd.mux.Handle("/callback", rd.wrapCallback(rd.callback))
 	// short path is a link-shortener style URL
-	// that will redirect to the Teleport-Proxy supplied address
+	// that will redirect to the Siriusec-Proxy supplied address
 	rd.mux.HandleFunc(rd.shortPath, func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, rd.redirectURL.Value(), http.StatusFound)
 	})
@@ -118,7 +118,7 @@ func NewRedirector(ctx context.Context, login SSHLoginSSO) (*Redirector, error) 
 }
 
 // Start launches local http server on the machine,
-// initiates SSO login request sequence with the Teleport Proxy
+// initiates SSO login request sequence with the Siriusec Proxy
 func (rd *Redirector) Start() error {
 	if rd.BindAddr != "" {
 		log.Debugf("Binding to %v.", rd.BindAddr)
@@ -136,7 +136,7 @@ func (rd *Redirector) Start() error {
 	}
 	log.Infof("Waiting for response at: %v.", rd.server.URL)
 
-	// communicate callback redirect URL to the Teleport Proxy
+	// communicate callback redirect URL to the Siriusec Proxy
 	u, err := url.Parse(rd.server.URL + "/callback")
 	if err != nil {
 		return trace.Wrap(err)
@@ -165,7 +165,7 @@ func (rd *Redirector) Start() error {
 	}
 	// notice late binding of the redirect URL here, it is referenced
 	// in the callback handler, but is known only after the request
-	// is sent to the Teleport Proxy, that's why
+	// is sent to the Siriusec Proxy, that's why
 	// redirectURL is a SyncString
 	rd.redirectURL.Set(re.RedirectURL)
 	return nil
@@ -195,8 +195,8 @@ func (rd *Redirector) ErrorC() <-chan error {
 	return rd.errorC
 }
 
-// callback is used by Teleport proxy to send back credentials
-// issued by Teleport proxy
+// callback is used by Siriusec proxy to send back credentials
+// issued by Siriusec proxy
 func (rd *Redirector) callback(w http.ResponseWriter, r *http.Request) (*auth.SSHLoginResponse, error) {
 	if r.URL.Path != "/callback" {
 		return nil, trace.NotFound("path not found")

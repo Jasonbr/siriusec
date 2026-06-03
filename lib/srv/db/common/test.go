@@ -103,9 +103,9 @@ type TestClientConfig struct {
 	AuthServer *auth.Server
 	// Address is the address to connect to (web proxy).
 	Address string
-	// Cluster is the Teleport cluster name.
+	// Cluster is the Siriusec cluster name.
 	Cluster string
-	// Username is the Teleport user name.
+	// Username is the Siriusec user name.
 	Username string
 	// RouteToDatabase contains database routing information.
 	RouteToDatabase tlsca.RouteToDatabase
@@ -118,7 +118,7 @@ func MakeTestClientTLSConfig(config TestClientConfig) (*tls.Config, error) {
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	// Generate client certificate for the Teleport user.
+	// Generate client certificate for the Siriusec user.
 	cert, err := config.AuthServer.GenerateDatabaseTestCert(auth.DatabaseTestCertRequest{
 		PublicKey:       key.Pub,
 		Cluster:         config.Cluster,

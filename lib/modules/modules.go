@@ -136,9 +136,9 @@ func (p *defaultModules) BuildType() string {
 	return BuildOSS
 }
 
-// PrintVersion prints the Teleport version.
+// PrintVersion prints the Siriusec version.
 func (p *defaultModules) PrintVersion() {
-	fmt.Printf("Teleport v%s git:%s %s\n", teleport.Version, teleport.Gitref, runtime.Version())
+	fmt.Printf("Sirius v%s git:%s %s\n", teleport.Version, teleport.Gitref, runtime.Version())
 }
 
 // Features returns supported features

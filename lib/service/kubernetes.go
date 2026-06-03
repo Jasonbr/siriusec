@@ -35,7 +35,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (process *TeleportProcess) initKubernetes() {
+func (process *SiriusecProcess) initKubernetes() {
 	log := process.log.WithFields(logrus.Fields{
 		trace.Component: teleport.Component(teleport.ComponentKube, process.id),
 	})
@@ -68,7 +68,7 @@ func (process *TeleportProcess) initKubernetes() {
 	})
 }
 
-func (process *TeleportProcess) initKubernetesService(log *logrus.Entry, conn *Connector) (retErr error) {
+func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *Connector) (retErr error) {
 	// clean up unused descriptors passed for proxy, but not used by it
 	defer func() {
 		if err := process.closeImportedDescriptors(teleport.ComponentKube); err != nil {
@@ -251,9 +251,9 @@ func (process *TeleportProcess) initKubernetesService(log *logrus.Entry, conn *C
 		LimiterConfig: cfg.Kube.Limiter,
 		OnHeartbeat: func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: TeleportDegradedEvent, Payload: teleport.ComponentKube})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentKube})
 			} else {
-				process.BroadcastEvent(Event{Name: TeleportOKEvent, Payload: teleport.ComponentKube})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentKube})
 			}
 		},
 	})

@@ -276,14 +276,14 @@ func parseSAMLInResponseTo(response string) (string, error) {
 		return "", trace.BadParameter("unable to parse response")
 	}
 
-	// teleport only supports sending party initiated flows (Teleport sends an
+	// teleport only supports sending party initiated flows (Siriusec sends an
 	// AuthnRequest to the IdP and gets a SAMLResponse from the IdP). identity
-	// provider initiated flows (where Teleport gets an unsolicited SAMLResponse
+	// provider initiated flows (where Siriusec gets an unsolicited SAMLResponse
 	// from the IdP) are not supported.
 	el := doc.Root()
 	responseTo := el.SelectAttr("InResponseTo")
 	if responseTo == nil {
-		message := "teleport does not support initiating login from a SAML identity provider, login must be initiated from either the Teleport Web UI or CLI"
+		message := "teleport does not support initiating login from a SAML identity provider, login must be initiated from either the Siriusec Web UI or CLI"
 		log.Infof(message)
 		return "", trace.NotImplemented(message)
 	}

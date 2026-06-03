@@ -66,13 +66,13 @@ type UserCommand struct {
 
 // Initialize allows UserCommand to plug itself into the CLI parser
 func (u *UserCommand) Initialize(app *kingpin.Application, config *service.Config) {
-	const helpPrefix string = "[Teleport DB users only]"
+	const helpPrefix string = "[Sirius DB users only]"
 
 	u.config = config
 	users := app.Command("users", "Manage user accounts")
 
 	u.userAdd = users.Command("add", "Generate a user invitation token "+helpPrefix)
-	u.userAdd.Arg("account", "Teleport user account name").Required().StringVar(&u.login)
+	u.userAdd.Arg("account", "Sirius user account name").Required().StringVar(&u.login)
 
 	u.userAdd.Flag("logins", "List of allowed logins for the new user").StringsVar(&u.allowedLogins)
 
@@ -100,7 +100,7 @@ func (u *UserCommand) Initialize(app *kingpin.Application, config *service.Confi
 	u.userAdd.Alias(AddUserHelp)
 
 	u.userUpdate = users.Command("update", "Update properties for existing user").Hidden()
-	u.userUpdate.Arg("login", "Teleport user login").Required().StringVar(&u.login)
+	u.userUpdate.Arg("login", "Sirius user login").Required().StringVar(&u.login)
 	u.userUpdate.Flag("set-roles", "Roles to assign to this user").
 		Default("").StringVar(&u.updateRoles)
 
@@ -112,7 +112,7 @@ func (u *UserCommand) Initialize(app *kingpin.Application, config *service.Confi
 		Required().StringVar(&u.login)
 
 	u.userResetPassword = users.Command("reset", "Reset user password and generate a new token "+helpPrefix)
-	u.userResetPassword.Arg("account", "Teleport user account name").Required().StringVar(&u.login)
+	u.userResetPassword.Arg("account", "Sirius user account name").Required().StringVar(&u.login)
 	u.userResetPassword.Flag("ttl", fmt.Sprintf("Set expiration time for token, default is %v, maximum is %v",
 		defaults.ChangePasswordTokenTTL, defaults.MaxChangePasswordTokenTTL)).
 		Default(fmt.Sprintf("%v", defaults.ChangePasswordTokenTTL)).DurationVar(&u.ttl)
@@ -365,7 +365,7 @@ func printTokenAsText(token types.ResetPasswordToken, messageFormat string) erro
 
 	ttl := trimDurationZeroSuffix(token.Expiry().Sub(time.Now().UTC()))
 	fmt.Printf(messageFormat, token.GetUser(), ttl, url)
-	fmt.Printf("NOTE: Make sure %v points at a Teleport proxy which users can access.\n", url.Host)
+	fmt.Printf("NOTE: Make sure %v points at a Sirius proxy which users can access.\n", url.Host)
 	return nil
 }
 

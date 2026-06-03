@@ -67,7 +67,7 @@ type Rate struct {
 	Time   time.Duration
 }
 
-// Config structure is used to initialize _all_ services Teleport can run.
+// Config structure is used to initialize _all_ services Siriusec can run.
 // Some settings are global (like DataDir) while others are grouped into
 // sections, like AuthConfig
 type Config struct {
@@ -78,7 +78,7 @@ type Config struct {
 	// Hostname is a node host name
 	Hostname string
 
-	// Token is used to register this Teleport instance with the auth server
+	// Token is used to register this Siriusec instance with the auth server
 	Token string
 
 	// JoinMethod is the method the instance will use to join the auth server
@@ -161,8 +161,8 @@ type Config struct {
 	// ClusterConfiguration is a service that provides cluster configuration
 	ClusterConfiguration services.ClusterConfiguration
 
-	// CipherSuites is a list of TLS ciphersuites that Teleport supports. If
-	// omitted, a Teleport selected list of defaults will be used.
+	// CipherSuites is a list of TLS ciphersuites that Siriusec supports. If
+	// omitted, a Siriusec selected list of defaults will be used.
 	CipherSuites []uint16
 
 	// Ciphers is a list of SSH ciphers that the server supports. If omitted,
@@ -220,13 +220,13 @@ type Config struct {
 	// BPFConfig holds configuration for the BPF service.
 	BPFConfig *bpf.Config
 
-	// Kube is a Kubernetes API gateway using Teleport client identities.
+	// Kube is a Kubernetes API gateway using Siriusec client identities.
 	Kube KubeConfig
 
 	// Log optionally specifies the logger
 	Log utils.Logger
 
-	// PluginRegistry allows adding enterprise logic to Teleport services
+	// PluginRegistry allows adding enterprise logic to Siriusec services
 	PluginRegistry plugin.Registry
 
 	// RotationConnectionInterval is the interval between connection
@@ -258,7 +258,7 @@ func (cfg *Config) ApplyToken(token string) (bool, error) {
 	return false, nil
 }
 
-// RoleConfig is a config for particular Teleport role
+// RoleConfig is a config for particular Siriusec role
 func (cfg *Config) RoleConfig() RoleConfig {
 	return RoleConfig{
 		DataDir:     cfg.DataDir,
@@ -434,7 +434,7 @@ type KubeProxyConfig struct {
 	// cluster, used only in tests
 	ClusterOverride string
 
-	// PublicAddrs is a list of the public addresses the Teleport Kube proxy can be accessed by,
+	// PublicAddrs is a list of the public addresses the Siriusec Kube proxy can be accessed by,
 	// it also affects the host principals and routing logic
 	PublicAddrs []utils.NetAddr
 
@@ -523,16 +523,16 @@ type SSHConfig struct {
 	CmdLabels             services.CommandLabels
 	PermitUserEnvironment bool
 
-	// PAM holds PAM configuration for Teleport.
+	// PAM holds PAM configuration for Siriusec.
 	PAM *pam.Config
 
 	// PublicAddrs affects the SSH host principals and DNS names added to the SSH and TLS certs.
 	PublicAddrs []utils.NetAddr
 
-	// BPF holds BPF configuration for Teleport.
+	// BPF holds BPF configuration for Siriusec.
 	BPF *bpf.Config
 
-	// RestrictedSession holds kernel objects restrictions for Teleport.
+	// RestrictedSession holds kernel objects restrictions for Siriusec.
 	RestrictedSession *restricted.Config
 
 	// AllowTCPForwarding indicates that TCP port forwarding is allowed on this node
@@ -553,12 +553,12 @@ type KubeConfig struct {
 	// Optional.
 	ListenAddr *utils.NetAddr
 
-	// PublicAddrs is a list of the public addresses the Teleport kubernetes
+	// PublicAddrs is a list of the public addresses the Siriusec kubernetes
 	// service can be reached by the proxy service.
 	PublicAddrs []utils.NetAddr
 
 	// KubeClusterName is the name of a kubernetes cluster this proxy is running
-	// in. If empty, defaults to the Teleport cluster name.
+	// in. If empty, defaults to the Siriusec cluster name.
 	KubeClusterName string
 
 	// KubeconfigPath is a path to kubeconfig
@@ -747,7 +747,7 @@ func (a App) Check() error {
 			return trace.BadParameter("application %q public_addr %q can not contain a port, applications will be available on the same port as the web proxy", a.Name, a.PublicAddr)
 		}
 		if net.ParseIP(a.PublicAddr) != nil {
-			return trace.BadParameter("application %q public_addr %q can not be an IP address, Teleport Application Access uses DNS names for routing", a.Name, a.PublicAddr)
+			return trace.BadParameter("application %q public_addr %q can not be an IP address, Siriusec Application Access uses DNS names for routing", a.Name, a.PublicAddr)
 		}
 	}
 	// Make sure there are no reserved headers in the rewrite configuration.
@@ -832,7 +832,7 @@ func ApplyDefaults(cfg *Config) {
 
 	// Remove insecure and (borderline insecure) cryptographic primitives from
 	// default configuration. These can still be added back in file configuration by
-	// users, but not supported by default by Teleport. See #1856 for more
+	// users, but not supported by default by Siriusec. See #1856 for more
 	// details.
 	kex := utils.RemoveFromSlice(sc.KeyExchanges,
 		defaults.DiffieHellmanGroup1SHA1,

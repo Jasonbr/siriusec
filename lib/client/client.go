@@ -51,7 +51,7 @@ import (
 // ProxyClient implements ssh client to a teleport proxy
 // It can provide list of nodes or connect to nodes
 type ProxyClient struct {
-	teleportClient  *TeleportClient
+	teleportClient  *SiriusecClient
 	Client          *ssh.Client
 	hostLogin       string
 	proxyAddress    string
@@ -68,7 +68,7 @@ type NodeClient struct {
 	Namespace string
 	Client    *ssh.Client
 	Proxy     *ProxyClient
-	TC        *TeleportClient
+	TC        *SiriusecClient
 }
 
 // GetSites returns list of the "sites" (AKA teleport clusters) connected to the proxy
@@ -140,10 +140,10 @@ type ReissueParams struct {
 	RouteToApp        proto.RouteToApp
 
 	// ExistingCreds is a gross hack for lib/web/terminal.go to pass in
-	// existing user credentials. The TeleportClient in lib/web/terminal.go
+	// existing user credentials. The SiriusecClient in lib/web/terminal.go
 	// doesn't have a real LocalKeystore and keeps all certs in memory.
 	// Normally, existing credentials are loaded from
-	// TeleportClient.localAgent.
+	// SiriusecClient.localAgent.
 	//
 	// TODO(awly): refactor lib/web to use a Keystore implementation that
 	// mimics LocalKeystore and remove this.
@@ -453,7 +453,7 @@ func (proxy *ProxyClient) IssueUserCertsWithMFA(ctx context.Context, params Reis
 }
 
 func (proxy *ProxyClient) prepareUserCertsRequest(params ReissueParams, key *Key) (*proto.UserCertsRequest, error) {
-	tlsCert, err := key.TeleportTLSCertificate()
+	tlsCert, err := key.SiriusecTLSCertificate()
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -699,7 +699,7 @@ func (proxy *ProxyClient) ConnectToCluster(ctx context.Context, clusterName stri
 	if err != nil {
 		return nil, trace.Wrap(err, "failed to fetch TLS key for %v", proxy.teleportClient.Username)
 	}
-	tlsConfig, err := tlsKey.TeleportClientTLSConfig(nil)
+	tlsConfig, err := tlsKey.SiriusecClientTLSConfig(nil)
 	if err != nil {
 		return nil, trace.Wrap(err, "failed to generate client TLS config")
 	}
@@ -736,11 +736,11 @@ type proxyResponse struct {
 func (proxy *ProxyClient) isRecordingProxy() (bool, error) {
 	responseCh := make(chan proxyResponse)
 
-	// we have to run this in a goroutine because older version of Teleport handled
-	// global out-of-band requests incorrectly: Teleport would ignore requests it
+	// we have to run this in a goroutine because older version of Siriusec handled
+	// global out-of-band requests incorrectly: Siriusec would ignore requests it
 	// does not know about and never reply to them. So if we wait a second and
 	// don't hear anything back, most likley we are trying to connect to an older
-	// version of Teleport and we should not try and forward our agent.
+	// version of Siriusec and we should not try and forward our agent.
 	go func() {
 		ok, responseBytes, err := proxy.Client.SendRequest(teleport.RecordingProxyReqType, true, nil)
 		if err != nil {
@@ -1002,7 +1002,7 @@ func (proxy *ProxyClient) ConnectToNode(ctx context.Context, nodeAddress NodeAdd
 	}
 
 	// Start a goroutine that will run for the duration of the client to process
-	// global requests from the client. Teleport clients will use this to update
+	// global requests from the client. Siriusec clients will use this to update
 	// terminal sizes when the remote PTY size has changed.
 	go nc.handleGlobalRequests(ctx, reqs)
 
@@ -1074,7 +1074,7 @@ func (proxy *ProxyClient) PortForwardToNode(ctx context.Context, nodeAddress Nod
 	}
 
 	// Start a goroutine that will run for the duration of the client to process
-	// global requests from the client. Teleport clients will use this to update
+	// global requests from the client. Siriusec clients will use this to update
 	// terminal sizes when the remote PTY size has changed.
 	go nc.handleGlobalRequests(ctx, reqs)
 
@@ -1217,7 +1217,7 @@ func (c *NodeClient) ExecuteSCP(ctx context.Context, cmd scp.Command) error {
 		if err != nil && errors.Is(err, &ssh.ExitMissingError{}) {
 			// TODO(dmitri): currently, if the session is aborted with (*session).Close,
 			// the remote side cannot send exit-status and this error results.
-			// To abort the session properly, Teleport needs to support `signal` request
+			// To abort the session properly, Siriusec needs to support `signal` request
 			err = nil
 		}
 		runC <- err
@@ -1455,7 +1455,7 @@ func (proxy *ProxyClient) sessionSSHCertificate(ctx context.Context, nodeAddr No
 	return []ssh.AuthMethod{am}, nil
 }
 
-// localAgent returns for the Teleport client's local agent.
+// localAgent returns for the Siriusec client's local agent.
 func (proxy *ProxyClient) localAgent() *LocalKeyAgent {
 	return proxy.teleportClient.LocalAgent()
 }

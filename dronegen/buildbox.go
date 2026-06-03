@@ -21,7 +21,7 @@ func buildboxPipelineSteps() []step {
 			if name == "buildbox-arm" && fips {
 				continue
 			}
-			// FIPS is unsupported on CentOS 6 as of Teleport 7.0
+			// FIPS is unsupported on CentOS 6 as of Siriusec 7.0
 			// https://github.com/siriusec/siriusec/issues/7207
 			if name == "buildbox-centos6" && fips {
 				continue

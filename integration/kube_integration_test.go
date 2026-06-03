@@ -138,8 +138,8 @@ func newKubeSuite(t *testing.T) *KubeSuite {
 
 // For this test suite to work, the target Kubernetes cluster must have the
 // following RBAC objects configured:
-// https://github.com/siriusec/siriusec/blob/master/fixtures/ci-teleport-rbac/ci-teleport.yaml
-const testImpersonationGroup = "teleport-ci-test-group"
+// https://github.com/siriusec/siriusec/blob/master/fixtures/ci-siriusec-rbac/ci-siriusec.yaml
+const testImpersonationGroup = "siriusec-ci-test-group"
 
 type kubeIntegrationTest func(t *testing.T, suite *KubeSuite)
 
@@ -166,7 +166,7 @@ func TestKube(t *testing.T) {
 func testKubeExec(t *testing.T, suite *KubeSuite) {
 	tconf := suite.teleKubeConfig(Host)
 
-	teleport := NewInstance(InstanceConfig{
+	siriusec := NewInstance(InstanceConfig{
 		ClusterName: Site,
 		HostID:      HostID,
 		NodeName:    Host,
@@ -187,19 +187,19 @@ func testKubeExec(t *testing.T, suite *KubeSuite) {
 		},
 	})
 	require.NoError(t, err)
-	teleport.AddUserWithRole(username, role)
+	siriusec.AddUserWithRole(username, role)
 
-	err = teleport.CreateEx(t, nil, tconf)
+	err = siriusec.CreateEx(t, nil, tconf)
 	require.NoError(t, err)
 
-	err = teleport.Start()
+	err = siriusec.Start()
 	require.NoError(t, err)
-	defer teleport.StopAll()
+	defer siriusec.StopAll()
 
 	// impersonating client requests will be denied if the headers
 	// are referencing users or groups not allowed by the existing roles
 	impersonatingProxyClient, impersonatingProxyClientConfig, err := kubeProxyClient(kubeProxyConfig{
-		t:             teleport,
+		t:             siriusec,
 		username:      username,
 		kubeUsers:     kubeUsers,
 		kubeGroups:    kubeGroups,
@@ -215,7 +215,7 @@ func testKubeExec(t *testing.T, suite *KubeSuite) {
 	// scoped client requests will be allowed, as long as the impersonation headers
 	// are referencing users and groups allowed by existing roles
 	scopedProxyClient, scopedProxyClientConfig, err := kubeProxyClient(kubeProxyConfig{
-		t:          teleport,
+		t:          siriusec,
 		username:   username,
 		kubeUsers:  kubeUsers,
 		kubeGroups: kubeGroups,
@@ -231,7 +231,7 @@ func testKubeExec(t *testing.T, suite *KubeSuite) {
 
 	// set up kube configuration using proxy
 	proxyClient, proxyClientConfig, err := kubeProxyClient(kubeProxyConfig{
-		t:          teleport,
+		t:          siriusec,
 		username:   username,
 		kubeUsers:  kubeUsers,
 		kubeGroups: kubeGroups,
@@ -283,7 +283,7 @@ func testKubeExec(t *testing.T, suite *KubeSuite) {
 loop:
 	for {
 		select {
-		case event := <-teleport.UploadEventsC:
+		case event := <-siriusec.UploadEventsC:
 			sessionID = event.SessionID
 			break loop
 		case <-timeoutC:
@@ -292,7 +292,7 @@ loop:
 	}
 
 	// read back the entire session and verify that it matches the stated output
-	capturedStream, err := teleport.Process.GetAuthServer().GetSessionChunk(apidefaults.Namespace, session.ID(sessionID), 0, events.MaxChunkBytes)
+	capturedStream, err := siriusec.Process.GetAuthServer().GetSessionChunk(apidefaults.Namespace, session.ID(sessionID), 0, events.MaxChunkBytes)
 	require.NoError(t, err)
 
 	require.Equal(t, sessionStream, string(capturedStream))
@@ -336,7 +336,7 @@ loop:
 func testKubeDeny(t *testing.T, suite *KubeSuite) {
 	tconf := suite.teleKubeConfig(Host)
 
-	teleport := NewInstance(InstanceConfig{
+	siriusec := NewInstance(InstanceConfig{
 		ClusterName: Site,
 		HostID:      HostID,
 		NodeName:    Host,
@@ -361,18 +361,18 @@ func testKubeDeny(t *testing.T, suite *KubeSuite) {
 		},
 	})
 	require.NoError(t, err)
-	teleport.AddUserWithRole(username, role)
+	siriusec.AddUserWithRole(username, role)
 
-	err = teleport.CreateEx(t, nil, tconf)
+	err = siriusec.CreateEx(t, nil, tconf)
 	require.NoError(t, err)
 
-	err = teleport.Start()
+	err = siriusec.Start()
 	require.NoError(t, err)
-	defer teleport.StopAll()
+	defer siriusec.StopAll()
 
 	// set up kube configuration using proxy
 	proxyClient, _, err := kubeProxyClient(kubeProxyConfig{
-		t:          teleport,
+		t:          siriusec,
 		username:   username,
 		kubeUsers:  kubeUsers,
 		kubeGroups: kubeGroups,
@@ -389,7 +389,7 @@ func testKubeDeny(t *testing.T, suite *KubeSuite) {
 func testKubePortForward(t *testing.T, suite *KubeSuite) {
 	tconf := suite.teleKubeConfig(Host)
 
-	teleport := NewInstance(InstanceConfig{
+	siriusec := NewInstance(InstanceConfig{
 		ClusterName: Site,
 		HostID:      HostID,
 		NodeName:    Host,
@@ -408,18 +408,18 @@ func testKubePortForward(t *testing.T, suite *KubeSuite) {
 		},
 	})
 	require.NoError(t, err)
-	teleport.AddUserWithRole(username, role)
+	siriusec.AddUserWithRole(username, role)
 
-	err = teleport.CreateEx(t, nil, tconf)
+	err = siriusec.CreateEx(t, nil, tconf)
 	require.NoError(t, err)
 
-	err = teleport.Start()
+	err = siriusec.Start()
 	require.NoError(t, err)
-	defer teleport.StopAll()
+	defer siriusec.StopAll()
 
 	// set up kube configuration using proxy
 	_, proxyClientConfig, err := kubeProxyClient(kubeProxyConfig{
-		t:          teleport,
+		t:          siriusec,
 		username:   username,
 		kubeGroups: kubeGroups,
 	})
@@ -455,7 +455,7 @@ func testKubePortForward(t *testing.T, suite *KubeSuite) {
 
 	// impersonating client requests will be denied
 	_, impersonatingProxyClientConfig, err := kubeProxyClient(kubeProxyConfig{
-		t:             teleport,
+		t:             siriusec,
 		username:      username,
 		kubeGroups:    kubeGroups,
 		impersonation: &rest.ImpersonationConfig{UserName: "bob", Groups: []string{testImpersonationGroup}},
@@ -1020,7 +1020,7 @@ func testKubeDisconnect(t *testing.T, suite *KubeSuite) {
 func runKubeDisconnectTest(t *testing.T, suite *KubeSuite, tc disconnectTestCase) {
 	tconf := suite.teleKubeConfig(Host)
 
-	teleport := NewInstance(InstanceConfig{
+	siriusec := NewInstance(InstanceConfig{
 		ClusterName: Site,
 		HostID:      HostID,
 		NodeName:    Host,
@@ -1040,18 +1040,18 @@ func runKubeDisconnectTest(t *testing.T, suite *KubeSuite, tc disconnectTestCase
 		},
 	})
 	require.NoError(t, err)
-	teleport.AddUserWithRole(username, role)
+	siriusec.AddUserWithRole(username, role)
 
-	err = teleport.CreateEx(t, nil, tconf)
+	err = siriusec.CreateEx(t, nil, tconf)
 	require.NoError(t, err)
 
-	err = teleport.Start()
+	err = siriusec.Start()
 	require.NoError(t, err)
-	defer teleport.StopAll()
+	defer siriusec.StopAll()
 
 	// set up kube configuration using proxy
 	proxyClient, proxyClientConfig, err := kubeProxyClient(kubeProxyConfig{
-		t:          teleport,
+		t:          siriusec,
 		username:   username,
 		kubeGroups: kubeGroups,
 	})
@@ -1103,7 +1103,7 @@ func runKubeDisconnectTest(t *testing.T, suite *KubeSuite, tc disconnectTestCase
 	}
 }
 
-// teleKubeConfig sets up teleport with kubernetes turned on
+// teleKubeConfig sets up siriusec with kubernetes turned on
 func (s *KubeSuite) teleKubeConfig(hostname string) *service.Config {
 	tconf := service.MakeDefaultConfig()
 	tconf.Console = nil
@@ -1154,7 +1154,7 @@ type kubeProxyConfig struct {
 	routeToCluster string
 }
 
-// kubeProxyClient returns kubernetes client using local teleport proxy
+// kubeProxyClient returns kubernetes client using local siriusec proxy
 func kubeProxyClient(cfg kubeProxyConfig) (*kubernetes.Clientset, *rest.Config, error) {
 	authServer := cfg.t.Process.GetAuthServer()
 	clusterName, err := authServer.GetClusterName()

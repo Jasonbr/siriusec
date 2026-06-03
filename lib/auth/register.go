@@ -236,7 +236,7 @@ func registerThroughAuth(token string, params RegisterParams) (*Identity, error)
 }
 
 // insecureRegisterClient attempts to connects to the Auth Server using the
-// CA on disk. If no CA is found on disk, Teleport will not verify the Auth
+// CA on disk. If no CA is found on disk, Siriusec will not verify the Auth
 // Server it is connecting to.
 func insecureRegisterClient(params RegisterParams) (*Client, error) {
 	tlsConfig := utils.TLSConfig(params.CipherSuites)

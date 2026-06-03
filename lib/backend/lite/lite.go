@@ -51,7 +51,7 @@ const (
 )
 
 // GetName is a part of backend API and it returns SQLite backend type
-// as it appears in `storage/type` section of Teleport YAML
+// as it appears in `storage/type` section of Siriusec YAML
 func GetName() string {
 	return BackendName
 }

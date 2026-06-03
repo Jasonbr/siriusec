@@ -291,7 +291,7 @@ const (
 var OriginValues = []string{OriginDefaults, OriginConfigFile, OriginDynamic}
 
 const (
-	// RecordAtNode is the default. Sessions are recorded at Teleport nodes.
+	// RecordAtNode is the default. Sessions are recorded at Siriusec nodes.
 	RecordAtNode = "node"
 
 	// RecordAtProxy enables the recording proxy which intercepts and records

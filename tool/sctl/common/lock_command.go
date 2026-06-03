@@ -44,10 +44,10 @@ func (c *LockCommand) Initialize(app *kingpin.Application, config *service.Confi
 	c.config = config
 
 	c.mainCmd = app.Command("lock", "Create a new lock.")
-	c.mainCmd.Flag("user", "Name of a Teleport user to disable.").StringVar(&c.spec.Target.User)
-	c.mainCmd.Flag("role", "Name of a Teleport role to disable.").StringVar(&c.spec.Target.Role)
+	c.mainCmd.Flag("user", "Name of a Sirius user to disable.").StringVar(&c.spec.Target.User)
+	c.mainCmd.Flag("role", "Name of a Sirius role to disable.").StringVar(&c.spec.Target.Role)
 	c.mainCmd.Flag("login", "Name of a local UNIX user to disable.").StringVar(&c.spec.Target.Login)
-	c.mainCmd.Flag("node", "UUID of a Teleport node to disable.").StringVar(&c.spec.Target.Node)
+	c.mainCmd.Flag("node", "UUID of a Sirius node to disable.").StringVar(&c.spec.Target.Node)
 	c.mainCmd.Flag("mfa-device", "UUID of a user MFA device to disable.").StringVar(&c.spec.Target.MFADevice)
 	c.mainCmd.Flag("message", "Message to display to locked-out users.").StringVar(&c.spec.Message)
 	c.mainCmd.Flag("expires", "Time point (RFC3339) when the lock expires.").StringVar(&c.expires)

@@ -73,7 +73,7 @@ type RemoteClusterTunnelManagerConfig struct {
 	Clock clockwork.Clock
 	// KubeDialAddr is an optional address of a local kubernetes proxy.
 	KubeDialAddr utils.NetAddr
-	// FIPS indicates if Teleport was started in FIPS mode.
+	// FIPS indicates if Siriusec was started in FIPS mode.
 	FIPS bool
 }
 

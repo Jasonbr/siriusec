@@ -30,7 +30,7 @@ import (
 )
 
 // TestProxyProtocolPostgres ensures that clients can successfully connect to a
-// Postgres database when Teleport is running behind a proxy that sends a proxy
+// Postgres database when Siriusec is running behind a proxy that sends a proxy
 // line.
 func TestProxyProtocolPostgres(t *testing.T) {
 	ctx := context.Background()
@@ -39,7 +39,7 @@ func TestProxyProtocolPostgres(t *testing.T) {
 
 	testCtx.createUserAndRole(ctx, t, "alice", "admin", []string{"postgres"}, []string{"postgres"})
 
-	// Point our proxy to the Teleport's db listener on the multiplexer.
+	// Point our proxy to the Siriusec's db listener on the multiplexer.
 	proxy, err := multiplexer.NewTestProxy(testCtx.mux.DB().Addr().String())
 	require.NoError(t, err)
 	t.Cleanup(func() { proxy.Close() })
@@ -53,7 +53,7 @@ func TestProxyProtocolPostgres(t *testing.T) {
 }
 
 // TestProxyProtocolMySQL ensures that clients can successfully connect to a
-// MySQL database when Teleport is running behind a proxy that sends a proxy
+// MySQL database when Siriusec is running behind a proxy that sends a proxy
 // line.
 func TestProxyProtocolMySQL(t *testing.T) {
 	ctx := context.Background()
@@ -62,7 +62,7 @@ func TestProxyProtocolMySQL(t *testing.T) {
 
 	testCtx.createUserAndRole(ctx, t, "alice", "admin", []string{"root"}, []string{types.Wildcard})
 
-	// Point our proxy to the Teleport's MySQL listener.
+	// Point our proxy to the Siriusec's MySQL listener.
 	proxy, err := multiplexer.NewTestProxy(testCtx.mysqlListener.Addr().String())
 	require.NoError(t, err)
 	t.Cleanup(func() { proxy.Close() })
@@ -76,7 +76,7 @@ func TestProxyProtocolMySQL(t *testing.T) {
 }
 
 // TestProxyProtocolMongo ensures that clients can successfully connect to a
-// Mongo database when Teleport is running behind a proxy that sends a proxy
+// Mongo database when Siriusec is running behind a proxy that sends a proxy
 // line.
 func TestProxyProtocolMongo(t *testing.T) {
 	ctx := context.Background()
@@ -85,13 +85,13 @@ func TestProxyProtocolMongo(t *testing.T) {
 
 	testCtx.createUserAndRole(ctx, t, "alice", "admin", []string{"admin"}, []string{types.Wildcard})
 
-	// Point our proxy to the Teleport's TLS listener.
+	// Point our proxy to the Siriusec's TLS listener.
 	proxy, err := multiplexer.NewTestProxy(testCtx.webListener.Addr().String())
 	require.NoError(t, err)
 	t.Cleanup(func() { proxy.Close() })
 	go proxy.Serve()
 
-	// Connect to the proxy instead of directly to Teleport listener and make
+	// Connect to the proxy instead of directly to Siriusec listener and make
 	// sure the connection succeeds.
 	mongo, err := testCtx.mongoClientWithAddr(ctx, proxy.Address(), "alice", "mongo", "admin")
 	require.NoError(t, err)

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package utils defines several functions used across the Teleport API and other packages
+// Package utils defines several functions used across the Siriusec API and other packages
 package utils
 
 import (

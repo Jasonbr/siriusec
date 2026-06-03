@@ -79,8 +79,8 @@ type proxySubsys struct {
 //
 // proxy subsystem name can take the following forms:
 //  "proxy:host:22"          - standard SSH request to connect to  host:22 on the 1st cluster
-//  "proxy:@clustername"        - Teleport request to connect to an auth server for cluster with name 'clustername'
-//  "proxy:host:22@clustername" - Teleport request to connect to host:22 on cluster 'clustername'
+//  "proxy:@clustername"        - Siriusec request to connect to an auth server for cluster with name 'clustername'
+//  "proxy:host:22@clustername" - Siriusec request to connect to host:22 on cluster 'clustername'
 //  "proxy:host:22@namespace@clustername"
 func parseProxySubsysRequest(request string) (proxySubsysRequest, error) {
 	log.Debugf("parse_proxy_subsys(%q)", request)
@@ -185,7 +185,7 @@ func newProxySubsys(ctx *srv.ServerContext, srv *Server, req proxySubsysRequest)
 	req.SetDefaults()
 	if req.clusterName == "" && ctx.Identity.RouteToCluster != "" {
 		log.Debugf("Proxy subsystem: routing user %q to cluster %q based on the route to cluster extension.",
-			ctx.Identity.TeleportUser, ctx.Identity.RouteToCluster,
+			ctx.Identity.SiriusecUser, ctx.Identity.RouteToCluster,
 		)
 		req.clusterName = ctx.Identity.RouteToCluster
 	}
@@ -367,7 +367,7 @@ func (t *proxySubsys) proxyToHost(
 	// Here t.host is either an IP address or a DNS name as the user requested.
 	principals := []string{t.host}
 
-	// Used to store the server ID (hostUUID.clusterName) of a Teleport node.
+	// Used to store the server ID (hostUUID.clusterName) of a Siriusec node.
 	var serverID string
 
 	// Resolve the IP address to dial to because the hostname may not be
@@ -543,9 +543,9 @@ func (t *proxySubsys) doHandshake(clientAddr net.Addr, clientConn io.ReadWriter,
 	// chop off extra unused bytes at the end of the buffer:
 	buff = buff[:n]
 
-	// is that a Teleport server?
+	// is that a Siriusec server?
 	if bytes.HasPrefix(buff, []byte(sshutils.SSHVersionPrefix)) {
-		// if we're connecting to a Teleport SSH server, send our own "handshake payload"
+		// if we're connecting to a Siriusec SSH server, send our own "handshake payload"
 		// message, along with a client's IP:
 		hp := &sshutils.HandshakePayload{
 			ClientAddr: clientAddr.String(),

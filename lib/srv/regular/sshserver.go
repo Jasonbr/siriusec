@@ -158,7 +158,7 @@ type Server struct {
 	// requesting connections to it come over a reverse tunnel.
 	useTunnel bool
 
-	// fips means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// fips means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	fips bool
 
@@ -242,7 +242,7 @@ func (s *Server) GetLockWatcher() *services.LockWatcher {
 }
 
 // isAuditedAtProxy returns true if sessions are being recorded at the proxy
-// and this is a Teleport node.
+// and this is a Siriusec node.
 func (s *Server) isAuditedAtProxy() bool {
 	// always be safe, better to double record than not record at all
 	recConfig, err := s.GetAccessPoint().GetSessionRecordingConfig(s.ctx)
@@ -876,10 +876,10 @@ func (s *Server) serveAgent(ctx *srv.ServerContext) error {
 	ctx.Parent().SetEnv(teleport.SSHAgentPID, fmt.Sprintf("%v", pid))
 	ctx.Parent().AddCloser(agentServer)
 	ctx.Parent().AddCloser(dirCloser)
-	ctx.Debugf("Starting agent server for Teleport user %v and socket %v.", ctx.Identity.TeleportUser, socketPath)
+	ctx.Debugf("Starting agent server for Teleport user %v and socket %v.", ctx.Identity.SiriusecUser, socketPath)
 	go func() {
 		if err := agentServer.Serve(); err != nil {
-			ctx.Errorf("agent server for user %q stopped: %v", ctx.Identity.TeleportUser, err)
+			ctx.Errorf("agent server for user %q stopped: %v", ctx.Identity.SiriusecUser, err)
 		}
 	}()
 
@@ -888,8 +888,8 @@ func (s *Server) serveAgent(ctx *srv.ServerContext) error {
 
 // HandleRequest processes global out-of-band requests. Global out-of-band
 // requests are processed in order (this way the originator knows which
-// request we are responding to). If Teleport does not support the request
-// type or an error occurs while processing that request Teleport will reply
+// request we are responding to). If Siriusec does not support the request
+// type or an error occurs while processing that request Siriusec will reply
 // req.Reply(false, nil).
 //
 // For more details: https://tools.ietf.org/html/rfc4254.html#page-4
@@ -932,7 +932,7 @@ func (s *Server) HandleNewConn(ctx context.Context, ccx *sshutils.ConnectionCont
 		},
 		UserMetadata: apievents.UserMetadata{
 			Login:        identityContext.Login,
-			User:         identityContext.TeleportUser,
+			User:         identityContext.SiriusecUser,
 			Impersonator: identityContext.Impersonator,
 		},
 		ConnectionMetadata: apievents.ConnectionMetadata{
@@ -980,7 +980,7 @@ func (s *Server) HandleNewConn(ctx context.Context, ccx *sshutils.ConnectionCont
 		Expiry:  netConfig.GetSessionControlTimeout(),
 		Params: types.AcquireSemaphoreRequest{
 			SemaphoreKind: types.SemaphoreKindConnection,
-			SemaphoreName: identityContext.TeleportUser,
+			SemaphoreName: identityContext.SiriusecUser,
 			MaxLeases:     maxConnections,
 			Holder:        s.uuid,
 		},
@@ -995,7 +995,7 @@ func (s *Server) HandleNewConn(ctx context.Context, ccx *sshutils.ConnectionCont
 				log.WithError(err).Warn("Failed to emit session reject event.")
 			}
 			err = trace.AccessDenied("too many concurrent ssh connections for user %q (max=%d)",
-				identityContext.TeleportUser,
+				identityContext.SiriusecUser,
 				maxConnections,
 			)
 		}
@@ -1077,7 +1077,7 @@ func (s *Server) HandleNewChan(ctx context.Context, ccx *sshutils.ConnectionCont
 					},
 					UserMetadata: apievents.UserMetadata{
 						Login:        identityContext.Login,
-						User:         identityContext.TeleportUser,
+						User:         identityContext.SiriusecUser,
 						Impersonator: identityContext.Impersonator,
 					},
 					ConnectionMetadata: apievents.ConnectionMetadata{
@@ -1094,7 +1094,7 @@ func (s *Server) HandleNewChan(ctx context.Context, ccx *sshutils.ConnectionCont
 				}); err != nil {
 					log.WithError(err).Warn("Failed to emit session reject event.")
 				}
-				rejectChannel(nch, ssh.Prohibited, fmt.Sprintf("too many session channels for user %q (max=%d)", identityContext.TeleportUser, max))
+				rejectChannel(nch, ssh.Prohibited, fmt.Sprintf("too many session channels for user %q (max=%d)", identityContext.SiriusecUser, max))
 				return
 			}
 			decr = d
@@ -1195,7 +1195,7 @@ func (s *Server) handleDirectTCPIPRequest(ctx context.Context, ccx *sshutils.Con
 	scx.Debugf("Opening direct-tcpip channel from %v to %v.", scx.SrcAddr, scx.DstAddr)
 	defer scx.Debugf("Closing direct-tcpip channel from %v to %v.", scx.SrcAddr, scx.DstAddr)
 
-	// Create command to re-exec Teleport which will perform a net.Dial. The
+	// Create command to re-exec Siriusec which will perform a net.Dial. The
 	// reason it's not done directly is because the PAM stack needs to be called
 	// from another process.
 	cmd, err := srv.ConfigureCommand(scx)
@@ -1203,7 +1203,7 @@ func (s *Server) handleDirectTCPIPRequest(ctx context.Context, ccx *sshutils.Con
 		writeStderr(channel, err.Error())
 		return
 	}
-	// Propagate stderr from the spawned Teleport process to log any errors.
+	// Propagate stderr from the spawned Siriusec process to log any errors.
 	cmd.Stderr = os.Stderr
 
 	// Create a pipe for std{in,out} that will be used to transfer data between
@@ -1277,7 +1277,7 @@ Loop:
 		},
 		UserMetadata: apievents.UserMetadata{
 			Login:        scx.Identity.Login,
-			User:         scx.Identity.TeleportUser,
+			User:         scx.Identity.SiriusecUser,
 			Impersonator: scx.Identity.Impersonator,
 		},
 		ConnectionMetadata: apievents.ConnectionMetadata{
@@ -1587,7 +1587,7 @@ func (s *Server) handleRecordingProxy(req *ssh.Request) {
 	log.Debugf("Replied to global request (%v, %v): %v", req.Type, req.WantReply, recordingProxy)
 }
 
-// handleVersionRequest replies with the Teleport version of the server.
+// handleVersionRequest replies with the Siriusec version of the server.
 func (s *Server) handleVersionRequest(req *ssh.Request) {
 	err := req.Reply(true, []byte(teleport.Version))
 	if err != nil {

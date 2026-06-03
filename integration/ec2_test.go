@@ -127,7 +127,7 @@ func TestSimplifiedNodeJoin(t *testing.T) {
 
 	// create and start the auth server
 	authConfig := newAuthConfig(t, clock)
-	authSvc, err := service.NewTeleport(authConfig)
+	authSvc, err := service.NewSiriusec(authConfig)
 	require.NoError(t, err)
 	require.NoError(t, authSvc.Start())
 	t.Cleanup(func() { require.NoError(t, authSvc.Close()) })
@@ -145,7 +145,7 @@ func TestSimplifiedNodeJoin(t *testing.T) {
 
 	// create and start the node
 	nodeConfig := newNodeConfig(t, authConfig.Auth.SSHAddr, tokenName)
-	nodeSvc, err := service.NewTeleport(nodeConfig)
+	nodeSvc, err := service.NewSiriusec(nodeConfig)
 	require.NoError(t, err)
 	require.NoError(t, nodeSvc.Start())
 	t.Cleanup(func() { require.NoError(t, nodeSvc.Close()) })

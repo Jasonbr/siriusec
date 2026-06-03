@@ -88,7 +88,7 @@ func testPortForwarding(t *testing.T, suite *integrationTestSuite) {
 
 	for _, tt := range testCases {
 		t.Run(tt.desc, func(t *testing.T) {
-			// Given a running teleport instance with port forwarding
+			// Given a running siriusec instance with port forwarding
 			// permissions set per the test case
 
 			recCfg, err := types.NewSessionRecordingConfigFromConfigFile(types.SessionRecordingConfigSpecV2{
@@ -105,10 +105,10 @@ func testPortForwarding(t *testing.T, suite *integrationTestSuite) {
 			cfg.SSH.Enabled = true
 			cfg.SSH.AllowTCPForwarding = tt.portForwardingAllowed
 
-			teleport := suite.newTeleportWithConfig(t, nil, nil, cfg)
-			defer teleport.StopAll()
+			siriusec := suite.newTeleportWithConfig(t, nil, nil, cfg)
+			defer siriusec.StopAll()
 
-			site := teleport.GetSiteAPI(Site)
+			site := siriusec.GetSiteAPI(Site)
 
 			// ...and a running dummy server
 			remoteSvr := httptest.NewServer(http.HandlerFunc(
@@ -124,8 +124,8 @@ func testPortForwarding(t *testing.T, suite *integrationTestSuite) {
 			remotePort, err := extractPort(remoteSvr)
 			require.NoError(t, err)
 
-			nodeSSHPort := teleport.GetPortSSHInt()
-			cl, err := teleport.NewClient(t, ClientConfig{
+			nodeSSHPort := siriusec.GetPortSSHInt()
+			cl, err := siriusec.NewClient(t, ClientConfig{
 				Login:   suite.me.Username,
 				Cluster: Site,
 				Host:    Host,

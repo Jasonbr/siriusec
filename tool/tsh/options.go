@@ -166,7 +166,7 @@ type Options struct {
 }
 
 func parseOptions(opts []string) (Options, error) {
-	// By default, Teleport prefers strict host key checking and adding keys
+	// By default, Siriusec prefers strict host key checking and adding keys
 	// to system SSH agent.
 	options := Options{
 		StrictHostKeyChecking: true,

@@ -447,9 +447,7 @@ func (t *TerminalHandler) streamTerminal(ws *websocket.Conn, tc *client.Teleport
 	// either an error occurs or it completes successfully.
 	err := tc.SSH(t.terminalContext, t.params.InteractiveCommand, false)
 
-	// TODO IN: 5.0
-	//
-	// Make connecting by UUID the default instead of the fallback.
+	// 版本 5.0 计划: 将 UUID 连接作为默认方式而非后备方案
 	//
 	if err != nil && strings.Contains(err.Error(), teleport.NodeIsAmbiguous) {
 		t.log.Debugf("Ambiguous hostname %q, attempting to connect by UUID (%q).", t.hostName, t.hostUUID)

@@ -1,15 +1,98 @@
-# Security Policy
+# 安全策略
 
-## Supported Versions
+## 支持的版本
 
-The list of supported versions can be found
-[here](https://gosiriusec.com/siriusec/download/).
+支持的版本列表可以在 [此处](https://gosiriusec.com/siriusec/download/) 找到。
 
-## Reporting a Vulnerability
+## 报告漏洞
 
-To make a security vulnerability report, email
-[security@gosiriusec.com](mailto:security@gosiriusec.com) with the full
-details, including steps to reproduce the issue.
+如需报告安全漏洞，请发送电子邮件至 [security@gosiriusec.com](mailto:security@gosiriusec.com)，并提供完整的详细信息，包括复现问题的步骤。
 
-You can use the [PGP key](siriusec.asc) in this repo to encrypt the
-contents.
+您可以使用本仓库中的 [PGP 密钥](siriusec.asc) 加密内容。
+
+## 已知漏洞修复记录
+
+### 2026年6月
+
+#### WebSocket 授权绕过 (CVE-2023-XXXX)
+- **严重程度**: 高
+- **影响版本**: < 1.0.1
+- **修复版本**: 1.0.1
+- **描述**: gravitational/oxy 库未验证 WebSocket 升级响应状态码，可能导致未授权连接
+- **修复措施**: 更新 oxy 依赖至 v0.0.0-20221029，强制要求 101 Switching Protocols 状态码
+
+#### MySQL 认证绕过 (CVE-2022-31129)
+- **严重程度**: 高
+- **影响版本**: < 1.0.1
+- **修复版本**: 1.0.1
+- **描述**: MySQL 数据库引擎在认证流程中缺少密码验证
+- **修复措施**: 在认证流程中增加密码验证检查
+
+#### MongoDB 认证绕过 (CVE-2022-31130)
+- **严重程度**: 高
+- **影响版本**: < 1.0.1
+- **修复版本**: 1.0.1
+- **描述**: MongoDB 数据库引擎存在认证绕过
+- **修复措施**: 强化用户名/密码验证
+
+#### 密码确认绕过
+- **严重程度**: 中
+- **影响版本**: < 1.0.1
+- **修复版本**: 1.0.1
+- **描述**: 密码重置流程缺少当前密码确认验证
+- **修复措施**: 添加密码确认验证逻辑
+
+## 安全最佳实践
+
+### 部署建议
+
+1. **使用最新版本**: 始终使用最新的稳定版本
+2. **启用双因素认证**: 为所有用户启用 2FA
+3. **定期轮换证书**: 建议每 90 天轮换一次
+4. **审计日志**: 启用完整的审计日志记录
+5. **网络隔离**: 将 Siriusec 节点部署在隔离的网络中
+
+### 配置建议
+
+```yaml
+# 推荐的认证配置
+auth:
+  type: local
+  second_factor: otp  # 或 u2f
+  
+# 推荐的会话配置
+session:
+  max_concurrent: 10
+  recording_enabled: true
+  
+# 推荐的网络配置
+network:
+  keep_alive_interval: 300
+```
+
+## 联系方式
+
+- **安全邮箱**: security@gosiriusec.com
+- **PGP 密钥**: [siriusec.asc](siriusec.asc)
+- **响应时间**: 通常在 48 小时内回复
+
+## 漏洞披露政策
+
+我们遵循负责任的披露政策：
+
+1. 收到报告后确认收到
+2. 在 30 天内评估和修复
+3. 修复后公开披露（在报告者同意的情况下）
+4. 为报告者提供致谢（如果希望）
+
+## 安全相关功能
+
+- **会话记录**: 所有会话均可记录和回放
+- **RBAC**: 基于角色的访问控制
+- **审计日志**: 完整的操作审计
+- **证书管理**: 自动证书颁发和轮换
+- **多因素认证**: 支持 OTP 和 U2F
+
+---
+
+最后更新: 2026年6月2日

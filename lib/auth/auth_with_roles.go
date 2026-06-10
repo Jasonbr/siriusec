@@ -2755,7 +2755,7 @@ func (a *ServerWithRoles) SignDatabaseCSR(ctx context.Context, req *proto.Databa
 //    on the auth server to produce a certificate for configuring a self-hosted
 //    database.
 //  - Remote user using "tctl auth sign --format=db" command with a remote
-//    proxy (e.g. Siriusec Cloud), as long as they can impersonate system
+//    proxy (e.g. Teleport Cloud), as long as they can impersonate system
 //    role Db.
 //  - Database service when initiating connection to a database instance to
 //    produce a client certificate.

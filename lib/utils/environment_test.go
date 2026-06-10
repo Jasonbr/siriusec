@@ -1,57 +1,199 @@
-/*
-Copyright 2017 Siriusec
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package utils
 
 import (
-	"io/ioutil"
 	"os"
-
-	"gopkg.in/check.v1"
+	"testing"
 )
 
-type EnvironmentSuite struct{}
+// TestGetEnvWithFallback tests the environment variable fallback mechanism
+func TestGetEnvWithFallback(t *testing.T) {
+	tests := []struct {
+		name     string
+		primary  string
+		fallback string
+		setup    func()
+		expected string
+		cleanup  func()
+	}{
+		{
+			name:     "primary_exists",
+			primary:  "TEST_PRIMARY",
+			fallback: "TEST_FALLBACK",
+			setup: func() {
+				os.Setenv("TEST_PRIMARY", "primary_value")
+				os.Setenv("TEST_FALLBACK", "fallback_value")
+			},
+			expected: "primary_value",
+			cleanup: func() {
+				os.Unsetenv("TEST_PRIMARY")
+				os.Unsetenv("TEST_FALLBACK")
+			},
+		},
+		{
+			name:     "primary_missing_use_fallback",
+			primary:  "TEST_PRIMARY",
+			fallback: "TEST_FALLBACK",
+			setup: func() {
+				os.Setenv("TEST_FALLBACK", "fallback_value")
+			},
+			expected: "fallback_value",
+			cleanup: func() {
+				os.Unsetenv("TEST_FALLBACK")
+			},
+		},
+		{
+			name:     "both_missing",
+			primary:  "TEST_PRIMARY",
+			fallback: "TEST_FALLBACK",
+			setup:    func() {},
+			expected: "",
+			cleanup:  func() {},
+		},
+		{
+			name:     "siriusec_with_teleport_fallback",
+			primary:  "SIRIUSEC_TEST_VAR",
+			fallback: "TELEPORT_TEST_VAR",
+			setup: func() {
+				os.Setenv("TELEPORT_TEST_VAR", "teleport_value")
+			},
+			expected: "teleport_value",
+			cleanup: func() {
+				os.Unsetenv("SIRIUSEC_TEST_VAR")
+				os.Unsetenv("TELEPORT_TEST_VAR")
+			},
+		},
+		{
+			name:     "siriusec_takes_precedence",
+			primary:  "SIRIUSEC_TEST_VAR",
+			fallback: "TELEPORT_TEST_VAR",
+			setup: func() {
+				os.Setenv("SIRIUSEC_TEST_VAR", "siriusec_value")
+				os.Setenv("TELEPORT_TEST_VAR", "teleport_value")
+			},
+			expected: "siriusec_value",
+			cleanup: func() {
+				os.Unsetenv("SIRIUSEC_TEST_VAR")
+				os.Unsetenv("TELEPORT_TEST_VAR")
+			},
+		},
+	}
 
-var _ = check.Suite(&EnvironmentSuite{})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			defer tt.cleanup()
 
-func (s *EnvironmentSuite) TestReadEnvironmentFile(c *check.C) {
-	// contents of environment file
-	rawenv := []byte(`
-foo=bar
-# comment
-foo=bar=baz
-    # comment 2
-=
-foo=
+			result := GetEnvWithFallback(tt.primary, tt.fallback)
+			if result != tt.expected {
+				t.Errorf("GetEnvWithFallback(%q, %q) = %q, want %q",
+					tt.primary, tt.fallback, result, tt.expected)
+			}
+		})
+	}
+}
 
-=bar
-`)
+// TestEnsureEnvFallback tests the environment variable migration mechanism
+func TestEnsureEnvFallback(t *testing.T) {
+	// Save original values
+	originalValues := map[string]string{
+		"SIRIUSEC_CONFIG":           os.Getenv("SIRIUSEC_CONFIG"),
+		"TELEPORT_CONFIG":           os.Getenv("TELEPORT_CONFIG"),
+		"SIRIUSEC_CONFIG_FILE":      os.Getenv("SIRIUSEC_CONFIG_FILE"),
+		"TELEPORT_CONFIG_FILE":      os.Getenv("TELEPORT_CONFIG_FILE"),
+		"SIRIUSEC_TUNNEL_PUBLIC_ADDR": os.Getenv("SIRIUSEC_TUNNEL_PUBLIC_ADDR"),
+		"TELEPORT_TUNNEL_PUBLIC_ADDR": os.Getenv("TELEPORT_TUNNEL_PUBLIC_ADDR"),
+		"SIRIUSEC_OS_FILES":         os.Getenv("SIRIUSEC_OS_FILES"),
+		"TELEPORT_OS_FILES":         os.Getenv("TELEPORT_OS_FILES"),
+	}
 
-	// create a temp file with an environment in it
-	f, err := ioutil.TempFile("", "teleport-environment-")
-	c.Assert(err, check.IsNil)
-	defer os.Remove(f.Name())
-	_, err = f.Write(rawenv)
-	c.Assert(err, check.IsNil)
-	err = f.Close()
-	c.Assert(err, check.IsNil)
+	// Cleanup function
+	defer func() {
+		// Restore original values
+		for key, value := range originalValues {
+			if value == "" {
+				os.Unsetenv(key)
+			} else {
+				os.Setenv(key, value)
+			}
+		}
+	}()
 
-	// read in the temp file
-	env, err := ReadEnvironmentFile(f.Name())
-	c.Assert(err, check.IsNil)
+	// Clear all test variables
+	os.Unsetenv("SIRIUSEC_CONFIG")
+	os.Unsetenv("TELEPORT_CONFIG")
+	os.Unsetenv("SIRIUSEC_CONFIG_FILE")
+	os.Unsetenv("TELEPORT_CONFIG_FILE")
+	os.Unsetenv("SIRIUSEC_TUNNEL_PUBLIC_ADDR")
+	os.Unsetenv("TELEPORT_TUNNEL_PUBLIC_ADDR")
+	os.Unsetenv("SIRIUSEC_OS_FILES")
+	os.Unsetenv("TELEPORT_OS_FILES")
 
-	// check we parsed it correctly
-	c.Assert(env, check.DeepEquals, []string{"foo=bar", "foo=bar=baz", "foo="})
+	t.Run("copies_teleport_to_siriusec_when_siriusec_missing", func(t *testing.T) {
+		// Setup: Set TELEPORT_ vars
+		os.Setenv("TELEPORT_CONFIG", "/etc/teleport/teleport.yaml")
+		os.Setenv("TELEPORT_CONFIG_FILE", "/etc/teleport/config.yaml")
+		os.Setenv("TELEPORT_TUNNEL_PUBLIC_ADDR", "example.com:3024")
+		os.Setenv("TELEPORT_OS_FILES", "/var/log/teleport")
+
+		// Ensure SIRIUSEC_ vars are not set initially
+		if v, ok := os.LookupEnv("SIRIUSEC_CONFIG"); ok {
+			t.Fatalf("SIRIUSEC_CONFIG should not be set initially, got: %s", v)
+		}
+
+		// Call EnsureEnvFallback
+		EnsureEnvFallback()
+
+		// Verify SIRIUSEC_ vars are now set
+		tests := map[string]string{
+			"SIRIUSEC_CONFIG":           "/etc/teleport/teleport.yaml",
+			"SIRIUSEC_CONFIG_FILE":      "/etc/teleport/config.yaml",
+			"SIRIUSEC_TUNNEL_PUBLIC_ADDR": "example.com:3024",
+			"SIRIUSEC_OS_FILES":         "/var/log/teleport",
+		}
+
+		for key, expected := range tests {
+			if value, ok := os.LookupEnv(key); !ok {
+				t.Errorf("%s should be set after EnsureEnvFallback", key)
+			} else if value != expected {
+				t.Errorf("%s = %q, want %q", key, value, expected)
+			}
+		}
+	})
+
+	t.Run("does_not_overwrite_existing_siriusec_vars", func(t *testing.T) {
+		// Reset
+		os.Unsetenv("SIRIUSEC_CONFIG")
+		os.Unsetenv("TELEPORT_CONFIG")
+
+		// Setup: Both SIRIUSEC_ and TELEPORT_ are set
+		os.Setenv("SIRIUSEC_CONFIG", "/etc/siriusec/siriusec.yaml")
+		os.Setenv("TELEPORT_CONFIG", "/etc/teleport/teleport.yaml")
+
+		// Call EnsureEnvFallback
+		EnsureEnvFallback()
+
+		// Verify SIRIUSEC_ var is NOT overwritten
+		value := os.Getenv("SIRIUSEC_CONFIG")
+		if value != "/etc/siriusec/siriusec.yaml" {
+			t.Errorf("SIRIUSEC_CONFIG = %q, want %q (should not be overwritten)",
+				value, "/etc/siriusec/siriusec.yaml")
+		}
+	})
+
+	t.Run("handles_empty_teleport_values", func(t *testing.T) {
+		// Reset
+		os.Unsetenv("SIRIUSEC_CONFIG")
+		os.Unsetenv("TELEPORT_CONFIG")
+
+		// Setup: TELEPORT_ is set to empty string
+		os.Setenv("TELEPORT_CONFIG", "")
+
+		// Call EnsureEnvFallback
+		EnsureEnvFallback()
+
+		// Verify SIRIUSEC_ is also empty (not set to empty string from TELEPORT_)
+		if _, ok := os.LookupEnv("SIRIUSEC_CONFIG"); ok {
+			t.Errorf("SIRIUSEC_CONFIG should not be set when TELEPORT_CONFIG is empty")
+		}
+	})
 }

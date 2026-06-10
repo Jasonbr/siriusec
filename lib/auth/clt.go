@@ -62,7 +62,7 @@ const (
 // Client is the Auth API client. It works by connecting to auth servers
 // via gRPC and HTTP.
 //
-// When Siriusec servers connect to auth API, they usually establish an SSH
+// When Teleport servers connect to auth API, they usually establish an SSH
 // tunnel first, and then do HTTP-over-SSH. This client is wrapped by auth.TunClient
 // in lib/auth/tun.go
 //
@@ -79,7 +79,7 @@ type Client struct {
 // Make sure Client implements all the necessary methods.
 var _ ClientI = &Client{}
 
-// NewClient creates a new API client with a connection to a Siriusec server.
+// NewClient creates a new API client with a connection to a Teleport server.
 //
 // The client will use the first credentials and the given dialer. If
 // no dialer is given, the first address will be used. This address must
@@ -161,7 +161,7 @@ func NewHTTPClient(cfg client.Config, tls *tls.Config, params ...roundtrip.Clien
 		TLSClientConfig:       tls,
 
 		// Increase the size of the connection pool. This substantially improves the
-		// performance of Siriusec under load as it reduces the number of TLS
+		// performance of Teleport under load as it reduces the number of TLS
 		// handshakes performed.
 		MaxIdleConns:        defaults.HTTPMaxIdleConns,
 		MaxIdleConnsPerHost: defaults.HTTPMaxIdleConnsPerHost,

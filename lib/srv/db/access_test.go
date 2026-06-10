@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -544,7 +544,7 @@ func TestAccessDisabled(t *testing.T) {
 	// Try to connect to the database as this user.
 	_, err := testCtx.postgresClient(ctx, userName, "postgres", dbUser, dbName)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "this Sirius cluster is not licensed for database access")
+	require.Contains(t, err.Error(), "this Siriusec cluster is not licensed for database access")
 }
 
 // TestPostgresInjectionDatabase makes sure Postgres connection is not
@@ -681,18 +681,18 @@ func (c *testContext) startHandlingConnections() {
 
 // postgresClient connects to test Postgres through database access as a
 // specified Siriusec user and database account.
-func (c *testContext) postgresClient(ctx context.Context, teleportUser, dbService, dbUser, dbName string) (*pgconn.PgConn, error) {
-	return c.postgresClientWithAddr(ctx, c.mux.DB().Addr().String(), teleportUser, dbService, dbUser, dbName)
+func (c *testContext) postgresClient(ctx context.Context, siriusecUser, dbService, dbUser, dbName string) (*pgconn.PgConn, error) {
+	return c.postgresClientWithAddr(ctx, c.mux.DB().Addr().String(), siriusecUser, dbService, dbUser, dbName)
 }
 
 // postgresClientWithAddr is like postgresClient but allows to override connection address.
-func (c *testContext) postgresClientWithAddr(ctx context.Context, address, teleportUser, dbService, dbUser, dbName string) (*pgconn.PgConn, error) {
+func (c *testContext) postgresClientWithAddr(ctx context.Context, address, siriusecUser, dbService, dbUser, dbName string) (*pgconn.PgConn, error) {
 	return postgres.MakeTestClient(ctx, common.TestClientConfig{
 		AuthClient: c.authClient,
 		AuthServer: c.authServer,
 		Address:    address,
 		Cluster:    c.clusterName,
-		Username:   teleportUser,
+		Username:   siriusecUser,
 		RouteToDatabase: tlsca.RouteToDatabase{
 			ServiceName: dbService,
 			Protocol:    defaults.ProtocolPostgres,
@@ -704,18 +704,18 @@ func (c *testContext) postgresClientWithAddr(ctx context.Context, address, telep
 
 // mysqlClient connects to test MySQL through database access as a specified
 // Siriusec user and database account.
-func (c *testContext) mysqlClient(teleportUser, dbService, dbUser string) (*client.Conn, error) {
-	return c.mysqlClientWithAddr(c.mysqlListener.Addr().String(), teleportUser, dbService, dbUser)
+func (c *testContext) mysqlClient(siriusecUser, dbService, dbUser string) (*client.Conn, error) {
+	return c.mysqlClientWithAddr(c.mysqlListener.Addr().String(), siriusecUser, dbService, dbUser)
 }
 
 // mysqlClientWithAddr is like mysqlClient but allows to override connection address.
-func (c *testContext) mysqlClientWithAddr(address, teleportUser, dbService, dbUser string) (*client.Conn, error) {
+func (c *testContext) mysqlClientWithAddr(address, siriusecUser, dbService, dbUser string) (*client.Conn, error) {
 	return mysql.MakeTestClient(common.TestClientConfig{
 		AuthClient: c.authClient,
 		AuthServer: c.authServer,
 		Address:    address,
 		Cluster:    c.clusterName,
-		Username:   teleportUser,
+		Username:   siriusecUser,
 		RouteToDatabase: tlsca.RouteToDatabase{
 			ServiceName: dbService,
 			Protocol:    defaults.ProtocolMySQL,
@@ -726,18 +726,18 @@ func (c *testContext) mysqlClientWithAddr(address, teleportUser, dbService, dbUs
 
 // mongoClient connects to test MongoDB through database access as a
 // specified Siriusec user and database account.
-func (c *testContext) mongoClient(ctx context.Context, teleportUser, dbService, dbUser string, opts ...*options.ClientOptions) (*mongo.Client, error) {
-	return c.mongoClientWithAddr(ctx, c.webListener.Addr().String(), teleportUser, dbService, dbUser, opts...)
+func (c *testContext) mongoClient(ctx context.Context, siriusecUser, dbService, dbUser string, opts ...*options.ClientOptions) (*mongo.Client, error) {
+	return c.mongoClientWithAddr(ctx, c.webListener.Addr().String(), siriusecUser, dbService, dbUser, opts...)
 }
 
 // mongoClientWithAddr is like mongoClient but allows to override connection address.
-func (c *testContext) mongoClientWithAddr(ctx context.Context, address, teleportUser, dbService, dbUser string, opts ...*options.ClientOptions) (*mongo.Client, error) {
+func (c *testContext) mongoClientWithAddr(ctx context.Context, address, siriusecUser, dbService, dbUser string, opts ...*options.ClientOptions) (*mongo.Client, error) {
 	return mongodb.MakeTestClient(ctx, common.TestClientConfig{
 		AuthClient: c.authClient,
 		AuthServer: c.authServer,
 		Address:    address,
 		Cluster:    c.clusterName,
-		Username:   teleportUser,
+		Username:   siriusecUser,
 		RouteToDatabase: tlsca.RouteToDatabase{
 			ServiceName: dbService,
 			Protocol:    defaults.ProtocolMongoDB,
@@ -850,7 +850,7 @@ func setupTestContext(ctx context.Context, t *testing.T, withDatabases ...withDa
 	require.NoError(t, err)
 	proxyLockWatcher, err := services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentProxy,
+			Component: siriusec.ComponentProxy,
 			Client:    proxyAuthClient,
 		},
 	})
@@ -924,7 +924,7 @@ func (c *testContext) setupDatabaseServer(ctx context.Context, t *testing.T, hos
 	// Lock watcher and authorizer for database service.
 	lockWatcher, err := services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentDatabase,
+			Component: siriusec.ComponentDatabase,
 			Client:    c.authClient,
 		},
 	})
@@ -986,7 +986,7 @@ func withSelfHostedPostgres(name string) withDatabaseOption {
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolPostgres,
 				URI:           net.JoinHostPort("localhost", postgresServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,
@@ -1016,7 +1016,7 @@ func withRDSPostgres(name, authToken string) withDatabaseOption {
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolPostgres,
 				URI:           net.JoinHostPort("localhost", postgresServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,
@@ -1051,7 +1051,7 @@ func withRedshiftPostgres(name, authToken string) withDatabaseOption {
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolPostgres,
 				URI:           net.JoinHostPort("localhost", postgresServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,
@@ -1090,7 +1090,7 @@ func withCloudSQLPostgres(name, authToken string) withDatabaseOption {
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolPostgres,
 				URI:           net.JoinHostPort("localhost", postgresServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,
@@ -1125,7 +1125,7 @@ func withSelfHostedMySQL(name string) withDatabaseOption {
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolMySQL,
 				URI:           net.JoinHostPort("localhost", mysqlServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,
@@ -1156,7 +1156,7 @@ func withRDSMySQL(name, authUser, authToken string) withDatabaseOption {
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolMySQL,
 				URI:           net.JoinHostPort("localhost", mysqlServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,
@@ -1195,7 +1195,7 @@ func withCloudSQLMySQL(name, authUser, authToken string) withDatabaseOption {
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolMySQL,
 				URI:           net.JoinHostPort("localhost", mysqlServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,
@@ -1230,7 +1230,7 @@ func withSelfHostedMongo(name string, opts ...mongodb.TestServerOption) withData
 			types.DatabaseServerSpecV3{
 				Protocol:      defaults.ProtocolMongoDB,
 				URI:           net.JoinHostPort("localhost", mongoServer.Port()),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      constants.APIDomain,
 				HostID:        testCtx.hostID,
 				DynamicLabels: dynamicLabels,

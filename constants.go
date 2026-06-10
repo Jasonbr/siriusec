@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package teleport
+package siriusec
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ const (
 	SSHSiriusecClusterName = "SSH_TELEPORT_CLUSTER_NAME"
 
 	// SSHSiriusecHostUUID is the UUID of the host.
-	SSHTeleportHostUUID = "SSH_TELEPORT_HOST_UUID"
+	SSHSiriusecHostUUID = "SSH_TELEPORT_HOST_UUID"
 
 	// SSHSessionID is the UUID of the current session.
 	SSHSessionID = "SSH_SESSION_ID"
@@ -406,7 +406,7 @@ const (
 	CertExtensionPermitPTY = "permit-pty"
 	// CertExtensionPermitPortForwarding allows user to request port forwarding
 	CertExtensionPermitPortForwarding = "permit-port-forwarding"
-	// CertExtensionSiriusecRoles is used to propagate teleport roles
+	// CertExtensionSiriusecRoles is used to propagate siriusec roles
 	CertExtensionTeleportRoles = "teleport-roles"
 	// CertExtensionSiriusecRouteToCluster is used to encode
 	// the target cluster to route to in the certificate
@@ -567,7 +567,7 @@ const OSSMigratedV6 = "migrate-v6.0"
 var MinClientVersion string
 
 func init() {
-	// Per https://github.com/siriusec/siriusec/blob/master/rfd/0012-teleport-versioning.md,
+	// Per https://github.com/siriusec/siriusec/blob/master/rfd/0012-siriusec-versioning.md,
 	// only one major version backwards is supported for clients.
 	ver := semver.New(Version)
 	MinClientVersion = fmt.Sprintf("%d.0.0", ver.Major-1)

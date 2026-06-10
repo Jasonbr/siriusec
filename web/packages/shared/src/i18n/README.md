@@ -23,7 +23,7 @@ web/packages/shared/src/i18n/
 在前端项目中安装必要的包:
 
 ```bash
-cd web/packages/teleport
+cd web/packages/siriusec
 npm install i18next react-i18next i18next-browser-languagedetector
 ```
 

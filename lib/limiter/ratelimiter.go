@@ -159,5 +159,5 @@ func (r *Rate) UnmarshalJSON(value []byte) error {
 
 const (
 	DefaultMaxNumberOfUsers = 100000
-	DefaultRate             = 100000000
+	DefaultRate             = 100
 )

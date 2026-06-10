@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 This file contains a single global variable controlling which edition
-of Teleport is running
+of Siriusec is running
 
 This flag contains various global booleans that are set during
-Teleport initialization.
+Siriusec initialization.
 
-These are NOT for configuring Teleport: use regular Config facilities for that,
+These are NOT for configuring Siriusec: use regular Config facilities for that,
 preferably tailored to specific services, i.e proxy config, auth config, etc
 
 These are for being set once, at the beginning of the process, and for
@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	// insecureDevMode is set to 'true' when teleport is started with a hidden
+	// insecureDevMode is set to 'true' when siriusec is started with a hidden
 	// --insecure flag. This mode is only useful for learning Siriusec and following
 	// quick starts: it disables HTTPS certificate validation
 	insecureDevMode bool

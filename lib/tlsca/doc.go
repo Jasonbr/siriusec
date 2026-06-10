@@ -16,5 +16,5 @@ limitations under the License.
 
 // Package tlsca provides internal TLS certificate authority used
 // for mutual TLS authentication with the auth server and internal
-// teleport components and external clients
+// siriusec components and external clients
 package tlsca

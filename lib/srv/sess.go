@@ -27,7 +27,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/bpf"
@@ -53,7 +53,7 @@ const (
 
 var serverSessions = prometheus.NewGauge(
 	prometheus.GaugeOpts{
-		Name: teleport.MetricServerInteractiveSessions,
+		Name: siriusec.MetricServerInteractiveSessions,
 		Help: "Number of active sessions to this host",
 	},
 )
@@ -87,7 +87,7 @@ func NewSessionRegistry(srv Server) (*SessionRegistry, error) {
 
 	return &SessionRegistry{
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.Component(teleport.ComponentSession, srv.Component()),
+			trace.Component: siriusec.Component(siriusec.ComponentSession, srv.Component()),
 		}),
 		srv:      srv,
 		sessions: make(map[rsession.ID]*session),
@@ -123,7 +123,7 @@ func (s *SessionRegistry) Close() {
 }
 
 // emitSessionJoinEvent emits a session join event to both the Audit Log as
-// well as sending a "x-teleport-event" global request on the SSH connection.
+// well as sending a "x-siriusec-event" global request on the SSH connection.
 func (s *SessionRegistry) emitSessionJoinEvent(ctx *ServerContext) {
 	sessionJoinEvent := &apievents.SessionJoin{
 		Metadata: apievents.Metadata{
@@ -162,14 +162,14 @@ func (s *SessionRegistry) emitSessionJoinEvent(ctx *ServerContext) {
 	}
 
 	// Notify all members of the party that a new member has joined over the
-	// "x-teleport-event" channel.
+	// "x-siriusec-event" channel.
 	for _, p := range session.getParties() {
 		eventPayload, err := json.Marshal(sessionJoinEvent)
 		if err != nil {
 			s.log.Warnf("Unable to marshal %v for %v: %v.", events.SessionJoinEvent, p.sconn.RemoteAddr(), err)
 			continue
 		}
-		_, _, err = p.sconn.SendRequest(teleport.SessionEvent, false, eventPayload)
+		_, _, err = p.sconn.SendRequest(siriusec.SessionEvent, false, eventPayload)
 		if err != nil {
 			s.log.Warnf("Unable to send %v to %v: %v.", events.SessionJoinEvent, p.sconn.RemoteAddr(), err)
 			continue
@@ -191,13 +191,16 @@ func (s *SessionRegistry) OpenSession(ch ssh.Channel, req *ssh.Request, ctx *Ser
 		}
 
 		// Emit session join event to both the Audit Log as well as over the
-		// "x-teleport-event" channel in the SSH connection.
+		// "x-siriusec-event" channel in the SSH connection.
 		s.emitSessionJoinEvent(ctx)
 
 		return nil
 	}
 	// session not found? need to create one. start by getting/generating an ID for it
 	sid, found := ctx.GetEnv(sshutils.SessionEnvVar)
+	if !found {
+		sid, found = ctx.GetEnv("TELEPORT_SESSION")
+	}
 	if !found {
 		sid = string(rsession.NewID())
 		ctx.SetEnv(sshutils.SessionEnvVar, sid)
@@ -248,7 +251,7 @@ func (s *SessionRegistry) OpenExecSession(channel ssh.Channel, req *ssh.Request,
 }
 
 // emitSessionLeaveEvent emits a session leave event to both the Audit Log as
-// well as sending a "x-teleport-event" global request on the SSH connection.
+// well as sending a "x-siriusec-event" global request on the SSH connection.
 func (s *SessionRegistry) emitSessionLeaveEvent(party *party) {
 	sessionLeaveEvent := &apievents.SessionLeave{
 		Metadata: apievents.Metadata{
@@ -277,14 +280,14 @@ func (s *SessionRegistry) emitSessionLeaveEvent(party *party) {
 	}
 
 	// Notify all members of the party that a new member has left over the
-	// "x-teleport-event" channel.
+	// "x-siriusec-event" channel.
 	for _, p := range party.s.getParties() {
 		eventPayload, err := utils.FastMarshal(sessionLeaveEvent)
 		if err != nil {
 			s.log.Warnf("Unable to marshal %v for %v: %v.", events.SessionJoinEvent, p.sconn.RemoteAddr(), err)
 			continue
 		}
-		_, _, err = p.sconn.SendRequest(teleport.SessionEvent, false, eventPayload)
+		_, _, err = p.sconn.SendRequest(siriusec.SessionEvent, false, eventPayload)
 		if err != nil {
 			s.log.Warnf("Unable to send %v to %v: %v.", events.SessionJoinEvent, p.sconn.RemoteAddr(), err)
 			continue
@@ -300,7 +303,7 @@ func (s *SessionRegistry) leaveSession(party *party) error {
 	defer s.mu.Unlock()
 
 	// Emit session leave event to both the Audit Log as well as over the
-	// "x-teleport-event" channel in the SSH connection.
+	// "x-siriusec-event" channel in the SSH connection.
 	s.emitSessionLeaveEvent(party)
 
 	// Remove member from in-members representation of party.
@@ -454,7 +457,7 @@ func (s *SessionRegistry) NotifyWinChange(params rsession.TerminalParams, ctx *S
 		}
 
 		// Send the message as a global request.
-		_, _, err = p.sconn.SendRequest(teleport.SessionEvent, false, eventPayload)
+		_, _, err = p.sconn.SendRequest(siriusec.SessionEvent, false, eventPayload)
 		if err != nil {
 			s.log.Warnf("Unable to resize event to %v: %v.", p.sconn.RemoteAddr(), err)
 			continue
@@ -540,8 +543,8 @@ func newSession(id rsession.ID, r *SessionRegistry, ctx *ServerContext) (*sessio
 	rsess := rsession.Session{
 		ID: id,
 		TerminalParams: rsession.TerminalParams{
-			W: teleport.DefaultTerminalWidth,
-			H: teleport.DefaultTerminalHeight,
+			W: siriusec.DefaultTerminalWidth,
+			H: siriusec.DefaultTerminalHeight,
 		},
 		Login:          ctx.Identity.Login,
 		Created:        startTime,
@@ -591,7 +594,7 @@ func newSession(id rsession.ID, r *SessionRegistry, ctx *ServerContext) (*sessio
 
 	sess := &session{
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.Component(teleport.ComponentSession, r.srv.Component()),
+			trace.Component: siriusec.Component(siriusec.ComponentSession, r.srv.Component()),
 		}),
 		id:           id,
 		registry:     r,
@@ -668,7 +671,7 @@ func (s *session) startInteractive(ch ssh.Channel, ctx *ServerContext) error {
 	p := newParty(s, ch, ctx)
 
 	// Nodes discard events in cases when proxies are already recording them.
-	if s.registry.srv.Component() == teleport.ComponentNode &&
+	if s.registry.srv.Component() == siriusec.ComponentNode &&
 		services.IsRecordAtProxy(ctx.SessionRecordingConfig.GetMode()) {
 		s.recorder = &events.DiscardStream{}
 	} else {
@@ -686,7 +689,7 @@ func (s *session) startInteractive(ch ssh.Channel, ctx *ServerContext) error {
 			Namespace:    ctx.srv.GetNamespace(),
 			ServerID:     ctx.srv.HostUUID(),
 			RecordOutput: ctx.SessionRecordingConfig.GetMode() != types.RecordOff,
-			Component:    teleport.Component(teleport.ComponentSession, ctx.srv.Component()),
+			Component:    siriusec.Component(siriusec.ComponentSession, ctx.srv.Component()),
 			ClusterName:  ctx.ClusterName,
 		})
 		if err != nil {
@@ -800,8 +803,8 @@ func (s *session) startInteractive(ch ssh.Channel, ctx *ServerContext) error {
 		s.log.Debugf("Copying from PTY to writer completed with error %v.", err)
 
 		// once everything has been copied, notify the goroutine below. if this code
-		// is running in a teleport node, when the exec.Cmd is done it will close
-		// the PTY, allowing io.Copy to return. if this is a teleport forwarding
+		// is running in a siriusec node, when the exec.Cmd is done it will close
+		// the PTY, allowing io.Copy to return. if this is a siriusec forwarding
 		// node, when the remote side closes the channel (which is what s.term.PTY()
 		// returns) io.Copy will return.
 		doneCh <- true
@@ -866,7 +869,7 @@ func (s *session) startExec(channel ssh.Channel, ctx *ServerContext) error {
 	var err error
 
 	// Nodes discard events in cases when proxies are already recording them.
-	if s.registry.srv.Component() == teleport.ComponentNode &&
+	if s.registry.srv.Component() == siriusec.ComponentNode &&
 		services.IsRecordAtProxy(ctx.SessionRecordingConfig.GetMode()) {
 		s.recorder = &events.DiscardStream{}
 	} else {
@@ -884,7 +887,7 @@ func (s *session) startExec(channel ssh.Channel, ctx *ServerContext) error {
 			Namespace:    ctx.srv.GetNamespace(),
 			ServerID:     ctx.srv.HostUUID(),
 			RecordOutput: ctx.SessionRecordingConfig.GetMode() != types.RecordOff,
-			Component:    teleport.Component(teleport.ComponentSession, ctx.srv.Component()),
+			Component:    siriusec.Component(siriusec.ComponentSession, ctx.srv.Component()),
 			ClusterName:  ctx.ClusterName,
 		})
 		if err != nil {
@@ -1076,7 +1079,7 @@ func (s *session) newStreamer(ctx *ServerContext) (events.Streamer, error) {
 
 func sessionsStreamingUploadDir(ctx *ServerContext) string {
 	return filepath.Join(
-		ctx.srv.GetDataDir(), teleport.LogsDir, teleport.ComponentUpload,
+		ctx.srv.GetDataDir(), siriusec.LogsDir, siriusec.ComponentUpload,
 		events.StreamingLogsDir, ctx.srv.GetNamespace(),
 	)
 }
@@ -1170,7 +1173,7 @@ func (s *session) heartbeat(ctx *ServerContext) {
 	// If sessions are being recorded at the proxy, an identical version of this
 	// goroutine is running in the proxy, which means it does not need to run here.
 	if services.IsRecordAtProxy(ctx.SessionRecordingConfig.GetMode()) &&
-		s.registry.srv.Component() == teleport.ComponentNode {
+		s.registry.srv.Component() == siriusec.ComponentNode {
 		return
 	}
 
@@ -1375,7 +1378,7 @@ type party struct {
 func newParty(s *session, ch ssh.Channel, ctx *ServerContext) *party {
 	return &party{
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.Component(teleport.ComponentSession, ctx.srv.Component()),
+			trace.Component: siriusec.Component(siriusec.ComponentSession, ctx.srv.Component()),
 		}),
 		user:      ctx.Identity.SiriusecUser,
 		login:     ctx.Identity.Login,

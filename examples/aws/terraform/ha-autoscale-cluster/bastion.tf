@@ -11,8 +11,8 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   subnet_id                   = element(aws_subnet.public.*.id, 0)
   tags = {
-    TeleportCluster = var.cluster_name
-    TeleportRole    = "bastion"
+    SiriusecCluster = var.cluster_name
+    SiriusecRole    = "bastion"
   }
 }
 
@@ -21,7 +21,7 @@ resource "aws_security_group" "bastion" {
   name   = "${var.cluster_name}-bastion"
   vpc_id = local.vpc_id
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 

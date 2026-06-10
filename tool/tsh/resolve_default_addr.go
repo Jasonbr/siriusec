@@ -21,7 +21,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strconv"
@@ -41,7 +40,7 @@ type raceResult struct {
 // read from a ping response body before abandoning the read. A minimal ping
 // response is about 256 bytes, so this should be more than enough for a valid
 // response without being too onerous on the client side if we hit a non-
-// teleport responder by mistake.
+// siriusec responder by mistake.
 const maxPingBodySize = 16 * 1024
 
 // logResponseBody reads and dumps a response body to the log at the supplied
@@ -56,7 +55,7 @@ func logResponseBody(level logrus.Level, bodyStream io.Reader) {
 	//     context originally supplied to the request that initiated this
 	//     response, so no need to have an independent reading timeout
 	//     here.
-	body, err := ioutil.ReadAll(io.LimitReader(bodyStream, maxPingBodySize))
+	body, err := io.ReadAll(io.LimitReader(bodyStream, maxPingBodySize))
 	if err != nil {
 		// This is only for debugging purposes, so it's safe to just give up here.
 		log.WithError(err).Debug("Could not read failed racer response body")

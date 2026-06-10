@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"sync/atomic"
@@ -84,7 +83,7 @@ func RoundtripWithConn(conn net.Conn) (string, error) {
 		return "", err
 	}
 	defer re.Body.Close()
-	out, err := ioutil.ReadAll(re.Body)
+	out, err := io.ReadAll(io.LimitReader(re.Body, 10<<20))
 	if err != nil {
 		return "", err
 	}

@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/session"
 	"github.com/siriusec/siriusec/lib/utils"
 	"github.com/gravitational/trace"
@@ -76,7 +76,7 @@ var (
 const (
 	// endpointPropertyKey
 	endpointPropertyKey = "endpoint"
-	// credentialsPath is used to supply credentials to teleport via JSON-typed service account key file
+	// credentialsPath is used to supply credentials to siriusec via JSON-typed service account key file
 	credentialsPath = "credentialsPath"
 	// projectID is used to to lookup GCS resources for a given GCP project
 	projectID = "projectID"
@@ -197,7 +197,7 @@ func NewHandler(ctx context.Context, cancelFunc context.CancelFunc, cfg Config, 
 	}
 	h := &Handler{
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.Component(teleport.SchemeGCS),
+			trace.Component: siriusec.Component(siriusec.SchemeGCS),
 		}),
 		Config:        cfg,
 		gcsClient:     client,
@@ -261,7 +261,7 @@ func (h *Handler) Upload(ctx context.Context, sessionID session.ID, reader io.Re
 	if err != nil {
 		return "", convertGCSError(err)
 	}
-	return fmt.Sprintf("%v://%v/%v", teleport.SchemeGCS, h.Bucket, path), nil
+	return fmt.Sprintf("%v://%v/%v", siriusec.SchemeGCS, h.Bucket, path), nil
 }
 
 // Download downloads recorded session from GCS bucket and writes the results into writer

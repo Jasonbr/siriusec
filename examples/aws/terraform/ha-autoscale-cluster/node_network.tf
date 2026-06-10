@@ -1,4 +1,4 @@
-// Node subnets are for teleport nodes joining the cluster
+// Node subnets are for siriusec nodes joining the cluster
 // Nodes are not accessible via internet and are accessed
 // via emergency access bastions or proxies
 resource "aws_route_table" "node" {
@@ -6,7 +6,7 @@ resource "aws_route_table" "node" {
   vpc_id = local.vpc_id
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -25,7 +25,7 @@ resource "aws_subnet" "node" {
   cidr_block        = cidrsubnet(var.vpc_cidr, 6, count.index + 1)
   availability_zone = element(local.azs, count.index)
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -42,7 +42,7 @@ resource "aws_security_group" "node" {
   name   = "${var.cluster_name}-node"
   vpc_id = local.vpc_id
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 

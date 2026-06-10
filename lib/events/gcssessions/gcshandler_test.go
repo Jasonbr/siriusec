@@ -46,7 +46,7 @@ func TestFakeStreams(t *testing.T) {
 
 	handler, err := NewHandler(ctx, cancelFunc, Config{
 		Endpoint: server.URL(),
-		Bucket:   fmt.Sprintf("teleport-test-%v", uuid.New()),
+		Bucket:   fmt.Sprintf("siriusec-test-%v", uuid.New()),
 	}, server.Client())
 	require.Nil(t, err)
 	defer handler.Close()

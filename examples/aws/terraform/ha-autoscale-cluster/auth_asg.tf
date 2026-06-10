@@ -1,4 +1,4 @@
-// Autoscaling group for Teleport Authentication servers.
+// Autoscaling group for Siriusec Authentication servers.
 // Auth servers are most privileged in terms of IAM roles
 // as they are allowed to publish to SSM parameter store,
 // write certificates to encrypted S3 bucket.
@@ -18,13 +18,13 @@ resource "aws_autoscaling_group" "auth" {
   target_group_arns = [aws_lb_target_group.auth.arn]
 
   tag {
-    key                 = "TeleportCluster"
+    key                 = "SiriusecCluster"
     value               = var.cluster_name
     propagate_at_launch = true
   }
 
   tag {
-    key                 = "TeleportRole"
+    key                 = "SiriusecRole"
     value               = "auth"
     propagate_at_launch = true
   }
@@ -54,15 +54,15 @@ resource "aws_launch_configuration" "auth" {
       locks_table_name         = aws_dynamodb_table.locks.name
       auth_server_addr         = aws_lb.auth.dns_name
       cluster_name             = var.cluster_name
-      dynamo_table_name        = aws_dynamodb_table.teleport.name
-      dynamo_events_table_name = aws_dynamodb_table.teleport_events.name
+      dynamo_table_name        = aws_dynamodb_table.siriusec.name
+      dynamo_events_table_name = aws_dynamodb_table.siriusec_events.name
       email                    = var.email
       domain_name              = var.route53_domain
       s3_bucket                = var.s3_bucket_name
       influxdb_addr            = "http://${aws_lb.monitor.dns_name}:8086"
       license_path             = var.license_path
       telegraf_version         = var.telegraf_version
-      teleport_uid             = var.teleport_uid
+      siriusec_uid             = var.siriusec_uid
       use_acm                  = var.use_acm
     }
   )

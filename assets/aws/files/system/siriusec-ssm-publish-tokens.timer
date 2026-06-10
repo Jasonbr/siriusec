@@ -1,0 +1,8 @@
+[Unit]
+Description=Timer rotating siriusec tokens in SSM
+ConditionPathExists=/etc/siriusec.d/role.auth
+
+[Timer]
+OnBootSec=3min
+OnCalendar=hourly
+Persistent=true

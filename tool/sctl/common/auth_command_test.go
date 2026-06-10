@@ -241,9 +241,9 @@ func (c *mockClient) GenerateDatabaseCert(ctx context.Context, req *proto.Databa
 }
 
 func TestCheckKubeCluster(t *testing.T) {
-	const teleportCluster = "local-teleport"
+	const siriusecCluster = "local-siriusec"
 	clusterName, err := services.NewClusterNameWithRandomID(types.ClusterNameSpecV2{
-		ClusterName: teleportCluster,
+		ClusterName: siriusecCluster,
 	})
 	require.NoError(t, err)
 	client := &mockClient{
@@ -266,7 +266,7 @@ func TestCheckKubeCluster(t *testing.T) {
 		{
 			desc:               "local cluster, valid kube cluster",
 			kubeCluster:        "foo",
-			leafCluster:        teleportCluster,
+			leafCluster:        siriusecCluster,
 			registeredClusters: []*types.KubernetesCluster{{Name: "foo"}},
 			outputFormat:       identityfile.FormatKubernetes,
 			want:               "foo",
@@ -275,7 +275,7 @@ func TestCheckKubeCluster(t *testing.T) {
 		{
 			desc:               "local cluster, empty kube cluster",
 			kubeCluster:        "",
-			leafCluster:        teleportCluster,
+			leafCluster:        siriusecCluster,
 			registeredClusters: []*types.KubernetesCluster{{Name: "foo"}},
 			outputFormat:       identityfile.FormatKubernetes,
 			want:               "foo",
@@ -284,7 +284,7 @@ func TestCheckKubeCluster(t *testing.T) {
 		{
 			desc:               "local cluster, empty kube cluster, no registered kube clusters",
 			kubeCluster:        "",
-			leafCluster:        teleportCluster,
+			leafCluster:        siriusecCluster,
 			registeredClusters: []*types.KubernetesCluster{},
 			outputFormat:       identityfile.FormatKubernetes,
 			want:               "",
@@ -293,7 +293,7 @@ func TestCheckKubeCluster(t *testing.T) {
 		{
 			desc:               "local cluster, invalid kube cluster",
 			kubeCluster:        "bar",
-			leafCluster:        teleportCluster,
+			leafCluster:        siriusecCluster,
 			registeredClusters: []*types.KubernetesCluster{{Name: "foo"}},
 			outputFormat:       identityfile.FormatKubernetes,
 			assertErr:          require.Error,
@@ -301,7 +301,7 @@ func TestCheckKubeCluster(t *testing.T) {
 		{
 			desc:               "remote cluster, empty kube cluster",
 			kubeCluster:        "",
-			leafCluster:        "remote-teleport",
+			leafCluster:        "remote-siriusec",
 			registeredClusters: []*types.KubernetesCluster{{Name: "foo"}},
 			outputFormat:       identityfile.FormatKubernetes,
 			want:               "",
@@ -310,7 +310,7 @@ func TestCheckKubeCluster(t *testing.T) {
 		{
 			desc:               "remote cluster, non-empty kube cluster",
 			kubeCluster:        "bar",
-			leafCluster:        "remote-teleport",
+			leafCluster:        "remote-siriusec",
 			registeredClusters: []*types.KubernetesCluster{{Name: "foo"}},
 			outputFormat:       identityfile.FormatKubernetes,
 			want:               "bar",

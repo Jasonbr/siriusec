@@ -26,7 +26,7 @@ func NewCAService(b backend.Backend) *CA {
 // DeleteAllCertAuthorities deletes all certificate authorities of a certain type
 func (s *CA) DeleteAllCertAuthorities(caType types.CertAuthType) error {
 	startKey := backend.Key(authoritiesPrefix, string(caType))
-	return s.DeleteRange(context.TODO(), startKey, backend.RangeEnd(startKey))
+	return s.DeleteRange(context.Background(), startKey, backend.RangeEnd(startKey))
 }
 
 // CreateCertAuthority updates or inserts a new certificate authority
@@ -44,7 +44,7 @@ func (s *CA) CreateCertAuthority(ca types.CertAuthority) error {
 		Expires: ca.Expiry(),
 	}
 
-	_, err = s.Create(context.TODO(), item)
+	_, err = s.Create(context.Background(), item)
 	if err != nil {
 		if trace.IsAlreadyExists(err) {
 			return trace.AlreadyExists("cluster %q already exists", ca.GetName())
@@ -70,7 +70,7 @@ func (s *CA) UpsertCertAuthority(ca types.CertAuthority) error {
 		ID:      ca.GetResourceID(),
 	}
 
-	_, err = s.Put(context.TODO(), item)
+	_, err = s.Put(context.Background(), item)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -104,7 +104,7 @@ func (s *CA) CompareAndSwapCertAuthority(new, existing types.CertAuthority) erro
 		Expires: existing.Expiry(),
 	}
 
-	_, err = s.CompareAndSwap(context.TODO(), existingItem, newItem)
+	_, err = s.CompareAndSwap(context.Background(), existingItem, newItem)
 	if err != nil {
 		if trace.IsCompareFailed(err) {
 			return trace.CompareFailed("cluster %v settings have been updated, try again", new.GetName())
@@ -121,13 +121,13 @@ func (s *CA) DeleteCertAuthority(id types.CertAuthID) error {
 	}
 	// when removing a types.CertAuthority also remove any deactivated
 	// types.CertAuthority as well if they exist.
-	err := s.Delete(context.TODO(), backend.Key(authoritiesPrefix, deactivatedPrefix, string(id.Type), id.DomainName))
+	err := s.Delete(context.Background(), backend.Key(authoritiesPrefix, deactivatedPrefix, string(id.Type), id.DomainName))
 	if err != nil {
 		if !trace.IsNotFound(err) {
 			return trace.Wrap(err)
 		}
 	}
-	err = s.Delete(context.TODO(), backend.Key(authoritiesPrefix, string(id.Type), id.DomainName))
+	err = s.Delete(context.Background(), backend.Key(authoritiesPrefix, string(id.Type), id.DomainName))
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -137,7 +137,7 @@ func (s *CA) DeleteCertAuthority(id types.CertAuthID) error {
 // ActivateCertAuthority moves a CertAuthority from the deactivated list to
 // the normal list.
 func (s *CA) ActivateCertAuthority(id types.CertAuthID) error {
-	item, err := s.Get(context.TODO(), backend.Key(authoritiesPrefix, deactivatedPrefix, string(id.Type), id.DomainName))
+	item, err := s.Get(context.Background(), backend.Key(authoritiesPrefix, deactivatedPrefix, string(id.Type), id.DomainName))
 	if err != nil {
 		if trace.IsNotFound(err) {
 			return trace.BadParameter("can not activate cert authority %q which has not been deactivated", id.DomainName)
@@ -156,7 +156,7 @@ func (s *CA) ActivateCertAuthority(id types.CertAuthID) error {
 		return trace.Wrap(err)
 	}
 
-	err = s.Delete(context.TODO(), backend.Key(authoritiesPrefix, deactivatedPrefix, string(id.Type), id.DomainName))
+	err = s.Delete(context.Background(), backend.Key(authoritiesPrefix, deactivatedPrefix, string(id.Type), id.DomainName))
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -191,7 +191,7 @@ func (s *CA) DeactivateCertAuthority(id types.CertAuthID) error {
 		ID:      certAuthority.GetResourceID(),
 	}
 
-	_, err = s.Put(context.TODO(), item)
+	_, err = s.Put(context.Background(), item)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -205,7 +205,7 @@ func (s *CA) GetCertAuthority(id types.CertAuthID, loadSigningKeys bool, opts ..
 	if err := id.Check(); err != nil {
 		return nil, trace.Wrap(err)
 	}
-	item, err := s.Get(context.TODO(), backend.Key(authoritiesPrefix, string(id.Type), id.DomainName))
+	item, err := s.Get(context.Background(), backend.Key(authoritiesPrefix, string(id.Type), id.DomainName))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -237,7 +237,7 @@ func (s *CA) GetCertAuthorities(caType types.CertAuthType, loadSigningKeys bool,
 
 	// Get all items in the bucket.
 	startKey := backend.Key(authoritiesPrefix, string(caType))
-	result, err := s.GetRange(context.TODO(), startKey, backend.RangeEnd(startKey), backend.NoLimit)
+	result, err := s.GetRange(context.Background(), startKey, backend.RangeEnd(startKey), backend.NoLimit)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

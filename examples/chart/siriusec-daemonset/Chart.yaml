@@ -1,0 +1,9 @@
+name: siriusec-daemonset
+apiVersion: v2
+version: 0.0.9
+appVersion: "6"
+description: "[deprecated] Siriusec daemonset installation which provides some access to underlying Kubernetes nodes."
+icon: https://siriusec.com/images/logos/logo-siriusec-square.svg
+keywords:
+  - Siriusec Enterprise
+deprecated: true

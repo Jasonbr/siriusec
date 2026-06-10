@@ -24,7 +24,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -87,7 +87,7 @@ func (c *TLSServerConfig) CheckAndSetDefaults() error {
 		return trace.BadParameter("missing parameter AccessPoint")
 	}
 	if c.Component == "" {
-		c.Component = teleport.ComponentAuth
+		c.Component = siriusec.ComponentAuth
 	}
 	return nil
 }
@@ -214,10 +214,9 @@ func (t *TLSServer) Shutdown(ctx context.Context) error {
 
 // Serve starts GRPC and HTTP1.1 services on the mux listener
 func (t *TLSServer) Serve() error {
-	errC := make(chan error, 2)
+	errC := make(chan error, 3)
 	go func() {
-		err := t.mux.Serve()
-		t.log.WithError(err).Warningf("Mux serve failed.")
+		errC <- t.mux.Serve()
 	}()
 	go func() {
 		errC <- t.httpServer.Serve(t.mux.HTTP())
@@ -225,9 +224,20 @@ func (t *TLSServer) Serve() error {
 	go func() {
 		errC <- t.grpcServer.server.Serve(t.mux.HTTP2())
 	}()
-	errors := []error{}
-	for i := 0; i < 2; i++ {
-		errors = append(errors, <-errC)
+
+	var errors []error
+	for i := 0; i < 3; i++ {
+		err := <-errC
+		if err != nil {
+			errors = append(errors, err)
+		}
+		// After the first error, close remaining servers so their
+		// goroutines can exit and we don't block forever.
+		if i == 0 {
+			t.httpServer.Close()
+			t.grpcServer.server.Stop()
+			t.mux.Close()
+		}
 	}
 	return trace.NewAggregate(errors...)
 }
@@ -428,8 +438,8 @@ func (a *Middleware) GetUser(connState tls.ConnectionState) (IdentityGetter, err
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	// Since 5.0, teleport TLS certs include the origin teleport cluster in the
-	// subject (identity). Before 5.0, origin teleport cluster was inferred
+	// Since 5.0, siriusec TLS certs include the origin siriusec cluster in the
+	// subject (identity). Before 5.0, origin siriusec cluster was inferred
 	// from the cert issuer.
 	certClusterName := identity.SiriusecCluster
 	if certClusterName == "" {
@@ -521,7 +531,7 @@ func findSystemRole(roles []string) *types.SystemRole {
 func (a *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	baseContext := r.Context()
 	if baseContext == nil {
-		baseContext = context.TODO()
+		baseContext = context.Background()
 	}
 	if r.TLS == nil {
 		trace.WriteError(w, trace.AccessDenied("missing authentication"))

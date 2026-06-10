@@ -129,7 +129,7 @@ func save(encodedToken string, w http.ResponseWriter) string {
 		Name:   CookieName,
 		Value:  encodedToken,
 		MaxAge: defaultMaxAge,
-		// Set SameSite to none so browsers preserve gravitational CSRF cookie
+		// Set SameSite to none so browsers preserve siriusec CSRF cookie
 		// while processing SSO providers redirects.
 		SameSite: http.SameSiteNoneMode,
 		HttpOnly: true,

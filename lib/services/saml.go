@@ -27,7 +27,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/tlsca"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -54,7 +54,7 @@ func ValidateSAMLConnector(sc types.SAMLConnector) error {
 			return trace.BadParameter("status code %v when fetching from %q", resp.StatusCode, sc.GetEntityDescriptorURL())
 		}
 		defer resp.Body.Close()
-		body, err := utils.ReadAtMost(resp.Body, teleport.MaxHTTPResponseSize)
+		body, err := utils.ReadAtMost(resp.Body, siriusec.MaxHTTPResponseSize)
 		if err != nil {
 			return trace.Wrap(err)
 		}
@@ -84,7 +84,7 @@ func ValidateSAMLConnector(sc types.SAMLConnector) error {
 	if sc.GetSigningKeyPair() == nil {
 		keyPEM, certPEM, err := utils.GenerateSelfSignedSigningCert(pkix.Name{
 			Organization: []string{"Sirius OSS"},
-			CommonName:   "teleport.localhost.localdomain",
+			CommonName:   "siriusec.localhost.localdomain",
 		}, nil, 10*365*24*time.Hour)
 		if err != nil {
 			return trace.Wrap(err)
@@ -212,9 +212,9 @@ func GetSAMLServiceProvider(sc types.SAMLConnector, clock clockwork.Clock) (*sam
 	}
 
 	// adfs specific settings
-	if sc.GetProvider() == teleport.ADFS {
+	if sc.GetProvider() == siriusec.ADFS {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentSAML,
+			trace.Component: siriusec.ComponentSAML,
 		}).Debug("Setting ADFS values.")
 		if sp.SignAuthnRequests {
 			// adfs does not support C14N11, we have to use the C14N10 canonicalizer

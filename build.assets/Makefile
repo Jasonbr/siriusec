@@ -1,11 +1,11 @@
 #
-# This Makefile is used for producing official Teleport releases
+# This Makefile is used for producing official Siriusec releases
 #
 ifneq ("$(wildcard /bin/bash)","")
 SHELL := /bin/bash -o pipefail
 endif
 HOSTNAME=buildbox
-SRCDIR=/go/src/github.com/gravitational/teleport
+SRCDIR=/go/src/github.com/gravitational/siriusec
 GOMODCACHE ?= /tmp/gomodcache
 DOCKERFLAGS := --rm=true -v "$$(pwd)/../":$(SRCDIR) -v /tmp:/tmp -w $(SRCDIR) -h $(HOSTNAME) -e GOMODCACHE=$(GOMODCACHE)
 ADDFLAGS ?=
@@ -27,11 +27,11 @@ PROTOC_VER ?= 3.6.1
 PROTOC_PLATFORM := linux-x86_64
 GOGO_PROTO_TAG ?= v1.3.2
 
-BUILDBOX=quay.io/gravitational/teleport-buildbox:$(RUNTIME)
-BUILDBOX_FIPS=quay.io/gravitational/teleport-buildbox-fips:$(RUNTIME)
-BUILDBOX_CENTOS6=quay.io/gravitational/teleport-buildbox-centos6:$(RUNTIME)
-BUILDBOX_ARM=quay.io/gravitational/teleport-buildbox-arm:$(RUNTIME)
-BUILDBOX_ARM_FIPS=quay.io/gravitational/teleport-buildbox-arm-fips:$(RUNTIME)
+BUILDBOX=registry.siriusec.com/siriusec-buildbox:$(RUNTIME)
+BUILDBOX_FIPS=registry.siriusec.com/siriusec-buildbox-fips:$(RUNTIME)
+BUILDBOX_CENTOS6=registry.siriusec.com/siriusec-buildbox-centos6:$(RUNTIME)
+BUILDBOX_ARM=registry.siriusec.com/siriusec-buildbox-arm:$(RUNTIME)
+BUILDBOX_ARM_FIPS=registry.siriusec.com/siriusec-buildbox-arm-fips:$(RUNTIME)
 
 # These variables are used to dynamically change the name of the buildbox Docker image used by the 'release'
 # target. The other solution was to remove the 'buildbox' dependency from the 'release' target, but this would
@@ -39,7 +39,7 @@ BUILDBOX_ARM_FIPS=quay.io/gravitational/teleport-buildbox-arm-fips:$(RUNTIME)
 BUILDBOX_NAME=$(BUILDBOX)
 BUILDBOX_FIPS_NAME=$(BUILDBOX_FIPS)
 
-DOCSBOX=quay.io/gravitational/next:main
+DOCSBOX=registry.siriusec.com/next:main
 
 ifneq ("$(KUBECONFIG)","")
 DOCKERFLAGS := $(DOCKERFLAGS) -v $(KUBECONFIG):/mnt/kube/config -e KUBECONFIG=/mnt/kube/config -e TEST_KUBE=$(TEST_KUBE)
@@ -61,7 +61,7 @@ export
 
 
 #
-# Build 'teleport' release inside a docker container
+# Build 'siriusec' release inside a docker container
 #
 .PHONY:build
 build: buildbox
@@ -69,7 +69,7 @@ build: buildbox
 		make -C $(SRCDIR) ADDFLAGS='$(ADDFLAGS)' release
 
 #
-# Build 'teleport' release inside a docker container
+# Build 'siriusec' release inside a docker container
 #
 .PHONY:build-binaries
 build-binaries: buildbox
@@ -77,7 +77,7 @@ build-binaries: buildbox
 		make -C $(SRCDIR) ADDFLAGS='$(ADDFLAGS)' full
 
 #
-# Build 'teleport' Enterprise release inside a docker container
+# Build 'siriusec' Enterprise release inside a docker container
 #
 .PHONY:build-enterprise-binaries
 build-enterprise-binaries: buildbox
@@ -85,7 +85,7 @@ build-enterprise-binaries: buildbox
 		make -C $(SRCDIR)/e ADDFLAGS='$(ADDFLAGS)' VERSION=$(VERSION) GITTAG=v$(VERSION) clean full
 
 #
-# Build 'teleport' FIPS release inside a docker container
+# Build 'siriusec' FIPS release inside a docker container
 # This builds Enterprise binaries only.
 #
 .PHONY:build-binaries-fips
@@ -94,7 +94,7 @@ build-binaries-fips: buildbox-fips
 		make -C $(SRCDIR)/e ADDFLAGS='$(ADDFLAGS)' VERSION=$(VERSION) GITTAG=v$(VERSION) FIPS=yes clean full
 
 #
-# Builds a Docker container which is used for building official Teleport binaries
+# Builds a Docker container which is used for building official Siriusec binaries
 # If running in CI and there is no image with the buildbox name:tag combination present locally,
 # the image is pulled from the Docker repository. If this pull fails (i.e. when a new Go runtime is
 # first used), the error is ignored and the buildbox is built using the Dockerfile.
@@ -144,12 +144,12 @@ buildbox-centos6:
 		--cache-from $(BUILDBOX_CENTOS6) \
 		--tag $(BUILDBOX_CENTOS6) -f Dockerfile-centos6 .
 
-# CentOS 6 FIPS builds were removed in Teleport 7.0
-# https://github.com/gravitational/teleport/issues/7207
+# CentOS 6 FIPS builds were removed in Siriusec 7.0
+# https://github.com/gravitational/siriusec/issues/7207
 
 #
 # Builds a Docker buildbox for ARMv7/ARM64 builds
-# ARM buildboxes use a regular Teleport buildbox as a base which already has a user
+# ARM buildboxes use a regular Siriusec buildbox as a base which already has a user
 # with the correct UID and GID created, so those arguments are not needed here.
 #
 .PHONY:buildbox-arm
@@ -163,7 +163,7 @@ buildbox-arm: buildbox
 
 #
 # Builds a Docker buildbox for ARMv7/ARM64 FIPS builds
-# ARM buildboxes use a regular Teleport buildbox as a base which already has a user
+# ARM buildboxes use a regular Siriusec buildbox as a base which already has a user
 # with the correct UID and GID created, so those arguments are not needed here.
 #
 .PHONY:buildbox-arm-fips
@@ -180,7 +180,7 @@ buildbox-arm-fips: buildbox-fips
 grpc: buildbox
 	docker run \
 		$(DOCKERFLAGS) -t $(BUILDBOX) \
-		make -C /go/src/github.com/gravitational/teleport buildbox-grpc
+		make -C /go/src/github.com/gravitational/siriusec buildbox-grpc
 
 #
 # Removes the docker image
@@ -197,26 +197,26 @@ clean:
 .PHONY:test
 test: buildbox
 	docker run \
-		--env TELEPORT_ETCD_TEST="yes" \
+		--env SIRIUSEC_ETCD_TEST="yes" \
 		$(DOCKERFLAGS) $(NOROOT) -t $(BUILDBOX) \
 		/bin/bash -c \
 		"examples/etcd/start-etcd.sh & sleep 1; \
 		type gcloud 2>&1 >/dev/null || exit 1; \
 		gcloud -q beta emulators firestore start --host-port=localhost:8618 & sleep 1; \
 		ssh-agent > external.agent.tmp && source external.agent.tmp; \
-		cd $(SRCDIR) && make TELEPORT_DEBUG=0 FLAGS='-cover -race' clean test"
+		cd $(SRCDIR) && make SIRIUSEC_DEBUG=0 FLAGS='-cover -race' clean test"
 
 .PHONY:test
 test-root: buildbox
 	docker run \
-		--env TELEPORT_ETCD_TEST="yes" \
+		--env SIRIUSEC_ETCD_TEST="yes" \
 		$(DOCKERFLAGS) -t $(BUILDBOX) \
 		/bin/bash -c \
 		"examples/etcd/start-etcd.sh & sleep 1; \
 		type gcloud 2>&1 >/dev/null || exit 1; \
 		gcloud -q beta emulators firestore start --host-port=localhost:8618 & sleep 1; \
 		ssh-agent > external.agent.tmp && source external.agent.tmp; \
-		cd $(SRCDIR) && make TELEPORT_DEBUG=0 FLAGS='-cover -race' clean test-go-root"
+		cd $(SRCDIR) && make SIRIUSEC_DEBUG=0 FLAGS='-cover -race' clean test-go-root"
 
 .PHONY:test-sh
 test-sh: buildbox
@@ -226,7 +226,7 @@ test-sh: buildbox
 .PHONY:integration
 integration: buildbox
 	docker run \
-		--env TELEPORT_ETCD_TEST="yes" \
+		--env SIRIUSEC_ETCD_TEST="yes" \
 		$(DOCKERFLAGS) $(NOROOT) -t $(BUILDBOX) \
 		/bin/bash -c \
 		"examples/etcd/start-etcd.sh & sleep 1; \
@@ -254,7 +254,7 @@ enter: buildbox
 		-e HOME=$(SRCDIR)/build.assets -w $(SRCDIR) $(BUILDBOX) /bin/bash
 
 #
-# Create a Teleport package using the build container.
+# Create a Siriusec package using the build container.
 # Don't use this target directly; call named Makefile targets like release-amd64.
 #
 .PHONY:release
@@ -288,7 +288,7 @@ release-amd64-centos6: buildbox-centos6
 	$(MAKE) release-centos6 ARCH=amd64
 
 #
-# Create a Teleport FIPS package using the build container.
+# Create a Siriusec FIPS package using the build container.
 # This is a special case because it only builds and packages the Enterprise FIPS binaries, no OSS.
 # CI should not use this target, it should use named Makefile targets like release-amd64-fips.
 #
@@ -299,7 +299,7 @@ release-fips: buildbox-fips
 		/usr/bin/make -C e release -e ADDFLAGS="$(ADDFLAGS)" OS=$(OS) ARCH=$(ARCH) RUNTIME=$(RUNTIME) FIPS=yes VERSION=$(VERSION) GITTAG=v$(VERSION) REPRODUCIBLE=yes
 
 #
-# Create a Teleport package for CentOS 6 using the build container.
+# Create a Siriusec package for CentOS 6 using the build container.
 #
 .PHONY:release-centos6
 release-centos6: buildbox-centos6
@@ -307,7 +307,7 @@ release-centos6: buildbox-centos6
 		/usr/bin/make release -e ADDFLAGS="$(ADDFLAGS)" OS=$(OS) ARCH=$(ARCH) RUNTIME=$(RUNTIME) REPRODUCIBLE=no
 
 #
-# Create a Windows Teleport package using the build container.
+# Create a Windows Siriusec package using the build container.
 #
 .PHONY:release-windows
 release-windows: buildbox
@@ -315,7 +315,7 @@ release-windows: buildbox
 		/usr/bin/make release -e ADDFLAGS="$(ADDFLAGS)" OS=windows
 
 #
-# Create a Windows Teleport package using the build container.
+# Create a Windows Siriusec package using the build container.
 #
 .PHONY:release-windows-unsigned
 release-windows-unsigned: buildbox

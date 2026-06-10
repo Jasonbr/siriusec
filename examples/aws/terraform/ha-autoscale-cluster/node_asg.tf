@@ -1,5 +1,5 @@
 // Node auto scaling group supports multiple
-// teleport nodes joining the cluster,
+// siriusec nodes joining the cluster,
 // Setup for demo/testing purposes.
 resource "aws_autoscaling_group" "node" {
   name                      = "${var.cluster_name}-node"
@@ -13,13 +13,13 @@ resource "aws_autoscaling_group" "node" {
   vpc_zone_identifier       = aws_subnet.node.*.id
 
   tag {
-    key                 = "TeleportCluster"
+    key                 = "SiriusecCluster"
     value               = var.cluster_name
     propagate_at_launch = true
   }
 
   tag {
-    key                 = "TeleportRole"
+    key                 = "SiriusecRole"
     value               = "node"
     propagate_at_launch = true
   }

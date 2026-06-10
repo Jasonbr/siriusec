@@ -30,7 +30,7 @@ import (
 )
 
 func TestUserMessageFromError(t *testing.T) {
-	t.Skip("Enable after https://drone.gravitational.io/gravitational/teleport/3517 is merged.")
+	t.Skip("Enable after https://drone.siriusec.io/siriusec/siriusec/3517 is merged.")
 	tests := []struct {
 		comment   string
 		inError   error

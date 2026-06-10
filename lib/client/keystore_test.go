@@ -444,7 +444,7 @@ func newSelfSignedCA(privateKey []byte) (*tlsca.CertAuthority, auth.TrustedCerts
 }
 
 func newTest(t *testing.T) (keyStoreTest, func()) {
-	dir, err := ioutil.TempDir("", "teleport-keystore")
+	dir, err := ioutil.TempDir("", "siriusec-keystore")
 	require.NoError(t, err)
 
 	store, err := NewFSLocalKeyStore(dir)

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -33,8 +33,8 @@ func ReadEnvironmentFile(filename string) ([]string, error) {
 		// follow the lead of OpenSSH and don't allow more than 1,000 environment variables
 		// https://github.com/openssh/openssh-portable/blob/master/session.c#L873-L874
 		lineno = lineno + 1
-		if lineno > teleport.MaxEnvironmentFileLines {
-			log.Warnf("Too many lines in environment file %v, returning first %v lines", filename, teleport.MaxEnvironmentFileLines)
+		if lineno > siriusec.MaxEnvironmentFileLines {
+			log.Warnf("Too many lines in environment file %v, returning first %v lines", filename, siriusec.MaxEnvironmentFileLines)
 			return envs, nil
 		}
 
@@ -68,4 +68,33 @@ func ReadEnvironmentFile(filename string) ([]string, error) {
 	}
 
 	return envs, nil
+}
+
+// GetEnvWithFallback looks up an environment variable with a primary key,
+// falling back to a secondary key if the primary is not set. This enables
+// backward-compatible environment variable renaming (e.g., SIRIUSEC_* with
+// TELEPORT_* fallback).
+func GetEnvWithFallback(primary, fallback string) string {
+	if v := os.Getenv(primary); v != "" {
+		return v
+	}
+	return os.Getenv(fallback)
+}
+
+// EnsureEnvFallback copies TELEPORT_* environment variables to their SIRIUSEC_*
+// equivalents when the SIRIUSEC_* variable is not set. This provides backward
+// compatibility for existing deployments using TELEPORT_* env vars, particularly
+// for CLI frameworks like kingpin that only support a single env var per flag.
+func EnsureEnvFallback() {
+	fallbacks := []struct{ siriusec, teleport string }{
+		{"SIRIUSEC_CONFIG", "TELEPORT_CONFIG"},
+		{"SIRIUSEC_CONFIG_FILE", "TELEPORT_CONFIG_FILE"},
+		{"SIRIUSEC_TUNNEL_PUBLIC_ADDR", "TELEPORT_TUNNEL_PUBLIC_ADDR"},
+		{"SIRIUSEC_OS_FILES", "TELEPORT_OS_FILES"},
+	}
+	for _, fb := range fallbacks {
+		if os.Getenv(fb.siriusec) == "" && os.Getenv(fb.teleport) != "" {
+			os.Setenv(fb.siriusec, os.Getenv(fb.teleport))
+		}
+	}
 }

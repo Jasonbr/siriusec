@@ -4,9 +4,9 @@ package proto;
 import "gogoproto/gogo.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "github.com/gravitational/teleport/api/types/types.proto";
-import "github.com/gravitational/teleport/api/types/wrappers/wrappers.proto";
-import "github.com/gravitational/teleport/api/types/events/events.proto";
+import "github.com/siriusec/siriusec/api/types/types.proto";
+import "github.com/siriusec/siriusec/api/types/wrappers/wrappers.proto";
+import "github.com/siriusec/siriusec/api/types/events/events.proto";
 
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.unmarshaler_all) = true;
@@ -154,7 +154,7 @@ message UserCertsRequest {
     // escalated privileges should be added to the certificate.
     repeated string AccessRequests = 6 [ (gogoproto.jsontag) = "access_requests,omitempty" ];
     // KubernetesCluster specifies the target kubernetes cluster for TLS
-    // identities. This can be empty on older Teleport clients.
+    // identities. This can be empty on older Siriusec clients.
     string KubernetesCluster = 7 [ (gogoproto.jsontag) = "kubernetes_cluster,omitempty" ];
     // RouteToDatabase specifies the target database proxy name to encode into
     // certificate so database client requests are routed appropriately.
@@ -193,7 +193,7 @@ message UserCertsRequest {
 
 // RouteToDatabase combines parameters for database service routing information.
 message RouteToDatabase {
-    // ServiceName is the Teleport database proxy service name the cert is for.
+    // ServiceName is the Siriusec database proxy service name the cert is for.
     string ServiceName = 1 [ (gogoproto.jsontag) = "service_name" ];
     // Protocol is the type of the database the cert is for.
     string Protocol = 2 [ (gogoproto.jsontag) = "protocol" ];
@@ -259,7 +259,7 @@ message RequestStateSetter {
     wrappers.LabelValues Annotations = 5 [
         (gogoproto.nullable) = false,
         (gogoproto.jsontag) = "annotations,omitempty",
-        (gogoproto.customtype) = "github.com/gravitational/teleport/api/types/wrappers.Traits"
+        (gogoproto.customtype) = "github.com/siriusec/siriusec/api/types/wrappers.Traits"
     ];
     // Roles, if present, overrides the existing set of roles associated
     // with the access request.
@@ -293,9 +293,9 @@ message PingRequest {
     // Ping method currently takes no parameters
 }
 
-// PingResponse contains data about the teleport auth server.
+// PingResponse contains data about the siriusec auth server.
 message PingResponse {
-    // ClusterName is the name of the teleport cluster.
+    // ClusterName is the name of the siriusec cluster.
     string ClusterName = 1 [ (gogoproto.jsontag) = "cluster_name" ];
     // ServerVersion is the version of the auth server.
     string ServerVersion = 2 [ (gogoproto.jsontag) = "server_version" ];
@@ -418,9 +418,9 @@ message DeleteAllAppServersRequest {
 // GenerateAppTokenRequest are the parameters used to request an application
 // token.
 message GenerateAppTokenRequest {
-    // Username is the Teleport username.
+    // Username is the Siriusec username.
     string Username = 1 [ (gogoproto.jsontag) = "username" ];
-    // Roles is a list of Teleport roles assigned to the user.
+    // Roles is a list of Siriusec roles assigned to the user.
     repeated string Roles = 2 [ (gogoproto.jsontag) = "roles" ];
     // URI is the URI of the application this token is targeting.
     string URI = 3 [ (gogoproto.jsontag) = "uri" ];
@@ -693,7 +693,7 @@ message U2FRegisterResponse {
 message TOTPRegisterChallenge {
     // Secret is a secret shared by client and server to generate codes.
     string Secret = 1;
-    // Issuer is the name of the Teleport cluster.
+    // Issuer is the name of the Siriusec cluster.
     string Issuer = 2;
     // PeriodSeconds is a period for TOTP code rotation, in seconds.
     uint32 PeriodSeconds = 3;

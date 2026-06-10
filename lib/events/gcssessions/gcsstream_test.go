@@ -24,7 +24,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/events/test"
 
 	"cloud.google.com/go/storage"
@@ -37,11 +37,11 @@ import (
 // TestStreams tests various streaming upload scenarios
 func TestStreams(t *testing.T) {
 	ctx := context.Background()
-	uri := os.Getenv(teleport.GCSTestURI)
+	uri := os.Getenv(siriusec.GCSTestURI)
 	if uri == "" {
 		t.Skip(
-			fmt.Sprintf("Skipping GCS tests, set env var %q, details here: https://siriusec.com/teleport/docs/gcp-guide/",
-				teleport.GCSTestURI))
+			fmt.Sprintf("Skipping GCS tests, set env var %q, details here: https://siriusec.com/docs/gcp-guide/",
+				siriusec.GCSTestURI))
 	}
 	u, err := url.Parse(uri)
 	require.Nil(t, err)

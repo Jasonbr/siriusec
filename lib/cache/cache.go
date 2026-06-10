@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -39,7 +39,7 @@ import (
 )
 
 func tombstoneKey() []byte {
-	return backend.Key("cache", teleport.Version, "tombstone", "ok")
+	return backend.Key("cache", siriusec.Version, "tombstone", "ok")
 }
 
 // ForAuth sets up watch configuration for the auth server
@@ -510,7 +510,7 @@ func (c *Config) CheckAndSetDefaults() error {
 		c.CacheInitTimeout = time.Second * 20
 	}
 	if c.Component == "" {
-		c.Component = teleport.ComponentCache
+		c.Component = siriusec.ComponentCache
 	}
 	return nil
 }
@@ -584,7 +584,7 @@ func New(config Config) (*Cache, error) {
 
 	// if the ok tombstone is present, set the initial read state of the cache
 	// to ok. this tombstone's presence indicates that we are dealing with an
-	// on-disk cache produced by the same teleport version which gracefully shutdown
+	// on-disk cache produced by the same siriusec version which gracefully shutdown
 	// while in an ok state.  We delete the tombstone rather than check for its
 	// presence to ensure self-healing in the event that the tombstone wasn't actually
 	// valid.  Note that setting the cache's read state to ok does not cause us to skip
@@ -957,7 +957,7 @@ func (c *Cache) GetCertAuthority(id types.CertAuthID, loadSigningKeys bool, opts
 
 	if !rg.IsCacheRead() && !loadSigningKeys {
 		ta := func(_ types.CertAuthority) {} // compile-time type assertion
-		ci, err := c.fnCache.Get(context.TODO(), getCertAuthorityCacheKey{id}, func() (interface{}, error) {
+		ci, err := c.fnCache.Get(context.Background(), getCertAuthorityCacheKey{id}, func() (interface{}, error) {
 			ca, err := rg.trust.GetCertAuthority(id, loadSigningKeys, opts...)
 			ta(ca)
 			return ca, err
@@ -999,7 +999,7 @@ func (c *Cache) GetCertAuthorities(caType types.CertAuthType, loadSigningKeys bo
 	defer rg.Release()
 	if !rg.IsCacheRead() && !loadSigningKeys {
 		ta := func(_ []types.CertAuthority) {} // compile-time type assertion
-		ci, err := c.fnCache.Get(context.TODO(), getCertAuthoritiesCacheKey{caType}, func() (interface{}, error) {
+		ci, err := c.fnCache.Get(context.Background(), getCertAuthoritiesCacheKey{caType}, func() (interface{}, error) {
 			cas, err := rg.trust.GetCertAuthorities(caType, loadSigningKeys, opts...)
 			ta(cas)
 			return cas, trace.Wrap(err)
@@ -1074,7 +1074,7 @@ func (c *Cache) GetClusterConfig(opts ...services.MarshalOption) (types.ClusterC
 	defer rg.Release()
 	if !rg.IsCacheRead() {
 		ta := func(_ types.ClusterConfig) {} // compile-time type assertion
-		ci, err := c.fnCache.Get(context.TODO(), clusterConfigCacheKey{"main"}, func() (interface{}, error) {
+		ci, err := c.fnCache.Get(context.Background(), clusterConfigCacheKey{"main"}, func() (interface{}, error) {
 			cfg, err := rg.clusterConfig.GetClusterConfig(opts...)
 			ta(cfg)
 			return cfg, err
@@ -1150,7 +1150,7 @@ func (c *Cache) GetClusterName(opts ...services.MarshalOption) (types.ClusterNam
 	defer rg.Release()
 	if !rg.IsCacheRead() {
 		ta := func(_ types.ClusterName) {} // compile-time type assertion
-		ci, err := c.fnCache.Get(context.TODO(), clusterConfigCacheKey{"name"}, func() (interface{}, error) {
+		ci, err := c.fnCache.Get(context.Background(), clusterConfigCacheKey{"name"}, func() (interface{}, error) {
 			cfg, err := rg.clusterConfig.GetClusterName(opts...)
 			ta(cfg)
 			return cfg, err
@@ -1356,7 +1356,7 @@ func (c *Cache) GetRemoteClusters(opts ...services.MarshalOption) ([]types.Remot
 	defer rg.Release()
 	if !rg.IsCacheRead() {
 		ta := func(_ []types.RemoteCluster) {} // compile-time type assertion
-		ri, err := c.fnCache.Get(context.TODO(), remoteClustersCacheKey{}, func() (interface{}, error) {
+		ri, err := c.fnCache.Get(context.Background(), remoteClustersCacheKey{}, func() (interface{}, error) {
 			remotes, err := rg.presence.GetRemoteClusters(opts...)
 			ta(remotes)
 			return remotes, err
@@ -1384,7 +1384,7 @@ func (c *Cache) GetRemoteCluster(clusterName string) (types.RemoteCluster, error
 	defer rg.Release()
 	if !rg.IsCacheRead() {
 		ta := func(_ types.RemoteCluster) {} // compile-time type assertion
-		ri, err := c.fnCache.Get(context.TODO(), remoteClustersCacheKey{clusterName}, func() (interface{}, error) {
+		ri, err := c.fnCache.Get(context.Background(), remoteClustersCacheKey{clusterName}, func() (interface{}, error) {
 			remote, err := rg.presence.GetRemoteCluster(clusterName)
 			ta(remote)
 			return remote, err

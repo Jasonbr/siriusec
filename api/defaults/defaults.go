@@ -106,5 +106,5 @@ const (
 
 const (
 	// TunnelPublicAddrEnvar optionally specifies the alternative reverse tunnel address.
-	TunnelPublicAddrEnvar = "TELEPORT_TUNNEL_PUBLIC_ADDR"
+	TunnelPublicAddrEnvar = "SIRIUSEC_TUNNEL_PUBLIC_ADDR"
 )

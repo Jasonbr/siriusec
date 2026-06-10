@@ -17,7 +17,7 @@ limitations under the License.
 package service
 
 import (
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/utils"
 	"github.com/gravitational/trace"
 )
@@ -27,18 +27,18 @@ import (
 type listenerType string
 
 var (
-	listenerAuthSSH    = listenerType(teleport.ComponentAuth)
-	listenerNodeSSH    = listenerType(teleport.ComponentNode)
-	listenerProxySSH   = listenerType(teleport.Component(teleport.ComponentProxy, "ssh"))
-	listenerDiagnostic = listenerType(teleport.ComponentDiagnostic)
-	listenerProxyKube  = listenerType(teleport.Component(teleport.ComponentProxy, "kube"))
-	listenerKube       = listenerType(teleport.ComponentKube)
+	listenerAuthSSH    = listenerType(siriusec.ComponentAuth)
+	listenerNodeSSH    = listenerType(siriusec.ComponentNode)
+	listenerProxySSH   = listenerType(siriusec.Component(siriusec.ComponentProxy, "ssh"))
+	listenerDiagnostic = listenerType(siriusec.ComponentDiagnostic)
+	listenerProxyKube  = listenerType(siriusec.Component(siriusec.ComponentProxy, "kube"))
+	listenerKube       = listenerType(siriusec.ComponentKube)
 	// Proxy can use the same listener for tunnels and web interface
 	// (multiplexing the requests).
-	listenerProxyTunnelAndWeb = listenerType(teleport.Component(teleport.ComponentProxy, "tunnel", "web"))
-	listenerProxyWeb          = listenerType(teleport.Component(teleport.ComponentProxy, "web"))
-	listenerProxyTunnel       = listenerType(teleport.Component(teleport.ComponentProxy, "tunnel"))
-	listenerProxyMySQL        = listenerType(teleport.Component(teleport.ComponentProxy, "mysql"))
+	listenerProxyTunnelAndWeb = listenerType(siriusec.Component(siriusec.ComponentProxy, "tunnel", "web"))
+	listenerProxyWeb          = listenerType(siriusec.Component(siriusec.ComponentProxy, "web"))
+	listenerProxyTunnel       = listenerType(siriusec.Component(siriusec.ComponentProxy, "tunnel"))
+	listenerProxyMySQL        = listenerType(siriusec.Component(siriusec.ComponentProxy, "mysql"))
 )
 
 // AuthSSHAddr returns auth server SSH endpoint, if configured and started.

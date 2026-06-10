@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	apisshutils "github.com/siriusec/siriusec/api/utils/sshutils"
@@ -49,7 +49,7 @@ import (
 var (
 	remoteClustersStats = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: teleport.MetricRemoteClusters,
+			Name: siriusec.MetricRemoteClusters,
 			Help: "Number inbound connections from remote clusters and clusters stats",
 		},
 		[]string{"cluster"},
@@ -57,7 +57,7 @@ var (
 
 	trustedClustersStats = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: teleport.MetricTrustedClusters,
+			Name: siriusec.MetricTrustedClusters,
 			Help: "Number of tunnels per state",
 		},
 		[]string{"cluster", "state"},
@@ -225,7 +225,7 @@ func (cfg *Config) CheckAndSetDefaults() error {
 		return trace.BadParameter("missing parameter Emitter")
 	}
 	if cfg.Context == nil {
-		cfg.Context = context.TODO()
+		cfg.Context = context.Background()
 	}
 	if cfg.PollingPeriod == 0 {
 		cfg.PollingPeriod = defaults.HighResPollingPeriod
@@ -241,7 +241,7 @@ func (cfg *Config) CheckAndSetDefaults() error {
 		cfg.Clock = clockwork.NewRealClock()
 	}
 	if cfg.Component == "" {
-		cfg.Component = teleport.Component(teleport.ComponentProxy, teleport.ComponentServer)
+		cfg.Component = siriusec.Component(siriusec.ComponentProxy, siriusec.ComponentServer)
 	}
 	logger := cfg.Log
 	if cfg.Log == nil {
@@ -315,7 +315,7 @@ func NewServer(cfg Config) (Server, error) {
 	}
 
 	s, err := sshutils.NewServer(
-		teleport.ComponentReverseTunnelServer,
+		siriusec.ComponentReverseTunnelServer,
 		// TODO(klizhentas): improve interface, use struct instead of parameter list
 		// this address is not used
 		utils.NetAddr{Addr: "127.0.0.1:1", AddrNetwork: "tcp"},
@@ -428,7 +428,7 @@ func (s *server) fetchClusterPeers() error {
 		}
 
 		// Filter out tunnels which are not online.
-		if services.TunnelConnectionStatus(s.Clock, newConn, s.offlineThreshold) != teleport.RemoteClusterStatusOnline {
+		if services.TunnelConnectionStatus(s.Clock, newConn, s.offlineThreshold) != siriusec.RemoteClusterStatusOnline {
 			continue
 		}
 
@@ -553,7 +553,7 @@ func (s *server) diffConns(newConns, existingConns map[string]types.TunnelConnec
 }
 
 func (s *server) Wait() {
-	s.srv.Wait(context.TODO())
+	s.srv.Wait(context.Background())
 }
 
 func (s *server) Start() error {
@@ -621,7 +621,7 @@ func (s *server) handleTransport(sconn *ssh.ServerConn, nch ssh.NewChannel) {
 		authClient:       s.LocalAccessPoint,
 		channel:          channel,
 		requestCh:        requestCh,
-		component:        teleport.ComponentReverseTunnelServer,
+		component:        siriusec.ComponentReverseTunnelServer,
 		localClusterName: s.ClusterName,
 	}
 	go t.start()
@@ -763,20 +763,20 @@ func (s *server) keyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (perm *ssh.Pe
 		caType = types.HostCA
 	case ssh.UserCert:
 		var ok bool
-		clusterName, ok = cert.Extensions[teleport.CertExtensionTeleportRouteToCluster]
+		clusterName, ok = cert.Extensions[siriusec.CertExtensionTeleportRouteToCluster]
 		if !ok || clusterName == "" {
 			clusterName = s.ClusterName
 		}
-		encRoles, ok := cert.Extensions[teleport.CertExtensionTeleportRoles]
+		encRoles, ok := cert.Extensions[siriusec.CertExtensionTeleportRoles]
 		if !ok || encRoles == "" {
-			return nil, trace.BadParameter("certificate missing %q extension; this SSH user certificate was not issued by Sirius or issued by an older version of Sirius; try upgrading your Sirius proxies/auth servers and logging in again (or exporting an identity file, if that's what you used)", teleport.CertExtensionTeleportRoles)
+			return nil, trace.BadParameter("certificate missing %q extension; this SSH user certificate was not issued by Sirius or issued by an older version of Sirius; try upgrading your Sirius proxies/auth servers and logging in again (or exporting an identity file, if that's what you used)", siriusec.CertExtensionTeleportRoles)
 		}
 		roles, err := services.UnmarshalCertRoles(encRoles)
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
 		if len(roles) == 0 {
-			return nil, trace.BadParameter("certificate missing roles in %q extension; make sure your user has some roles assigned (or ask your Sirius admin to) and log in again (or export an identity file, if that's what you used)", teleport.CertExtensionTeleportRoles)
+			return nil, trace.BadParameter("certificate missing roles in %q extension; make sure your user has some roles assigned (or ask your Sirius admin to) and log in again (or export an identity file, if that's what you used)", siriusec.CertExtensionTeleportRoles)
 		}
 		certRole = roles[0]
 		certType = utils.ExtIntCertTypeUser
@@ -1012,7 +1012,7 @@ func newRemoteSite(srv *server, domainName string, sconn ssh.Conn) (*remoteSite,
 		domainName: domainName,
 		connInfo:   connInfo,
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentReverseTunnelServer,
+			trace.Component: siriusec.ComponentReverseTunnelServer,
 			trace.ComponentFields: log.Fields{
 				"cluster": domainName,
 			},
@@ -1132,9 +1132,9 @@ func sendVersionRequest(ctx context.Context, sconn ssh.Conn) (string, error) {
 }
 
 const (
-	extHost      = "host@teleport"
-	extAuthority = "auth@teleport"
+	extHost      = "host@siriusec"
+	extAuthority = "auth@siriusec"
 	extCertRole  = "role"
 
-	versionRequest = "x-teleport-version"
+	versionRequest = "x-siriusec-version"
 )

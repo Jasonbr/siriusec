@@ -1,0 +1,15 @@
+[Unit]
+Description=Siriusec SSH Service
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+EnvironmentFile=-/etc/default/siriusec
+ExecStart=/usr/local/bin/siriusec start --pid-file=/run/siriusec.pid
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/siriusec.pid
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

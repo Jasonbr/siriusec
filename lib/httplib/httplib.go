@@ -27,7 +27,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/httplib/csrf"
 	"github.com/siriusec/siriusec/lib/utils"
 
@@ -115,7 +115,7 @@ func WithCSRFProtection(fn HandlerFunc) httprouter.Handle {
 // ReadJSON reads HTTP json request and unmarshals it
 // into passed interface{} obj
 func ReadJSON(r *http.Request, val interface{}) error {
-	data, err := utils.ReadAtMost(r.Body, teleport.MaxHTTPRequestSize)
+	data, err := utils.ReadAtMost(r.Body, siriusec.MaxHTTPRequestSize)
 	if err != nil {
 		return trace.Wrap(err)
 	}

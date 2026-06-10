@@ -25,7 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -45,7 +44,7 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/client/webclient"
 	"github.com/siriusec/siriusec/api/constants"
@@ -105,7 +104,7 @@ const (
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentClient,
+	trace.Component: siriusec.ComponentClient,
 })
 
 // ForwardedPort specifies local tunnel to remote
@@ -163,7 +162,7 @@ type HostKeyCallback func(host string, ip net.Addr, key ssh.PublicKey) error
 
 // Config is a client config
 type Config struct {
-	// Username is the Teleport account username (for logging into Siriusec proxies)
+	// Username is the Siriusec account username (for logging into Siriusec proxies)
 	Username string
 
 	// Remote host to connect
@@ -534,7 +533,7 @@ func readProfile(profileDir string, profileName string) (*ProfileStatus, error) 
 	// Extract roles from certificate. Note, if the certificate is in old format,
 	// this will be empty.
 	var roles []string
-	rawRoles, ok := sshCert.Extensions[teleport.CertExtensionTeleportRoles]
+	rawRoles, ok := sshCert.Extensions[siriusec.CertExtensionTeleportRoles]
 	if ok {
 		roles, err = services.UnmarshalCertRoles(rawRoles)
 		if err != nil {
@@ -546,7 +545,7 @@ func readProfile(profileDir string, profileName string) (*ProfileStatus, error) 
 	// Extract traits from the certificate. Note if the certificate is in the
 	// old format, this will be empty.
 	var traits wrappers.Traits
-	rawTraits, ok := sshCert.Extensions[teleport.CertExtensionTeleportTraits]
+	rawTraits, ok := sshCert.Extensions[siriusec.CertExtensionTeleportTraits]
 	if ok {
 		err = wrappers.UnmarshalTraits([]byte(rawTraits), &traits)
 		if err != nil {
@@ -555,7 +554,7 @@ func readProfile(profileDir string, profileName string) (*ProfileStatus, error) 
 	}
 
 	var activeRequests services.RequestIDs
-	rawRequests, ok := sshCert.Extensions[teleport.CertExtensionTeleportActiveRequests]
+	rawRequests, ok := sshCert.Extensions[siriusec.CertExtensionTeleportActiveRequests]
 	if ok {
 		if err := activeRequests.Unmarshal([]byte(rawRequests)); err != nil {
 			return nil, trace.Wrap(err)
@@ -566,10 +565,10 @@ func readProfile(profileDir string, profileName string) (*ProfileStatus, error) 
 	// certificate (like can the user request a PTY, port forwarding, etc.)
 	var extensions []string
 	for ext := range sshCert.Extensions {
-		if ext == teleport.CertExtensionTeleportRoles ||
-			ext == teleport.CertExtensionTeleportTraits ||
-			ext == teleport.CertExtensionTeleportRouteToCluster ||
-			ext == teleport.CertExtensionTeleportActiveRequests {
+		if ext == siriusec.CertExtensionTeleportRoles ||
+			ext == siriusec.CertExtensionTeleportTraits ||
+			ext == siriusec.CertExtensionTeleportRouteToCluster ||
+			ext == siriusec.CertExtensionTeleportActiveRequests {
 			continue
 		}
 		extensions = append(extensions, ext)
@@ -991,7 +990,7 @@ func (c *Config) ProxySpecified() bool {
 	return c.WebProxyAddr != ""
 }
 
-// SiriusecClient is a wrapper around SSH client with teleport specific
+// SiriusecClient is a wrapper around SSH client with siriusec specific
 // workflow built in.
 // SiriusecClient is NOT safe for concurrent use.
 type SiriusecClient struct {
@@ -1011,7 +1010,7 @@ type SiriusecClient struct {
 	lastPing *webclient.PingResponse
 }
 
-// ShellCreatedCallback can be supplied for every teleport client. It will
+// ShellCreatedCallback can be supplied for every siriusec client. It will
 // be called right after the remote shell is created, but the session
 // hasn't begun yet.
 //
@@ -1029,7 +1028,7 @@ func NewClient(c *Config) (tc *SiriusecClient, err error) {
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
-		log.Infof("No teleport login given. defaulting to %s", c.Username)
+		log.Infof("No siriusec login given. defaulting to %s", c.Username)
 	}
 	if c.WebProxyAddr == "" {
 		return nil, trace.BadParameter("No proxy address specified, missed --proxy flag?")
@@ -1548,7 +1547,7 @@ func PlayFile(ctx context.Context, tarFile io.Reader, sid string) error {
 	var sessionEvents []events.EventFields
 	var stream []byte
 	protoReader := events.NewProtoReader(tarFile)
-	playbackDir, err := ioutil.TempDir("", "playback")
+	playbackDir, err := os.MkdirTemp("", "playback")
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -2063,7 +2062,7 @@ func (tc *SiriusecClient) connectToProxy(ctx context.Context) (*ProxyClient, err
 
 	log.Infof("Successful auth with proxy %v.", sshProxyAddr)
 	return &ProxyClient{
-		teleportClient:  tc,
+		siriusecClient:  tc,
 		Client:          sshClient,
 		proxyAddress:    sshProxyAddr,
 		proxyPrincipal:  sshConfig.User,
@@ -2200,7 +2199,7 @@ func (tc *SiriusecClient) LogoutAll() error {
 	return nil
 }
 
-// Login logs the user into a Teleport cluster by talking to a Siriusec proxy.
+// Login logs the user into a Siriusec cluster by talking to a Siriusec proxy.
 //
 // The returned Key should typically be passed to ActivateKey in order to
 // update local agent state.
@@ -2366,14 +2365,14 @@ func (tc *SiriusecClient) Ping(ctx context.Context) (*webclient.PingResponse, er
 
 	// If version checking was requested and the server advertises a minimum version.
 	if tc.CheckVersions && pr.MinClientVersion != "" {
-		if err := utils.CheckVersion(teleport.Version, pr.MinClientVersion); err != nil && trace.IsBadParameter(err) {
+		if err := utils.CheckVersion(siriusec.Version, pr.MinClientVersion); err != nil && trace.IsBadParameter(err) {
 			fmt.Printf(`
 			WARNING
 			Detected potentially incompatible client and server versions.
 			Minimum client version supported by the server is %v but you are using %v.
 			Please upgrade tsh to %v or newer or use the --skip-version-check flag to bypass this check.
 			Future versions of tsh will fail when incompatible versions are detected.
-			`, pr.MinClientVersion, teleport.Version, pr.MinClientVersion)
+			`, pr.MinClientVersion, siriusec.Version, pr.MinClientVersion)
 		}
 	}
 
@@ -2764,7 +2763,7 @@ func loopbackPool(proxyAddr string) *x509.CertPool {
 	certPool := x509.NewCertPool()
 
 	certPath := filepath.Join(defaults.DataDir, defaults.SelfSignedCertPath)
-	pemByte, err := ioutil.ReadFile(certPath)
+	pemByte, err := os.ReadFile(certPath)
 	if err != nil {
 		log.Debugf("could not open any path in: %v", certPath)
 		return nil
@@ -2789,7 +2788,7 @@ func loopbackPool(proxyAddr string) *x509.CertPool {
 
 // connectToSSHAgent connects to the system SSH agent and returns an agent.Agent.
 func connectToSSHAgent() agent.Agent {
-	socketPath := os.Getenv(teleport.SSHAuthSock)
+	socketPath := os.Getenv(siriusec.SSHAuthSock)
 	conn, err := agentconn.Dial(socketPath)
 	if err != nil {
 		log.Errorf("[KEY AGENT] Unable to connect to SSH agent on socket: %q.", socketPath)
@@ -2863,7 +2862,7 @@ func (tc *SiriusecClient) getServerVersion(nodeClient *NodeClient) (string, erro
 	responseCh := make(chan serverResponse)
 
 	go func() {
-		ok, payload, err := nodeClient.Client.SendRequest(teleport.VersionRequest, true, nil)
+		ok, payload, err := nodeClient.Client.SendRequest(siriusec.VersionRequest, true, nil)
 		if err != nil {
 			responseCh <- serverResponse{err: trace.NotFound(err.Error())}
 		} else if !ok {

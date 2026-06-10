@@ -26,7 +26,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
@@ -169,10 +169,10 @@ func (p *transport) start() {
 	// Connect to the Kubernetes proxy.
 	case LocalKubernetes:
 		switch p.component {
-		case teleport.ComponentReverseTunnelServer:
+		case siriusec.ComponentReverseTunnelServer:
 			p.reply(req, false, []byte("connection rejected: no remote kubernetes proxy"))
 			return
-		case teleport.ComponentKube:
+		case siriusec.ComponentKube:
 			// kubernetes_service can directly handle the connection, via
 			// p.server.
 			if p.server == nil {
@@ -203,10 +203,10 @@ func (p *transport) start() {
 		}
 	// LocalNode requests are for the single server running in the agent pool.
 	case LocalNode:
-		// Transport is allocated with both teleport.ComponentReverseTunnelAgent
-		// and teleport.ComponentReverseTunneServer. However, dialing to this address
-		// only makes sense when running within a teleport.ComponentReverseTunnelAgent.
-		if p.component == teleport.ComponentReverseTunnelServer {
+		// Transport is allocated with both siriusec.ComponentReverseTunnelAgent
+		// and siriusec.ComponentReverseTunneServer. However, dialing to this address
+		// only makes sense when running within a siriusec.ComponentReverseTunnelAgent.
+		if p.component == siriusec.ComponentReverseTunnelServer {
 			p.reply(req, false, []byte("connection rejected: no local node"))
 			return
 		}

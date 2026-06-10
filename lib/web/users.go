@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/httplib"
 	"github.com/siriusec/siriusec/lib/web/ui"
@@ -88,7 +88,7 @@ func createUser(r *http.Request, m userAPIGetter, createdBy string) (*ui.User, e
 
 	user.SetRoles(req.Roles)
 	user.SetTraits(map[string][]string{
-		teleport.TraitLogins: req.Logins,
+		siriusec.TraitLogins: req.Logins,
 	})
 
 	user.SetCreatedBy(types.CreatedBy{
@@ -120,7 +120,7 @@ func updateUser(r *http.Request, m userAPIGetter, createdBy string) (*ui.User, e
 	user.SetRoles(req.Roles)
 	if req.Logins != nil {
 		user.SetTraits(map[string][]string{
-			teleport.TraitLogins: req.Logins,
+			siriusec.TraitLogins: req.Logins,
 		})
 	}
 

@@ -94,7 +94,7 @@ type Metadata struct {
 	Code string `protobuf:"bytes,4,opt,name=Code,proto3" json:"code,omitempty"`
 	// Time is event time
 	Time time.Time `protobuf:"bytes,5,opt,name=Time,proto3,stdtime" json:"time"`
-	// ClusterName identifies the originating teleport cluster
+	// ClusterName identifies the originating siriusec cluster
 	ClusterName          string   `protobuf:"bytes,6,opt,name=ClusterName,proto3" json:"cluster_name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -180,7 +180,7 @@ var xxx_messageInfo_SessionMetadata proto.InternalMessageInfo
 
 // UserMetadata is a common user event metadata
 type UserMetadata struct {
-	// User is teleport user name
+	// User is siriusec user name
 	User string `protobuf:"bytes,1,opt,name=User,proto3" json:"user,omitempty"`
 	// Login is OS login
 	Login string `protobuf:"bytes,2,opt,name=Login,proto3" json:"login,omitempty"`
@@ -1403,7 +1403,7 @@ type AccessRequestCreate struct {
 	// RequestState is access request state (in the access_request.review variant of
 	// the event this represents the post-review state of the request).
 	RequestState string `protobuf:"bytes,6,opt,name=RequestState,proto3" json:"state"`
-	// Delegator is used by teleport plugins to indicate the identity
+	// Delegator is used by siriusec plugins to indicate the identity
 	// which caused them to update state.
 	Delegator string `protobuf:"bytes,7,opt,name=Delegator,proto3" json:"delegator,omitempty"`
 	// Reason is an optional description of why the request is being

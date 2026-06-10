@@ -24,7 +24,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/metadata"
@@ -56,21 +56,21 @@ import (
 var (
 	heartbeatConnectionsReceived = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricHeartbeatConnectionsReceived,
+			Name: siriusec.MetricHeartbeatConnectionsReceived,
 			Help: "Number of times auth received a heartbeat connection",
 		},
 	)
 	watcherEventsEmitted = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    teleport.MetricWatcherEventsEmitted,
+			Name:    siriusec.MetricWatcherEventsEmitted,
 			Help:    "Per resources size of events emitted",
 			Buckets: prometheus.LinearBuckets(0, 200, 5),
 		},
-		[]string{teleport.TagResource},
+		[]string{siriusec.TagResource},
 	)
 	watcherEventSizes = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
-			Name:    teleport.MetricWatcherEventSizes,
+			Name:    siriusec.MetricWatcherEventSizes,
 			Help:    "Overall size of events emitted",
 			Buckets: prometheus.LinearBuckets(0, 100, 20),
 		},
@@ -2040,7 +2040,7 @@ func validateUserSingleUseCertRequest(ctx context.Context, actx *grpcContext, re
 		return trace.BadParameter("unknown certificate Usage %q", req.Usage)
 	}
 
-	maxExpiry := actx.authServer.GetClock().Now().Add(teleport.UserSingleUseCertTTL)
+	maxExpiry := actx.authServer.GetClock().Now().Add(siriusec.UserSingleUseCertTTL)
 	if req.Expires.After(maxExpiry) {
 		req.Expires = maxExpiry
 	}
@@ -2994,7 +2994,7 @@ func NewGRPCServer(cfg GRPCServerConfig) (*GRPCServer, error) {
 	authServer := &GRPCServer{
 		APIConfig: cfg.APIConfig,
 		Entry: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.Component(teleport.ComponentAuth, teleport.ComponentGRPC),
+			trace.Component: siriusec.Component(siriusec.ComponentAuth, siriusec.ComponentGRPC),
 		}),
 		server: server,
 	}

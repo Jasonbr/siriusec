@@ -361,7 +361,7 @@ type databasePack struct {
 }
 
 type databaseClusterPack struct {
-	cluster         *TeleInstance
+	cluster         *SiriusecInstance
 	user            types.User
 	role            types.Role
 	dbProcess       *service.SiriusecProcess

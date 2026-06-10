@@ -24,7 +24,7 @@ import (
 	"encoding/binary"
 	"sync"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/bpf"
 	"github.com/gravitational/trace"
 	"github.com/prometheus/client_golang/prometheus"
@@ -34,13 +34,13 @@ import (
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentRestrictedSession,
+	trace.Component: siriusec.ComponentRestrictedSession,
 })
 
 var (
 	lostRestrictedEvents = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricLostRestrictedEvents,
+			Name: siriusec.MetricLostRestrictedEvents,
 			Help: "Number of lost restricted events.",
 		},
 	)

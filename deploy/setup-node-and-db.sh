@@ -121,7 +121,7 @@ echo "[步骤 4/8] 创建主机节点配置..."
 
 cat > ${SIRIUSEC_CONFIG}/node.yaml << EOF
 # Siriusec 主机节点配置
-teleport:
+siriusec:
   nodename: ubuntu-$(hostname)
   advertise_ip: 0.0.0.0
   data_dir: ${SIRIUSEC_HOME}
@@ -161,7 +161,7 @@ auth_service:
     type: local
     second_factor: "off"
   tokens:
-    - "node,proxy,app,db:join-token-2024"
+    - "node,proxy,app,db:${SIRIUSEC_JOIN_TOKEN}"
 
 # Proxy 服务
 proxy_service:
@@ -217,7 +217,7 @@ cat > ${SIRIUSEC_CONFIG}/siriusec.yaml << EOF
 # ==========================================
 
 # 全局配置
-teleport:
+siriusec:
   nodename: siriusec-$(hostname)
   data_dir: ${SIRIUSEC_HOME}
   log:
@@ -233,7 +233,7 @@ auth_service:
     type: local
     second_factor: "off"
   tokens:
-    - "node,proxy,app,db:join-token-2024"
+    - "node,proxy,app,db:${SIRIUSEC_JOIN_TOKEN}"
 
 # SSH 服务 (主机节点)
 ssh_service:

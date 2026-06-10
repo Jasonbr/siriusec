@@ -174,14 +174,14 @@ func KubeClusterNames(ctx context.Context, p KubeServicesPresence) ([]string, er
 // default based on registered clusters.
 //
 // If no clusters are registered, a NotFound error is returned.
-func CheckOrSetKubeCluster(ctx context.Context, p KubeServicesPresence, kubeClusterName, teleportClusterName string) (string, error) {
+func CheckOrSetKubeCluster(ctx context.Context, p KubeServicesPresence, kubeClusterName, siriusecClusterName string) (string, error) {
 	kubeClusterNames, err := KubeClusterNames(ctx, p)
 	if err != nil {
 		return "", trace.Wrap(err)
 	}
 	if kubeClusterName != "" {
 		if !apiutils.SliceContainsStr(kubeClusterNames, kubeClusterName) {
-			return "", trace.BadParameter("kubernetes cluster %q is not registered in this teleport cluster; you can list registered kubernetes clusters using 'tsh kube ls'", kubeClusterName)
+			return "", trace.BadParameter("kubernetes cluster %q is not registered in this siriusec cluster; you can list registered kubernetes clusters using 'tsh kube ls'", kubeClusterName)
 		}
 		return kubeClusterName, nil
 	}
@@ -191,8 +191,8 @@ func CheckOrSetKubeCluster(ctx context.Context, p KubeServicesPresence, kubeClus
 	if len(kubeClusterNames) == 0 {
 		return "", trace.NotFound("no kubernetes clusters registered")
 	}
-	if apiutils.SliceContainsStr(kubeClusterNames, teleportClusterName) {
-		return teleportClusterName, nil
+	if apiutils.SliceContainsStr(kubeClusterNames, siriusecClusterName) {
+		return siriusecClusterName, nil
 	}
 	return kubeClusterNames[0], nil
 }

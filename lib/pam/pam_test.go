@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
-	_, err := os.Stat("../../build.assets/pam/pam_teleport.so")
+	_, err := os.Stat("../../build.assets/pam/pam_siriusec.so")
 	if os.IsNotExist(err) {
 		fmt.Println("PAM test module is not installed, you can install it with 'sudo make -C build.assets/pam install'")
 		os.Exit(0)
@@ -48,22 +48,22 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// TestEcho makes sure that the teleport env variables passed to a PAM module
+// TestEcho makes sure that the siriusec env variables passed to a PAM module
 // are correctly set
 //
-// The PAM module used, pam_teleport.so is called from the policy file
-// teleport-acct-echo. The policy file instructs pam_teleport.so to echo the
+// The PAM module used, pam_siriusec.so is called from the policy file
+// siriusec-acct-echo. The policy file instructs pam_siriusec.so to echo the
 // contents of TELEPORT_* to stdout where this test can read, parse, and
 // validate it's output.
 func TestEcho(t *testing.T) {
 	t.Parallel()
-	checkTestModule(t, "teleport-acct-echo")
+	checkTestModule(t, "siriusec-acct-echo")
 	username := currentUser(t)
 
 	var buf bytes.Buffer
 	pamContext, err := Open(&Config{
 		Enabled:     true,
-		ServiceName: "teleport-acct-echo",
+		ServiceName: "siriusec-acct-echo",
 		Login:       username,
 		Env: map[string]string{
 			"TELEPORT_USERNAME": username + "@example.com",
@@ -92,19 +92,19 @@ func TestEcho(t *testing.T) {
 // variables set by a PAM module) can be accessed from the PAM handle/context
 // in Go code.
 //
-// The PAM module used, pam_teleport.so is called from the policy file
-// teleport-session-environment. The policy file instructs pam_teleport.so to
+// The PAM module used, pam_siriusec.so is called from the policy file
+// siriusec-session-environment. The policy file instructs pam_siriusec.so to
 // read in the first argument and set it as a PAM environment variable. This
 // test then validates it matches what was set in the policy file.
 func TestEnvironment(t *testing.T) {
 	t.Parallel()
-	checkTestModule(t, "teleport-session-environment")
+	checkTestModule(t, "siriusec-session-environment")
 	username := currentUser(t)
 
 	var buf bytes.Buffer
 	pamContext, err := Open(&Config{
 		Enabled:     true,
-		ServiceName: "teleport-session-environment",
+		ServiceName: "siriusec-session-environment",
 		Login:       username,
 		Stdin:       &discardReader{},
 		Stdout:      &buf,
@@ -118,13 +118,13 @@ func TestEnvironment(t *testing.T) {
 
 func TestSuccess(t *testing.T) {
 	t.Parallel()
-	checkTestModule(t, "teleport-success")
+	checkTestModule(t, "siriusec-success")
 	username := currentUser(t)
 
 	var buf bytes.Buffer
 	pamContext, err := Open(&Config{
 		Enabled:     true,
-		ServiceName: "teleport-success",
+		ServiceName: "siriusec-success",
 		Login:       username,
 		Stdin:       &discardReader{},
 		Stdout:      &buf,
@@ -143,13 +143,13 @@ func TestSuccess(t *testing.T) {
 
 func TestAccountFailure(t *testing.T) {
 	t.Parallel()
-	checkTestModule(t, "teleport-acct-failure")
+	checkTestModule(t, "siriusec-acct-failure")
 	username := currentUser(t)
 
 	var buf bytes.Buffer
 	_, err := Open(&Config{
 		Enabled:     true,
-		ServiceName: "teleport-acct-failure",
+		ServiceName: "siriusec-acct-failure",
 		Login:       username,
 		Stdin:       &discardReader{},
 		Stdout:      &buf,
@@ -160,13 +160,13 @@ func TestAccountFailure(t *testing.T) {
 
 func TestAuthFailure(t *testing.T) {
 	t.Parallel()
-	checkTestModule(t, "teleport-auth-failure")
+	checkTestModule(t, "siriusec-auth-failure")
 	username := currentUser(t)
 
 	var buf bytes.Buffer
 	_, err := Open(&Config{
 		Enabled:     true,
-		ServiceName: "teleport-auth-failure",
+		ServiceName: "siriusec-auth-failure",
 		Login:       username,
 		Stdin:       &discardReader{},
 		Stdout:      &buf,
@@ -178,13 +178,13 @@ func TestAuthFailure(t *testing.T) {
 
 func TestAuthDisabled(t *testing.T) {
 	t.Parallel()
-	checkTestModule(t, "teleport-auth-failure")
+	checkTestModule(t, "siriusec-auth-failure")
 	username := currentUser(t)
 
 	var buf bytes.Buffer
 	pamContext, err := Open(&Config{
 		Enabled:     true,
-		ServiceName: "teleport-auth-failure",
+		ServiceName: "siriusec-auth-failure",
 		Login:       username,
 		Stdin:       &discardReader{},
 		Stdout:      &buf,
@@ -202,13 +202,13 @@ func TestAuthDisabled(t *testing.T) {
 
 func TestSessionFailure(t *testing.T) {
 	t.Parallel()
-	checkTestModule(t, "teleport-session-failure")
+	checkTestModule(t, "siriusec-session-failure")
 	username := currentUser(t)
 
 	var buf bytes.Buffer
 	_, err := Open(&Config{
 		Enabled:     true,
-		ServiceName: "teleport-session-failure",
+		ServiceName: "siriusec-session-failure",
 		Login:       username,
 		Stdin:       &discardReader{},
 		Stdout:      &buf,

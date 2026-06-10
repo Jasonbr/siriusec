@@ -1,0 +1,13 @@
+[Unit]
+Description=Siriusec SSH Service
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+User=ubuntu
+LimitNOFILE=32000
+ExecStart=/home/ubuntu/go/src/github.com/siriusec/siriusec/build/siriusec start --config=/etc/siriusec/siriusec.yaml -d --diag-addr=127.0.0.1:3000
+
+[Install]
+WantedBy=multi-user.target

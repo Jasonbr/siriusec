@@ -20,13 +20,13 @@ resource "aws_autoscaling_group" "monitor" {
   count             = var.use_acm ? 0 : 1
 
   tag {
-    key                 = "TeleportCluster"
+    key                 = "SiriusecCluster"
     value               = var.cluster_name
     propagate_at_launch = true
   }
 
   tag {
-    key                 = "TeleportRole"
+    key                 = "SiriusecRole"
     value               = "monitor"
     propagate_at_launch = true
   }
@@ -60,7 +60,7 @@ resource "aws_autoscaling_group" "monitor_acm" {
   count             = var.use_acm ? 1 : 0
 
   tag {
-    key                 = "TeleportCluster"
+    key                 = "SiriusecCluster"
     value               = var.cluster_name
     propagate_at_launch = true
   }
@@ -108,7 +108,7 @@ resource "aws_security_group" "monitor" {
   name   = "${var.cluster_name}-monitor"
   vpc_id = local.vpc_id
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -177,7 +177,7 @@ resource "aws_lb" "monitor" {
   idle_timeout       = 3600
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -185,7 +185,7 @@ resource "aws_lb" "monitor" {
 resource "aws_lb_target_group" "monitor" {
   name     = "${var.cluster_name}-monitor"
   port     = 8086
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "TCP"
 }
 

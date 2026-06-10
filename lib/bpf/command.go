@@ -19,7 +19,7 @@ limitations under the License.
 package bpf
 
 import (
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/utils"
 
 	"github.com/gravitational/trace"
@@ -36,7 +36,7 @@ var commandBPF []byte
 var (
 	lostCommandEvents = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricLostCommandEvents,
+			Name: siriusec.MetricLostCommandEvents,
 			Help: "Number of lost command events.",
 		},
 	)

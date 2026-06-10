@@ -19,7 +19,7 @@ package services
 import (
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/utils"
 
@@ -48,9 +48,9 @@ func LatestTunnelConnection(conns []types.TunnelConnection) (types.TunnelConnect
 func TunnelConnectionStatus(clock clockwork.Clock, conn types.TunnelConnection, offlineThreshold time.Duration) string {
 	diff := clock.Now().Sub(conn.GetLastHeartbeat())
 	if diff < offlineThreshold {
-		return teleport.RemoteClusterStatusOnline
+		return siriusec.RemoteClusterStatusOnline
 	}
-	return teleport.RemoteClusterStatusOffline
+	return siriusec.RemoteClusterStatusOffline
 }
 
 // UnmarshalTunnelConnection unmarshals TunnelConnection resource from JSON or YAML,

@@ -17,8 +17,8 @@ limitations under the License.
 package web
 
 import (
+	"io"
 	"compress/gzip"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -30,7 +30,7 @@ import (
 // internal buffers to avoid too many objects on the heap
 var writerPool = sync.Pool{
 	New: func() interface{} {
-		gz := gzip.NewWriter(ioutil.Discard)
+		gz := gzip.NewWriter(io.Discard)
 		return gz
 	},
 }

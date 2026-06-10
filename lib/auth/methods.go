@@ -23,6 +23,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"github.com/siriusec/siriusec/api/constants"
+	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/auth/u2f"
@@ -86,7 +87,7 @@ type SessionCreds struct {
 
 // AuthenticateUser authenticates user based on the request type
 func (s *Server) AuthenticateUser(req AuthenticateUserRequest) error {
-	mfaDev, err := s.authenticateUser(context.TODO(), req)
+	mfaDev, err := s.authenticateUser(context.Background(), req)
 	event := &apievents.UserLogin{
 		Metadata: apievents.Metadata{
 			Type: events.UserLoginEvent,
@@ -209,7 +210,8 @@ func (s *Server) authenticateUser(ctx context.Context, req AuthenticateUserReque
 // if authentication is successful. In case the existing session ID is used to authenticate,
 // returns the existing session instead of creating a new one
 func (s *Server) AuthenticateWebUser(req AuthenticateUserRequest) (types.WebSession, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	authPref, err := s.GetAuthPreference(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -225,7 +227,7 @@ func (s *Server) AuthenticateWebUser(req AuthenticateUserRequest) (types.WebSess
 	}
 
 	if req.Session != nil {
-		session, err := s.GetWebSession(context.TODO(), types.GetWebSessionRequest{
+		session, err := s.GetWebSession(context.Background(), types.GetWebSessionRequest{
 			User:      req.Username,
 			SessionID: req.Session.ID,
 		})
@@ -244,7 +246,7 @@ func (s *Server) AuthenticateWebUser(req AuthenticateUserRequest) (types.WebSess
 		return nil, trace.Wrap(err)
 	}
 
-	sess, err := s.createUserWebSession(context.TODO(), user)
+	sess, err := s.createUserWebSession(context.Background(), user)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -300,7 +302,7 @@ type SSHLoginResponse struct {
 // TrustedCerts contains host certificates, it preserves backwards compatibility
 // on the wire, which is the primary reason for non-matching json tags
 type TrustedCerts struct {
-	// ClusterName identifies teleport cluster name this authority serves,
+	// ClusterName identifies siriusec cluster name this authority serves,
 	// for host authorities that means base hostname of all servers,
 	// for user authorities that means organization name
 	ClusterName string `json:"domain_name"`
@@ -341,7 +343,8 @@ func AuthoritiesToTrustedCerts(authorities []types.CertAuthority) []TrustedCerts
 // AuthenticateSSHUser authenticates an SSH user and returns SSH and TLS
 // certificates for the public key in req.
 func (s *Server) AuthenticateSSHUser(req AuthenticateSSHRequest) (*SSHLoginResponse, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	authPref, err := s.GetAuthPreference(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)

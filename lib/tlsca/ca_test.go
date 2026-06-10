@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/lib/fixtures"
 
@@ -83,7 +83,7 @@ func TestKubeExtensions(t *testing.T) {
 		// Generate a certificate restricted for
 		// use against a kubernetes endpoint, and not the API server endpoint
 		// otherwise proxies can generate certs for any user.
-		Usage:             []string{teleport.UsageKubeOnly},
+		Usage:             []string{siriusec.UsageKubeOnly},
 		KubernetesGroups:  []string{"system:masters", "admin"},
 		KubernetesUsers:   []string{"IAM#alice@example.com"},
 		KubernetesCluster: "kube-cluster",

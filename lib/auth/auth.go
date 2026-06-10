@@ -38,7 +38,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -141,7 +141,7 @@ func NewServer(cfg *InitConfig, opts ...ServerOption) (*Server, error) {
 		return nil, trace.Wrap(err)
 	}
 
-	closeCtx, cancelFunc := context.WithCancel(context.TODO())
+	closeCtx, cancelFunc := context.WithCancel(context.Background())
 	as := Server{
 		bk:              cfg.Backend,
 		limiter:         limiter,
@@ -207,25 +207,25 @@ func (r Services) GetWebToken(ctx context.Context, req types.GetWebTokenRequest)
 var (
 	generateRequestsCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricGenerateRequests,
+			Name: siriusec.MetricGenerateRequests,
 			Help: "Number of requests to generate new server keys",
 		},
 	)
 	generateThrottledRequestsCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricGenerateRequestsThrottled,
+			Name: siriusec.MetricGenerateRequestsThrottled,
 			Help: "Number of throttled requests to generate new server keys",
 		},
 	)
 	generateRequestsCurrent = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: teleport.MetricGenerateRequestsCurrent,
+			Name: siriusec.MetricGenerateRequestsCurrent,
 			Help: "Number of current generate requests for server keys",
 		},
 	)
 	generateRequestsLatencies = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
-			Name: teleport.MetricGenerateRequestsHistogram,
+			Name: siriusec.MetricGenerateRequestsHistogram,
 			Help: "Latency for generate requests for server keys",
 			// lowest bucket start of upper bound 0.001 sec (1 ms) with factor 2
 			// highest bucket start of 0.001 sec * 2^15 == 32.768 sec
@@ -235,14 +235,14 @@ var (
 	// UserLoginCount counts user logins
 	UserLoginCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricUserLoginCount,
+			Name: siriusec.MetricUserLoginCount,
 			Help: "Number of times there was a user login",
 		},
 	)
 
 	heartbeatsMissedByAuth = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: teleport.MetricHeartbeatsMissed,
+			Name: siriusec.MetricHeartbeatsMissed,
 			Help: "Number of hearbeats missed by auth server",
 		},
 	)
@@ -274,7 +274,7 @@ type Server struct {
 	sshca.Authority
 
 	// AuthServiceName is a human-readable name of this CA. If several Auth services are running
-	// (managing multiple teleport clusters) this field is used to tell them apart in UIs
+	// (managing multiple siriusec clusters) this field is used to tell them apart in UIs
 	// It usually defaults to the hostname of the machine the Auth service runs on.
 	AuthServiceName string
 
@@ -349,7 +349,8 @@ func (a *Server) checkLockInForce(mode constants.LockingMode, targets []types.Lo
 // runPeriodicOperations runs some periodic bookkeeping operations
 // performed by auth server
 func (a *Server) runPeriodicOperations() {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	// run periodic functions with a semi-random period
 	// to avoid contention on the database in case if there are multiple
 	// auth servers running - so they don't compete trying
@@ -537,7 +538,7 @@ func (a *Server) GetKeyStore() keystore.KeyStore {
 }
 
 func (a *Server) generateHostCert(p services.HostCertParams) ([]byte, error) {
-	authPref, err := a.GetAuthPreference(context.TODO())
+	authPref, err := a.GetAuthPreference(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -582,8 +583,8 @@ type certRequest struct {
 	// the cert can be only used against kubernetes endpoint, and not auth endpoint,
 	// no usage means unrestricted (to keep backwards compatibility)
 	usage []string
-	// routeToCluster is an optional teleport cluster name to route the
-	// certificate requests to, this teleport cluster name will be used to
+	// routeToCluster is an optional siriusec cluster name to route the
+	// certificate requests to, this siriusec cluster name will be used to
 	// route the requests to in case of kubernetes
 	routeToCluster string
 	// kubernetesCluster specifies the target kubernetes cluster for TLS
@@ -720,10 +721,10 @@ func (a *Server) GenerateUserAppTestCert(req AppTestCertRequest) ([]byte, error)
 		// used to log into servers but SSH certificate generation code requires a
 		// principal be in the certificate.
 		traits: wrappers.Traits(map[string][]string{
-			teleport.TraitLogins: {uuid.New()},
+			siriusec.TraitLogins: {uuid.New()},
 		}),
 		// Only allow this certificate to be used for applications.
-		usage: []string{teleport.UsageAppsOnly},
+		usage: []string{siriusec.UsageAppsOnly},
 		// Add in the application routing information.
 		appSessionID:   sessionID,
 		appPublicAddr:  req.PublicAddr,
@@ -766,7 +767,7 @@ func (a *Server) GenerateDatabaseTestCert(req DatabaseTestCertRequest) ([]byte, 
 		checker:   checker,
 		ttl:       time.Hour,
 		traits: wrappers.Traits(map[string][]string{
-			teleport.TraitLogins: {req.Username},
+			siriusec.TraitLogins: {req.Username},
 		}),
 		routeToCluster: req.Cluster,
 		dbService:      req.RouteToDatabase.ServiceName,
@@ -788,7 +789,7 @@ func (a *Server) generateUserCert(req certRequest) (*certs, error) {
 	}
 
 	// Reject the cert request if there is a matching lock in force.
-	authPref, err := a.GetAuthPreference(context.TODO())
+	authPref, err := a.GetAuthPreference(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -812,7 +813,7 @@ func (a *Server) generateUserCert(req certRequest) (*certs, error) {
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	if certificateFormat == teleport.CertificateFormatUnspecified {
+	if certificateFormat == siriusec.CertificateFormatUnspecified {
 		certificateFormat = req.checker.CertificateFormat()
 	}
 
@@ -908,8 +909,8 @@ func (a *Server) generateUserCert(req certRequest) (*certs, error) {
 	if err != nil && !trace.IsNotFound(err) {
 		return nil, trace.Wrap(err)
 	}
-	// Only validate/default kubernetes cluster name for the current teleport
-	// cluster. If this cert is targeting a trusted teleport cluster, leave all
+	// Only validate/default kubernetes cluster name for the current siriusec
+	// cluster. If this cert is targeting a trusted siriusec cluster, leave all
 	// the kubernetes cluster validation up to them.
 	if req.routeToCluster == clusterName {
 		req.kubernetesCluster, err = kubeutils.CheckOrSetKubeCluster(a.closeCtx, a.Presence, req.kubernetesCluster, clusterName)
@@ -1071,7 +1072,7 @@ func (a *Server) PreAuthenticatedSignIn(user string, identity tlsca.Identity) (t
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	if err := a.upsertWebSession(context.TODO(), user, sess); err != nil {
+	if err := a.upsertWebSession(context.Background(), user, sess); err != nil {
 		return nil, trace.Wrap(err)
 	}
 	return sess.WithoutSecrets(), nil
@@ -1080,7 +1081,7 @@ func (a *Server) PreAuthenticatedSignIn(user string, identity tlsca.Identity) (t
 // MFAAuthenticateChallenge is a U2F authentication challenge sent on user
 // login.
 type MFAAuthenticateChallenge struct {
-	// Before 6.0 teleport would only send 1 U2F challenge. Embed the old
+	// Before 6.0 siriusec would only send 1 U2F challenge. Embed the old
 	// challenge for compatibility with older clients. All new clients should
 	// ignore this and read Challenges instead.
 	*u2f.AuthenticateChallenge
@@ -1093,7 +1094,8 @@ type MFAAuthenticateChallenge struct {
 }
 
 func (a *Server) GetMFAAuthenticateChallenge(user string, password []byte) (*MFAAuthenticateChallenge, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 
 	err := a.WithUserLock(user, func() error {
 		return a.checkPasswordWOToken(user, password)
@@ -1150,7 +1152,7 @@ func (a *Server) CheckU2FSignResponse(ctx context.Context, user string, response
 // If there is a switchback request, the roles will switchback to user's default roles and
 // the expiration time is derived from users recently logged in time.
 func (a *Server) ExtendWebSession(req WebSessionReq, identity tlsca.Identity) (types.WebSession, error) {
-	prevSession, err := a.GetWebSession(context.TODO(), types.GetWebSessionRequest{
+	prevSession, err := a.GetWebSession(context.Background(), types.GetWebSessionRequest{
 		User:      req.User,
 		SessionID: req.PrevSessionID,
 	})
@@ -1224,7 +1226,7 @@ func (a *Server) ExtendWebSession(req WebSessionReq, identity tlsca.Identity) (t
 	// Keep preserving the login time.
 	sess.SetLoginTime(prevSession.GetLoginTime())
 
-	if err := a.upsertWebSession(context.TODO(), req.User, sess); err != nil {
+	if err := a.upsertWebSession(context.Background(), req.User, sess); err != nil {
 		return nil, trace.Wrap(err)
 	}
 
@@ -1237,7 +1239,7 @@ func (a *Server) getRolesAndExpiryFromAccessRequest(user, accessRequestID string
 		ID:   accessRequestID,
 	}
 
-	reqs, err := a.GetAccessRequests(context.TODO(), reqFilter)
+	reqs, err := a.GetAccessRequests(context.Background(), reqFilter)
 	if err != nil {
 		return nil, time.Time{}, trace.Wrap(err)
 	}
@@ -1283,7 +1285,7 @@ func (a *Server) CreateWebSession(user string) (types.WebSession, error) {
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	if err := a.upsertWebSession(context.TODO(), user, sess); err != nil {
+	if err := a.upsertWebSession(context.Background(), user, sess); err != nil {
 		return nil, trace.Wrap(err)
 	}
 	return sess, nil
@@ -1612,7 +1614,8 @@ func (a *Server) GenerateServerKeys(req GenerateServerKeysRequest) (*PackedKeys,
 // a list of roles this token allows its owner to assume and token labels, or an error if the token
 // cannot be found.
 func (a *Server) ValidateToken(token string) (types.SystemRoles, map[string]string, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	tkns, err := a.GetCache().GetStaticTokens()
 	if err != nil {
 		return nil, nil, trace.Wrap(err)
@@ -1642,7 +1645,8 @@ func (a *Server) ValidateToken(token string) (types.SystemRoles, map[string]stri
 // checkTokenTTL checks if the token is still valid. If it is not, the token
 // is removed from the backend and returns false. Otherwise returns true.
 func (a *Server) checkTokenTTL(tok types.ProvisionToken) bool {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	now := a.clock.Now().UTC()
 	if tok.Expiry().Before(now) {
 		err := a.DeleteToken(ctx, tok.GetName())
@@ -1834,7 +1838,7 @@ func (a *Server) NewWebSession(req types.NewWebSessionRequest) (types.WebSession
 		return nil, trace.Wrap(err)
 	}
 
-	netCfg, err := a.GetClusterNetworkingConfig(context.TODO())
+	netCfg, err := a.GetClusterNetworkingConfig(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1904,7 +1908,8 @@ func (a *Server) GetWebSessionInfo(ctx context.Context, user, sessionID string) 
 }
 
 func (a *Server) DeleteNamespace(namespace string) error {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	if namespace == apidefaults.Namespace {
 		return trace.AccessDenied("can't delete default namespace")
 	}
@@ -2703,7 +2708,7 @@ func (a *Server) createSelfSignedCA(caID types.CertAuthID) error {
 	return nil
 }
 
-// deleteUnusedKeys deletes all teleport keys held in a connected HSM for this
+// deleteUnusedKeys deletes all siriusec keys held in a connected HSM for this
 // auth server which are not currently used in any CAs.
 func (a *Server) deleteUnusedKeys() error {
 	clusterName, err := a.GetClusterName()

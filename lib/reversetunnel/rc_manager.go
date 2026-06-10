@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -215,7 +215,7 @@ func (w *RemoteClusterTunnelManager) realNewAgentPool(ctx context.Context, clust
 		ReverseTunnelServer: w.cfg.ReverseTunnelServer,
 		FIPS:                w.cfg.FIPS,
 		// RemoteClusterManager only runs on proxies.
-		Component: teleport.ComponentProxy,
+		Component: siriusec.ComponentProxy,
 
 		// Configs for remote cluster.
 		Cluster:   cluster,

@@ -43,7 +43,7 @@ resource "aws_iam_role_policy" "auth_ssm" {
                 "ssm:PutParameter",
                 "ssm:DeleteParameter"
             ],
-            "Resource": "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/teleport/${var.cluster_name}/*"
+            "Resource": "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/siriusec/${var.cluster_name}/*"
         },
         {
          "Effect":"Allow",
@@ -70,28 +70,28 @@ resource "aws_iam_role_policy" "auth_dynamo" {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "AllActionsOnTeleportDB",
+            "Sid": "AllActionsOnSiriusecDB",
             "Effect": "Allow",
             "Action": "dynamodb:*",
-            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.teleport.name}"
+            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.siriusec.name}"
         },
         {
-            "Sid": "AllActionsOnTeleportEventsDB",
+            "Sid": "AllActionsOnSiriusecEventsDB",
             "Effect": "Allow",
             "Action": "dynamodb:*",
-            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.teleport_events.name}"
+            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.siriusec_events.name}"
         },
         {
-            "Sid": "AllActionsOnTeleportEventsIndexDB",
+            "Sid": "AllActionsOnSiriusecEventsIndexDB",
             "Effect": "Allow",
             "Action": "dynamodb:*",
-            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.teleport_events.name}/index/*"
+            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.siriusec_events.name}/index/*"
         },
         {
-            "Sid": "AllActionsOnTeleportStreamsDB",
+            "Sid": "AllActionsOnSiriusecStreamsDB",
             "Effect": "Allow",
             "Action": "dynamodb:*",
-            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.teleport.name}/stream/*"
+            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.siriusec.name}/stream/*"
         }
     ]
 }

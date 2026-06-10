@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package service implements teleport running service, takes care
+// Package service implements siriusec running service, takes care
 // of initialization, cleanup and shutdown procedures
 package service
 
@@ -25,7 +25,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -46,7 +45,7 @@ import (
 
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/client/webclient"
 	"github.com/siriusec/siriusec/api/constants"
@@ -163,16 +162,16 @@ const (
 	// all listening sockets and exiting.
 	SiriusecExitEvent = "TeleportExit"
 
-	// SiriusecReloadEvent is generated to trigger in-process teleport
+	// SiriusecReloadEvent is generated to trigger in-process siriusec
 	// service reload - all servers and clients will be re-created
 	// in a graceful way.
 	SiriusecReloadEvent = "TeleportReload"
 
-	// SiriusecPhaseChangeEvent is generated to indidate that teleport
+	// SiriusecPhaseChangeEvent is generated to indidate that siriusec
 	// CA rotation phase has been updated, used in tests
 	SiriusecPhaseChangeEvent = "TeleportPhaseChange"
 
-	// SiriusecReadyEvent is generated to signal that all teleport
+	// SiriusecReadyEvent is generated to signal that all siriusec
 	// internal components have started successfully.
 	SiriusecReadyEvent = "TeleportReady"
 
@@ -241,7 +240,7 @@ func (c *Connector) Close() error {
 }
 
 // SiriusecProcess structure holds the state of the Siriusec daemon, controlling
-// execution and configuration of the teleport services: ssh, auth and proxy.
+// execution and configuration of the siriusec services: ssh, auth and proxy.
 type SiriusecProcess struct {
 	Clock clockwork.Clock
 	sync.Mutex
@@ -272,7 +271,7 @@ type SiriusecProcess struct {
 	// passed by the parent process
 	importedDescriptors []FileDescriptor
 
-	// forkedPIDs is a collection of a teleport processes forked
+	// forkedPIDs is a collection of a siriusec processes forked
 	// during restart used to collect their status in case if the
 	// child process crashed.
 	forkedPIDs []int
@@ -310,7 +309,7 @@ type keyPairKey struct {
 }
 
 // processIndex is an internal process index
-// to help differentiate between two different teleport processes
+// to help differentiate between two different siriusec processes
 // during in-process reload.
 var processID int32
 
@@ -381,7 +380,7 @@ func (process *SiriusecProcess) getClusterFeatures() proto.Features {
 }
 
 // GetIdentity returns the process identity (credentials to the auth server) for a given
-// teleport Role. A teleport process can have any combination of 3 roles: auth, node, proxy
+// siriusec Role. A siriusec process can have any combination of 3 roles: auth, node, proxy
 // and they have their own identities
 func (process *SiriusecProcess) GetIdentity(role types.SystemRole) (i *auth.Identity, err error) {
 	var found bool
@@ -454,21 +453,21 @@ type Process interface {
 	WaitWithContext(ctx context.Context)
 }
 
-// NewProcess is a function that creates new teleport from config
+// NewProcess is a function that creates new siriusec from config
 type NewProcess func(cfg *Config) (Process, error)
 
 func newSiriusecProcess(cfg *Config) (Process, error) {
 	return NewSiriusec(cfg)
 }
 
-// Run starts teleport processes, waits for signals
+// Run starts siriusec processes, waits for signals
 // and handles internal process reloads.
-func Run(ctx context.Context, cfg Config, newTeleport NewProcess) error {
-	if newTeleport == nil {
-		newTeleport = newSiriusecProcess
+func Run(ctx context.Context, cfg Config, newSiriusec NewProcess) error {
+	if newSiriusec == nil {
+		newSiriusec = newSiriusecProcess
 	}
 	copyCfg := cfg
-	srv, err := newTeleport(&copyCfg)
+	srv, err := newSiriusec(&copyCfg)
 	if err != nil {
 		return trace.Wrap(err, "initialization failed")
 	}
@@ -480,11 +479,11 @@ func Run(ctx context.Context, cfg Config, newTeleport NewProcess) error {
 	}
 	// Wait and reload until called exit.
 	for {
-		srv, err = waitAndReload(ctx, cfg, srv, newTeleport)
+		srv, err = waitAndReload(ctx, cfg, srv, newSiriusec)
 		if err != nil {
 			// This error means that was a clean shutdown
 			// and no reload is necessary.
-			if err == ErrTeleportExited {
+			if err == ErrSiriusecExited {
 				return nil
 			}
 			return trace.Wrap(err)
@@ -492,12 +491,12 @@ func Run(ctx context.Context, cfg Config, newTeleport NewProcess) error {
 	}
 }
 
-func waitAndReload(ctx context.Context, cfg Config, srv Process, newTeleport NewProcess) (Process, error) {
+func waitAndReload(ctx context.Context, cfg Config, srv Process, newSiriusec NewProcess) (Process, error) {
 	err := srv.WaitForSignals(ctx)
 	if err == nil {
-		return nil, ErrTeleportExited
+		return nil, ErrSiriusecExited
 	}
-	if err != ErrTeleportReloading {
+	if err != ErrSiriusecReloading {
 		return nil, trace.Wrap(err)
 	}
 	cfg.Log.Infof("Started in-process service reload.")
@@ -508,7 +507,7 @@ func waitAndReload(ctx context.Context, cfg Config, srv Process, newTeleport New
 	}
 	newCfg := cfg
 	newCfg.FileDescriptors = fileDescriptors
-	newSrv, err := newTeleport(&newCfg)
+	newSrv, err := newSiriusec(&newCfg)
 	if err != nil {
 		warnOnErr(srv.Close(), cfg.Log)
 		return nil, trace.Wrap(err, "failed to create a new service")
@@ -586,7 +585,7 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 		if !modules.GetModules().IsBoringBinary() {
 			return nil, trace.BadParameter("binary not compiled against BoringCrypto, check " +
 				"that Enterprise release was downloaded from " +
-				"https://dashboard.gravitational.com")
+				"https://dashboard.siriusec.com")
 		}
 	}
 
@@ -657,7 +656,7 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 
 	processID := fmt.Sprintf("%v", nextProcessID())
 	supervisor := NewSupervisor(processID, cfg.Log)
-	storage, err := auth.NewProcessStorage(supervisor.ExitContext(), filepath.Join(cfg.DataDir, teleport.ComponentProcess))
+	storage, err := auth.NewProcessStorage(supervisor.ExitContext(), filepath.Join(cfg.DataDir, siriusec.ComponentProcess))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -687,7 +686,7 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 	process.registerAppDepend()
 
 	process.log = cfg.Log.WithFields(logrus.Fields{
-		trace.Component: teleport.Component(teleport.ComponentProcess, process.id),
+		trace.Component: siriusec.Component(siriusec.ComponentProcess, process.id),
 	})
 
 	serviceStarted := false
@@ -697,7 +696,7 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 			return nil, trace.Wrap(err)
 		}
 	} else {
-		warnOnErr(process.closeImportedDescriptors(teleport.ComponentDiagnostic), process.log)
+		warnOnErr(process.closeImportedDescriptors(siriusec.ComponentDiagnostic), process.log)
 	}
 
 	// Create a process wide key generator that will be shared. This is so the
@@ -740,7 +739,7 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 		}
 		serviceStarted = true
 	} else {
-		warnOnErr(process.closeImportedDescriptors(teleport.ComponentAuth), process.log)
+		warnOnErr(process.closeImportedDescriptors(siriusec.ComponentAuth), process.log)
 	}
 
 	if cfg.SSH.Enabled {
@@ -749,7 +748,7 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 		}
 		serviceStarted = true
 	} else {
-		warnOnErr(process.closeImportedDescriptors(teleport.ComponentNode), process.log)
+		warnOnErr(process.closeImportedDescriptors(siriusec.ComponentNode), process.log)
 	}
 
 	if cfg.Proxy.Enabled {
@@ -758,14 +757,14 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 		}
 		serviceStarted = true
 	} else {
-		warnOnErr(process.closeImportedDescriptors(teleport.ComponentProxy), process.log)
+		warnOnErr(process.closeImportedDescriptors(siriusec.ComponentProxy), process.log)
 	}
 
 	if cfg.Kube.Enabled {
 		process.initKubernetes()
 		serviceStarted = true
 	} else {
-		warnOnErr(process.closeImportedDescriptors(teleport.ComponentKube), process.log)
+		warnOnErr(process.closeImportedDescriptors(siriusec.ComponentKube), process.log)
 	}
 
 	// If this process is proxying applications, start application access server.
@@ -773,14 +772,14 @@ func NewSiriusec(cfg *Config) (*SiriusecProcess, error) {
 		process.initApps()
 		serviceStarted = true
 	} else {
-		warnOnErr(process.closeImportedDescriptors(teleport.ComponentApp), process.log)
+		warnOnErr(process.closeImportedDescriptors(siriusec.ComponentApp), process.log)
 	}
 
 	if cfg.Databases.Enabled {
 		process.initDatabases()
 		serviceStarted = true
 	} else {
-		warnOnErr(process.closeImportedDescriptors(teleport.ComponentDatabase), process.log)
+		warnOnErr(process.closeImportedDescriptors(siriusec.ComponentDatabase), process.log)
 	}
 
 	process.RegisterFunc("common.rotate", process.periodicSyncRotationState)
@@ -863,7 +862,7 @@ func adminCreds() (*int, *int, error) {
 	}
 	// if the user member of adm linux group,
 	// make audit log folder readable by admins
-	isAdmin, err := utils.IsGroupMember(teleport.LinuxAdminGID)
+	isAdmin, err := utils.IsGroupMember(siriusec.LinuxAdminGID)
 	if err != nil {
 		return nil, nil, trace.Wrap(err)
 	}
@@ -871,7 +870,7 @@ func adminCreds() (*int, *int, error) {
 		return nil, nil, nil
 	}
 	uid := os.Getuid()
-	gid := teleport.LinuxAdminGID
+	gid := siriusec.LinuxAdminGID
 	return &uid, &gid, nil
 }
 
@@ -881,7 +880,7 @@ func adminCreds() (*int, *int, error) {
 func initUploadHandler(ctx context.Context, auditConfig types.ClusterAuditConfig, dataDir string) (events.MultipartHandler, error) {
 	if !auditConfig.ShouldUploadSessions() {
 		recordsDir := filepath.Join(dataDir, events.RecordsDir)
-		if err := os.MkdirAll(recordsDir, teleport.SharedDirMode); err != nil {
+		if err := os.MkdirAll(recordsDir, siriusec.SharedDirMode); err != nil {
 			return nil, trace.ConvertSystemError(err)
 		}
 		handler, err := filesessions.NewHandler(filesessions.Config{
@@ -905,7 +904,7 @@ func initUploadHandler(ctx context.Context, auditConfig types.ClusterAuditConfig
 	}
 
 	switch uri.Scheme {
-	case teleport.SchemeGCS:
+	case siriusec.SchemeGCS:
 		config := gcssessions.Config{}
 		if err := config.SetFromURL(uri); err != nil {
 			return nil, trace.Wrap(err)
@@ -915,7 +914,7 @@ func initUploadHandler(ctx context.Context, auditConfig types.ClusterAuditConfig
 			return nil, trace.Wrap(err)
 		}
 		return handler, nil
-	case teleport.SchemeS3:
+	case siriusec.SchemeS3:
 		config := s3sessions.Config{}
 		if err := config.SetFromURL(uri, auditConfig.Region()); err != nil {
 			return nil, trace.Wrap(err)
@@ -925,8 +924,8 @@ func initUploadHandler(ctx context.Context, auditConfig types.ClusterAuditConfig
 			return nil, trace.Wrap(err)
 		}
 		return handler, nil
-	case teleport.SchemeFile:
-		if err := os.MkdirAll(uri.Path, teleport.SharedDirMode); err != nil {
+	case siriusec.SchemeFile:
+		if err := os.MkdirAll(uri.Path, siriusec.SharedDirMode); err != nil {
 			return nil, trace.ConvertSystemError(err)
 		}
 		handler, err := filesessions.NewHandler(filesessions.Config{
@@ -939,7 +938,7 @@ func initUploadHandler(ctx context.Context, auditConfig types.ClusterAuditConfig
 	default:
 		return nil, trace.BadParameter(
 			"unsupported scheme for audit_sesions_uri: %q, currently supported schemes are %q and %q",
-			uri.Scheme, teleport.SchemeS3, teleport.SchemeFile)
+			uri.Scheme, siriusec.SchemeS3, siriusec.SchemeFile)
 	}
 }
 
@@ -990,14 +989,14 @@ func initExternalLog(ctx context.Context, auditConfig types.ClusterAuditConfig, 
 				return nil, trace.Wrap(err)
 			}
 			loggers = append(loggers, logger)
-		case teleport.SchemeFile:
+		case siriusec.SchemeFile:
 			if uri.Path == "" {
 				return nil, trace.BadParameter("unsupported audit uri: %q (missing path component)", uri)
 			}
 			if uri.Host != "" && uri.Host != "localhost" {
 				return nil, trace.BadParameter("unsupported audit uri: %q (nonlocal host component: %q)", uri, uri.Host)
 			}
-			if err := os.MkdirAll(uri.Path, teleport.SharedDirMode); err != nil {
+			if err := os.MkdirAll(uri.Path, siriusec.SharedDirMode); err != nil {
 				return nil, trace.ConvertSystemError(err)
 			}
 			logger, err := events.NewFileLog(events.FileLogConfig{
@@ -1007,13 +1006,13 @@ func initExternalLog(ctx context.Context, auditConfig types.ClusterAuditConfig, 
 				return nil, trace.Wrap(err)
 			}
 			loggers = append(loggers, logger)
-		case teleport.SchemeStdout:
+		case siriusec.SchemeStdout:
 			logger := events.NewWriterEmitter(utils.NopWriteCloser(os.Stdout))
 			loggers = append(loggers, logger)
 		default:
 			return nil, trace.BadParameter(
 				"unsupported scheme for audit_events_uri: %q, currently supported schemes are %q and %q",
-				uri.Scheme, dynamo.GetName(), teleport.SchemeFile)
+				uri.Scheme, dynamo.GetName(), siriusec.SchemeFile)
 		}
 	}
 
@@ -1076,7 +1075,7 @@ func (process *SiriusecProcess) initAuthService() error {
 
 		auditConfig := cfg.Auth.AuditConfig
 		uploadHandler, err = initUploadHandler(
-			process.ExitContext(), auditConfig, filepath.Join(cfg.DataDir, teleport.LogsDir))
+			process.ExitContext(), auditConfig, filepath.Join(cfg.DataDir, siriusec.LogsDir))
 		if err != nil {
 			if !trace.IsNotFound(err) {
 				return trace.Wrap(err)
@@ -1099,7 +1098,7 @@ func (process *SiriusecProcess) initAuthService() error {
 
 		auditServiceConfig := events.AuditLogConfig{
 			Context:        process.ExitContext(),
-			DataDir:        filepath.Join(cfg.DataDir, teleport.LogsDir),
+			DataDir:        filepath.Join(cfg.DataDir, siriusec.LogsDir),
 			RecordSessions: recordSessions,
 			ServerID:       cfg.HostUUID,
 			UploadHandler:  uploadHandler,
@@ -1131,7 +1130,7 @@ func (process *SiriusecProcess) initAuthService() error {
 	if uploadHandler != nil {
 		uploadCompleter, err = events.NewUploadCompleter(events.UploadCompleterConfig{
 			Uploader:  uploadHandler,
-			Component: teleport.ComponentAuth,
+			Component: siriusec.ComponentAuth,
 			AuditLog:  process.auditLog,
 		})
 		if err != nil {
@@ -1196,12 +1195,12 @@ func (process *SiriusecProcess) initAuthService() error {
 	}
 
 	log := process.log.WithFields(logrus.Fields{
-		trace.Component: teleport.Component(teleport.ComponentAuth, process.id),
+		trace.Component: siriusec.Component(siriusec.ComponentAuth, process.id),
 	})
 
 	lockWatcher, err := services.NewLockWatcher(process.ExitContext(), services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentAuth,
+			Component: siriusec.ComponentAuth,
 			Log:       log,
 			Client:    authServer.Services,
 		},
@@ -1244,7 +1243,7 @@ func (process *SiriusecProcess) initAuthService() error {
 		cache, err := process.newAccessCache(accessCacheConfig{
 			services:  authServer.Services,
 			setup:     cache.ForAuth,
-			cacheName: []string{teleport.ComponentAuth},
+			cacheName: []string{siriusec.ComponentAuth},
 			inMemory:  true,
 			events:    true,
 		})
@@ -1274,14 +1273,14 @@ func (process *SiriusecProcess) initAuthService() error {
 	authAddr := listener.Addr().String()
 
 	// clean up unused descriptors passed for proxy, but not used by it
-	warnOnErr(process.closeImportedDescriptors(teleport.ComponentAuth), log)
+	warnOnErr(process.closeImportedDescriptors(siriusec.ComponentAuth), log)
 	if cfg.Auth.EnableProxyProtocol {
 		log.Infof("Starting Auth service with PROXY protocol support.")
 	}
 	mux, err := multiplexer.New(multiplexer.Config{
 		EnableProxyProtocol: cfg.Auth.EnableProxyProtocol,
 		Listener:            listener,
-		ID:                  teleport.Component(process.id),
+		ID:                  siriusec.Component(process.id),
 	})
 	if err != nil {
 		listener.Close()
@@ -1293,7 +1292,7 @@ func (process *SiriusecProcess) initAuthService() error {
 		APIConfig:     *apiConf,
 		LimiterConfig: cfg.Auth.Limiter,
 		AccessPoint:   authCache,
-		Component:     teleport.Component(teleport.ComponentAuth, process.id),
+		Component:     siriusec.Component(siriusec.ComponentAuth, process.id),
 		ID:            process.id,
 		Listener:      mux.TLS(),
 	})
@@ -1301,8 +1300,8 @@ func (process *SiriusecProcess) initAuthService() error {
 		return trace.Wrap(err)
 	}
 	process.RegisterCriticalFunc("auth.tls", func() error {
-		utils.Consolef(cfg.Console, log, teleport.ComponentAuth, "Auth service %s:%s is starting on %v.",
-			teleport.Version, teleport.Gitref, authAddr)
+		utils.Consolef(cfg.Console, log, siriusec.ComponentAuth, "Auth service %s:%s is starting on %v.",
+			siriusec.Version, siriusec.Gitref, authAddr)
 
 		// since tlsServer.Serve is a blocking call, we emit this even right before
 		// the service has started
@@ -1360,7 +1359,7 @@ func (process *SiriusecProcess) initAuthService() error {
 	heartbeat, err := srv.NewHeartbeat(srv.HeartbeatConfig{
 		Mode:      srv.HeartbeatModeAuth,
 		Context:   process.GracefulExitContext(),
-		Component: teleport.ComponentAuth,
+		Component: siriusec.ComponentAuth,
 		Announcer: authServer,
 		GetServerInfo: func() (types.Resource, error) {
 			srv := types.ServerV2{
@@ -1373,7 +1372,7 @@ func (process *SiriusecProcess) initAuthService() error {
 				Spec: types.ServerSpecV2{
 					Addr:     authAddr,
 					Hostname: process.Config.Hostname,
-					Version:  teleport.Version,
+					Version:  siriusec.Version,
 				},
 			}
 			state, err := process.storage.GetState(types.RoleAdmin)
@@ -1394,9 +1393,9 @@ func (process *SiriusecProcess) initAuthService() error {
 		ServerTTL:       apidefaults.ServerAnnounceTTL,
 		OnHeartbeat: func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentAuth})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentAuth})
 			} else {
-				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentAuth})
 			}
 		},
 	})
@@ -1443,7 +1442,7 @@ func payloadContext(payload interface{}, log logrus.FieldLogger) context.Context
 		return ctx
 	}
 	log.Errorf("Expected context, got %T.", payload)
-	return context.TODO()
+	return context.Background()
 }
 
 // OnExit allows individual services to register a callback function which will be
@@ -1452,7 +1451,7 @@ func payloadContext(payload interface{}, log logrus.FieldLogger) context.Context
 func (process *SiriusecProcess) OnExit(serviceName string, callback func(interface{})) {
 	process.RegisterFunc(serviceName, func() error {
 		eventC := make(chan Event)
-		process.WaitForEvent(context.TODO(), SiriusecExitEvent, eventC)
+		process.WaitForEvent(context.Background(), SiriusecExitEvent, eventC)
 
 		event := <-eventC
 		callback(event.Payload)
@@ -1516,7 +1515,7 @@ func (process *SiriusecProcess) newAccessCache(cfg accessCacheConfig) (*cache.Ca
 	} else {
 		process.log.Debugf("Creating sqlite backend for %v.", cfg.cacheName)
 		path := filepath.Join(append([]string{process.Config.DataDir, "cache"}, cfg.cacheName...)...)
-		if err := os.MkdirAll(path, teleport.SharedDirMode); err != nil {
+		if err := os.MkdirAll(path, siriusec.SharedDirMode); err != nil {
 			return nil, trace.ConvertSystemError(err)
 		}
 		liteBackend, err := lite.NewWithConfig(process.ExitContext(),
@@ -1533,7 +1532,7 @@ func (process *SiriusecProcess) newAccessCache(cfg accessCacheConfig) (*cache.Ca
 		cacheBackend = liteBackend
 	}
 	reporter, err := backend.NewReporter(backend.ReporterConfig{
-		Component: teleport.ComponentCache,
+		Component: siriusec.ComponentCache,
 		Backend:   cacheBackend,
 	})
 	if err != nil {
@@ -1555,8 +1554,8 @@ func (process *SiriusecProcess) newAccessCache(cfg accessCacheConfig) (*cache.Ca
 		AppSession:      cfg.services,
 		WebSession:      cfg.services.WebSessions(),
 		WebToken:        cfg.services.WebTokens(),
-		Component:       teleport.Component(append(cfg.cacheName, process.id, teleport.ComponentCache)...),
-		MetricComponent: teleport.Component(append(cfg.cacheName, teleport.ComponentCache)...),
+		Component:       siriusec.Component(append(cfg.cacheName, process.id, siriusec.ComponentCache)...),
+		MetricComponent: siriusec.Component(append(cfg.cacheName, siriusec.ComponentCache)...),
 	}))
 }
 
@@ -1637,7 +1636,7 @@ func (process *SiriusecProcess) initSSH() error {
 	process.WaitForEvent(process.ExitContext(), SSHIdentityEvent, eventsC)
 
 	log := process.log.WithFields(logrus.Fields{
-		trace.Component: teleport.Component(teleport.ComponentNode, process.id),
+		trace.Component: siriusec.Component(siriusec.ComponentNode, process.id),
 	})
 
 	var agentPool *reversetunnel.AgentPool
@@ -1671,7 +1670,7 @@ func (process *SiriusecProcess) initSSH() error {
 			return trace.Wrap(err)
 		}
 
-		authClient, err := process.newLocalCache(conn.Client, cache.ForNode, []string{teleport.ComponentNode})
+		authClient, err := process.newLocalCache(conn.Client, cache.ForNode, []string{siriusec.ComponentNode})
 		if err != nil {
 			return trace.Wrap(err)
 		}
@@ -1770,7 +1769,7 @@ func (process *SiriusecProcess) initSSH() error {
 
 		lockWatcher, err := services.NewLockWatcher(process.ExitContext(), services.LockWatcherConfig{
 			ResourceWatcherConfig: services.ResourceWatcherConfig{
-				Component: teleport.ComponentNode,
+				Component: siriusec.ComponentNode,
 				Log:       log,
 				Client:    conn.Client,
 			},
@@ -1804,9 +1803,9 @@ func (process *SiriusecProcess) initSSH() error {
 			regular.SetRestrictedSessionManager(rm),
 			regular.SetOnHeartbeat(func(err error) {
 				if err != nil {
-					process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentNode})
+					process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentNode})
 				} else {
-					process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentNode})
+					process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentNode})
 				}
 			}),
 			regular.SetAllowTCPForwarding(cfg.SSH.AllowTCPForwarding),
@@ -1830,11 +1829,11 @@ func (process *SiriusecProcess) initSSH() error {
 				return trace.Wrap(err)
 			}
 			// clean up unused descriptors passed for proxy, but not used by it
-			warnOnErr(process.closeImportedDescriptors(teleport.ComponentNode), log)
+			warnOnErr(process.closeImportedDescriptors(siriusec.ComponentNode), log)
 
-			log.Infof("Service %s:%s is starting on %v %v.", teleport.Version, teleport.Gitref, cfg.SSH.Addr.Addr, process.Config.CachePolicy)
-			utils.Consolef(cfg.Console, log, teleport.ComponentNode, "Service %s:%s is starting on %v.",
-				teleport.Version, teleport.Gitref, cfg.SSH.Addr.Addr)
+			log.Infof("Service %s:%s is starting on %v %v.", siriusec.Version, siriusec.Gitref, cfg.SSH.Addr.Addr, process.Config.CachePolicy)
+			utils.Consolef(cfg.Console, log, siriusec.ComponentNode, "Service %s:%s is starting on %v.",
+				siriusec.Version, siriusec.Gitref, cfg.SSH.Addr.Addr)
 
 			// Start the SSH server. This kicks off updating labels, starting the
 			// heartbeat, and accepting connections.
@@ -1853,7 +1852,7 @@ func (process *SiriusecProcess) initSSH() error {
 			agentPool, err = reversetunnel.NewAgentPool(
 				process.ExitContext(),
 				reversetunnel.AgentPoolConfig{
-					Component:   teleport.ComponentNode,
+					Component:   siriusec.ComponentNode,
 					HostUUID:    conn.ServerIdentity.ID.HostUUID,
 					ProxyAddr:   conn.TunnelProxy(),
 					Client:      conn.Client,
@@ -1940,7 +1939,7 @@ func (process *SiriusecProcess) registerWithAuthServer(role types.SystemRole, ev
 
 func (process *SiriusecProcess) initUploaderService(accessPoint auth.AccessPoint, auditLog events.IAuditLog) error {
 	log := process.log.WithFields(logrus.Fields{
-		trace.Component: teleport.Component(teleport.ComponentAuditLog, process.id),
+		trace.Component: siriusec.Component(siriusec.ComponentAuditLog, process.id),
 	})
 	// create folder for uploads
 	uid, gid, err := adminCreds()
@@ -1948,11 +1947,11 @@ func (process *SiriusecProcess) initUploaderService(accessPoint auth.AccessPoint
 		return trace.Wrap(err)
 	}
 	// prepare dirs for uploader
-	streamingDir := []string{process.Config.DataDir, teleport.LogsDir, teleport.ComponentUpload, events.StreamingLogsDir, apidefaults.Namespace}
+	streamingDir := []string{process.Config.DataDir, siriusec.LogsDir, siriusec.ComponentUpload, events.StreamingLogsDir, apidefaults.Namespace}
 	paths := [][]string{
 		// DELETE IN (5.1.0)
 		// this directory will no longer be used after migration to 5.1.0
-		{process.Config.DataDir, teleport.LogsDir, teleport.ComponentUpload, events.SessionLogsDir, apidefaults.Namespace},
+		{process.Config.DataDir, siriusec.LogsDir, siriusec.ComponentUpload, events.SessionLogsDir, apidefaults.Namespace},
 		// This directory will remain to be used after migration to 5.1.0
 		streamingDir,
 	}
@@ -1981,9 +1980,9 @@ func (process *SiriusecProcess) initUploaderService(accessPoint auth.AccessPoint
 	// this uploader was superseded by filesessions.Uploader,
 	// see below
 	uploader, err := events.NewUploader(events.UploaderConfig{
-		DataDir:   filepath.Join(process.Config.DataDir, teleport.LogsDir),
+		DataDir:   filepath.Join(process.Config.DataDir, siriusec.LogsDir),
 		Namespace: apidefaults.Namespace,
-		ServerID:  teleport.ComponentUpload,
+		ServerID:  siriusec.ComponentUpload,
 		AuditLog:  auditLog,
 		EventsC:   process.Config.UploadEventsC,
 	})
@@ -2050,11 +2049,20 @@ func (process *SiriusecProcess) initDiagnosticService() error {
 	}
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if authServer := process.GetAuthServer(); authServer != nil {
+			if _, err := authServer.GetClusterName(); err != nil {
+				roundtrip.ReplyJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
+					"status": "unhealthy",
+					"error":  err.Error(),
+				})
+				return
+			}
+		}
 		roundtrip.ReplyJSON(w, http.StatusOK, map[string]interface{}{"status": "ok"})
 	})
 
 	log := process.log.WithFields(logrus.Fields{
-		trace.Component: teleport.Component(teleport.ComponentDiagnostic, process.id),
+		trace.Component: siriusec.Component(siriusec.ComponentDiagnostic, process.id),
 	})
 
 	// Create a state machine that will process and update the internal state of
@@ -2086,16 +2094,16 @@ func (process *SiriusecProcess) initDiagnosticService() error {
 		// 503
 		case stateDegraded:
 			roundtrip.ReplyJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
-				"status": "teleport is in a degraded state, check logs for details",
+				"status": "siriusec is in a degraded state, check logs for details",
 			})
 		// 400
 		case stateRecovering:
 			roundtrip.ReplyJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"status": "teleport is recovering from a degraded state, check logs for details",
+				"status": "siriusec is recovering from a degraded state, check logs for details",
 			})
 		case stateStarting:
 			roundtrip.ReplyJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"status": "teleport is starting and hasn't joined the cluster yet",
+				"status": "siriusec is starting and hasn't joined the cluster yet",
 			})
 		// 200
 		case stateOK:
@@ -2109,12 +2117,12 @@ func (process *SiriusecProcess) initDiagnosticService() error {
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	warnOnErr(process.closeImportedDescriptors(teleport.ComponentDiagnostic), log)
+	warnOnErr(process.closeImportedDescriptors(siriusec.ComponentDiagnostic), log)
 
 	server := &http.Server{
 		Handler:           mux,
 		ReadHeaderTimeout: apidefaults.DefaultDialTimeout,
-		ErrorLog:          utils.NewStdlogger(log.Error, teleport.ComponentDiagnostic),
+		ErrorLog:          utils.NewStdlogger(log.Error, siriusec.ComponentDiagnostic),
 	}
 
 	log.Infof("Starting diagnostic service on %v.", process.Config.DiagnosticAddr.Addr)
@@ -2157,9 +2165,9 @@ func (process *SiriusecProcess) getAdditionalPrincipals(role types.SystemRole) (
 			process.Config.Proxy.SSHAddr,
 			process.Config.Proxy.ReverseTunnelListenAddr,
 			process.Config.Proxy.MySQLAddr,
-			utils.NetAddr{Addr: string(teleport.PrincipalLocalhost)},
-			utils.NetAddr{Addr: string(teleport.PrincipalLoopbackV4)},
-			utils.NetAddr{Addr: string(teleport.PrincipalLoopbackV6)},
+			utils.NetAddr{Addr: string(siriusec.PrincipalLocalhost)},
+			utils.NetAddr{Addr: string(siriusec.PrincipalLoopbackV4)},
+			utils.NetAddr{Addr: string(siriusec.PrincipalLoopbackV6)},
 			utils.NetAddr{Addr: reversetunnel.LocalKubernetes},
 		)
 		addrs = append(addrs, process.Config.Proxy.SSHPublicAddrs...)
@@ -2201,9 +2209,9 @@ func (process *SiriusecProcess) getAdditionalPrincipals(role types.SystemRole) (
 		}
 	case types.RoleKube:
 		addrs = append(addrs,
-			utils.NetAddr{Addr: string(teleport.PrincipalLocalhost)},
-			utils.NetAddr{Addr: string(teleport.PrincipalLoopbackV4)},
-			utils.NetAddr{Addr: string(teleport.PrincipalLoopbackV6)},
+			utils.NetAddr{Addr: string(siriusec.PrincipalLocalhost)},
+			utils.NetAddr{Addr: string(siriusec.PrincipalLoopbackV4)},
+			utils.NetAddr{Addr: string(siriusec.PrincipalLoopbackV6)},
 			utils.NetAddr{Addr: reversetunnel.LocalKubernetes},
 		)
 		addrs = append(addrs, process.Config.Kube.PublicAddrs...)
@@ -2223,7 +2231,7 @@ func (process *SiriusecProcess) getAdditionalPrincipals(role types.SystemRole) (
 	return principals, dnsNames, nil
 }
 
-// initProxy gets called if teleport runs with 'proxy' role enabled.
+// initProxy gets called if siriusec runs with 'proxy' role enabled.
 // this means it will do two things:
 //    1. serve a web UI
 //    2. proxy SSH connections to nodes running with 'node' role
@@ -2374,7 +2382,7 @@ func (process *SiriusecProcess) setupProxyListeners() (*proxyListeners, error) {
 			DisableTLS:          cfg.Proxy.DisableWebService,
 			DisableSSH:          cfg.Proxy.DisableReverseTunnel,
 			DisableDB:           cfg.Proxy.DisableDatabaseProxy,
-			ID:                  teleport.Component(teleport.ComponentProxy, "tunnel", "web", process.id),
+			ID:                  siriusec.Component(siriusec.ComponentProxy, "tunnel", "web", process.id),
 		})
 		if err != nil {
 			listener.Close()
@@ -2397,7 +2405,7 @@ func (process *SiriusecProcess) setupProxyListeners() (*proxyListeners, error) {
 			DisableTLS:          false,
 			DisableSSH:          true,
 			DisableDB:           cfg.Proxy.DisableDatabaseProxy,
-			ID:                  teleport.Component(teleport.ComponentProxy, "web", process.id),
+			ID:                  siriusec.Component(siriusec.ComponentProxy, "web", process.id),
 		})
 		if err != nil {
 			listener.Close()
@@ -2439,7 +2447,7 @@ func (process *SiriusecProcess) setupProxyListeners() (*proxyListeners, error) {
 					DisableTLS:          false, // Web service is enabled or we wouldn't have gotten here.
 					DisableSSH:          true,  // Reverse tunnel is on a separate listener created above.
 					DisableDB:           false, // Database proxy is enabled or we wouldn't have gotten here.
-					ID:                  teleport.Component(teleport.ComponentProxy, "web", process.id),
+					ID:                  siriusec.Component(siriusec.ComponentProxy, "web", process.id),
 				})
 				if err != nil {
 					listener.Close()
@@ -2461,7 +2469,7 @@ func (process *SiriusecProcess) setupProxyListeners() (*proxyListeners, error) {
 func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 	// clean up unused descriptors passed for proxy, but not used by it
 	defer func() {
-		if err := process.closeImportedDescriptors(teleport.ComponentProxy); err != nil {
+		if err := process.closeImportedDescriptors(siriusec.ComponentProxy); err != nil {
 			process.log.Warnf("Failed closing imported file descriptors: %v", err)
 		}
 	}()
@@ -2479,7 +2487,7 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 	}
 
 	// make a caching auth client for the auth server:
-	accessPoint, err := process.newLocalCacheForProxy(conn.Client, []string{teleport.ComponentProxy})
+	accessPoint, err := process.newLocalCacheForProxy(conn.Client, []string{siriusec.ComponentProxy})
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -2500,7 +2508,7 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 	proxySSHAddr.Addr = listeners.ssh.Addr().String()
 
 	log := process.log.WithFields(logrus.Fields{
-		trace.Component: teleport.Component(teleport.ComponentReverseTunnelServer, process.id),
+		trace.Component: siriusec.Component(siriusec.ComponentReverseTunnelServer, process.id),
 	})
 
 	clusterName := conn.ServerIdentity.Cert.Extensions[utils.CertExtensionAuthority]
@@ -2526,8 +2534,8 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 
 	lockWatcher, err := services.NewLockWatcher(process.ExitContext(), services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentProxy,
-			Log:       process.log.WithField(trace.Component, teleport.ComponentProxy),
+			Component: siriusec.ComponentProxy,
+			Log:       process.log.WithField(trace.Component, siriusec.ComponentProxy),
 			Client:    conn.Client,
 		},
 	})
@@ -2536,12 +2544,12 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 	}
 
 	// register SSH reverse tunnel server that accepts connections
-	// from remote teleport nodes
+	// from remote siriusec nodes
 	var tsrv reversetunnel.Server
 	if !process.Config.Proxy.DisableReverseTunnel {
 		tsrv, err = reversetunnel.NewServer(
 			reversetunnel.Config{
-				Component:                     teleport.Component(teleport.ComponentProxy, process.id),
+				Component:                     siriusec.Component(siriusec.ComponentProxy, process.id),
 				ID:                            process.Config.HostUUID,
 				ClusterName:                   clusterName,
 				ClientTLS:                     clientTLSConfig,
@@ -2573,9 +2581,9 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 			return trace.Wrap(err)
 		}
 		process.RegisterCriticalFunc("proxy.reversetunnel.server", func() error {
-			utils.Consolef(cfg.Console, log, teleport.ComponentProxy, "Reverse tunnel service %s:%s is starting on %v.",
-				teleport.Version, teleport.Gitref, cfg.Proxy.ReverseTunnelListenAddr.Addr)
-			log.Infof("Starting %s:%s on %v using %v", teleport.Version, teleport.Gitref, cfg.Proxy.ReverseTunnelListenAddr.Addr, process.Config.CachePolicy)
+			utils.Consolef(cfg.Console, log, siriusec.ComponentProxy, "Reverse tunnel service %s:%s is starting on %v.",
+				siriusec.Version, siriusec.Gitref, cfg.Proxy.ReverseTunnelListenAddr.Addr)
+			log.Infof("Starting %s:%s on %v using %v", siriusec.Version, siriusec.Gitref, cfg.Proxy.ReverseTunnelListenAddr.Addr, process.Config.CachePolicy)
 			if err := tsrv.Start(); err != nil {
 				log.Error(err)
 				return trace.Wrap(err)
@@ -2666,8 +2674,8 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 			} else {
 				log.Infof("Managing certs using ACME https://datatracker.ietf.org/doc/rfc8555/.")
 
-				acmePath := filepath.Join(process.Config.DataDir, teleport.ComponentACME)
-				if err := os.MkdirAll(acmePath, teleport.PrivateDirMode); err != nil {
+				acmePath := filepath.Join(process.Config.DataDir, siriusec.ComponentACME)
+				if err := os.MkdirAll(acmePath, siriusec.PrivateDirMode); err != nil {
 					return trace.ConvertSystemError(err)
 				}
 				hostChecker, err := newHostPolicyChecker(hostPolicyCheckerConfig{
@@ -2755,12 +2763,12 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 		webServer = &http.Server{
 			Handler:           proxyLimiter,
 			ReadHeaderTimeout: apidefaults.DefaultDialTimeout,
-			ErrorLog:          utils.NewStdlogger(log.Error, teleport.ComponentProxy),
+			ErrorLog:          utils.NewStdlogger(log.Error, siriusec.ComponentProxy),
 		}
 		process.RegisterCriticalFunc("proxy.web", func() error {
-			utils.Consolef(cfg.Console, log, teleport.ComponentProxy, "Web proxy service %s:%s is starting on %v.",
-				teleport.Version, teleport.Gitref, cfg.Proxy.WebAddr.Addr)
-			log.Infof("Web proxy service %s:%s is starting on %v.", teleport.Version, teleport.Gitref, cfg.Proxy.WebAddr.Addr)
+			utils.Consolef(cfg.Console, log, siriusec.ComponentProxy, "Web proxy service %s:%s is starting on %v.",
+				siriusec.Version, siriusec.Gitref, cfg.Proxy.WebAddr.Addr)
+			log.Infof("Web proxy service %s:%s is starting on %v.", siriusec.Version, siriusec.Gitref, cfg.Proxy.WebAddr.Addr)
 			defer webHandler.Close()
 			process.BroadcastEvent(Event{Name: ProxyWebServerReady, Payload: webHandler})
 			if err := webServer.Serve(listeners.web); err != nil && err != http.ErrServerClosed {
@@ -2791,9 +2799,9 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 		regular.SetFIPS(cfg.FIPS),
 		regular.SetOnHeartbeat(func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentProxy})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentProxy})
 			} else {
-				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentProxy})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentProxy})
 			}
 		}),
 		regular.SetEmitter(streamEmitter),
@@ -2804,9 +2812,9 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 	}
 
 	process.RegisterCriticalFunc("proxy.ssh", func() error {
-		utils.Consolef(cfg.Console, log, teleport.ComponentProxy, "SSH proxy service %s:%s is starting on %v.",
-			teleport.Version, teleport.Gitref, proxySSHAddr.Addr)
-		log.Infof("SSH proxy service %s:%s is starting on %v", teleport.Version, teleport.Gitref, proxySSHAddr)
+		utils.Consolef(cfg.Console, log, siriusec.ComponentProxy, "SSH proxy service %s:%s is starting on %v.",
+			siriusec.Version, siriusec.Gitref, proxySSHAddr.Addr)
+		log.Infof("SSH proxy service %s:%s is starting on %v", siriusec.Version, siriusec.Gitref, proxySSHAddr)
 		go sshProxy.Serve(listeners.ssh)
 		// broadcast that the proxy ssh server has started
 		process.BroadcastEvent(Event{Name: ProxySSHReady, Payload: nil})
@@ -2830,7 +2838,7 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 
 	process.RegisterCriticalFunc("proxy.reversetunnel.watcher", func() error {
 		log := logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.Component(teleport.ComponentReverseTunnelAgent, process.id),
+			trace.Component: siriusec.Component(siriusec.ComponentReverseTunnelAgent, process.id),
 		})
 		log.Infof("Starting reverse tunnel agent pool.")
 		done := make(chan struct{})
@@ -2854,7 +2862,7 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 		if err != nil {
 			return trace.Wrap(err)
 		}
-		component := teleport.Component(teleport.ComponentProxy, teleport.ComponentProxyKube)
+		component := siriusec.Component(siriusec.ComponentProxy, siriusec.ComponentProxyKube)
 		kubeServiceType := kubeproxy.ProxyService
 		if cfg.Proxy.Kube.LegacyKubeProxy {
 			kubeServiceType = kubeproxy.LegacyProxyService
@@ -2933,7 +2941,7 @@ func (process *SiriusecProcess) initProxyEndpoint(conn *Connector) error {
 		if err != nil {
 			return trace.Wrap(err)
 		}
-		log := process.log.WithField(trace.Component, teleport.Component(teleport.ComponentDatabase))
+		log := process.log.WithField(trace.Component, siriusec.Component(siriusec.ComponentDatabase))
 		if listeners.db.postgres != nil {
 			process.RegisterCriticalFunc("proxy.db.postgres", func() error {
 				log.Infof("Starting Postgres proxy server on %v.", cfg.Proxy.WebAddr.Addr)
@@ -3064,7 +3072,7 @@ func (process *SiriusecProcess) initApps() {
 	process.WaitForEvent(process.ExitContext(), AppsIdentityEvent, eventsCh)
 
 	// Define logger to prefix log lines with the name of the component and PID.
-	component := teleport.Component(teleport.ComponentApp, process.id)
+	component := siriusec.Component(siriusec.ComponentApp, process.id)
 	log := process.log.WithField(trace.Component, component)
 
 	var appServer *app.Server
@@ -3185,7 +3193,7 @@ func (process *SiriusecProcess) initApps() {
 			},
 			Spec: types.ServerSpecV2{
 				Hostname: process.Config.Hostname,
-				Version:  teleport.Version,
+				Version:  siriusec.Version,
 				Apps:     applications,
 			},
 		}
@@ -3193,7 +3201,7 @@ func (process *SiriusecProcess) initApps() {
 
 		lockWatcher, err := services.NewLockWatcher(process.ExitContext(), services.LockWatcherConfig{
 			ResourceWatcherConfig: services.ResourceWatcherConfig{
-				Component: teleport.ComponentApp,
+				Component: siriusec.ComponentApp,
 				Log:       log,
 				Client:    conn.Client,
 			},
@@ -3221,9 +3229,9 @@ func (process *SiriusecProcess) initApps() {
 			Server:       server,
 			OnHeartbeat: func(err error) {
 				if err != nil {
-					process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentApp})
+					process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentApp})
 				} else {
-					process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentApp})
+					process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentApp})
 				}
 			},
 		})
@@ -3238,7 +3246,7 @@ func (process *SiriusecProcess) initApps() {
 		// Create and start an agent pool.
 		agentPool, err = reversetunnel.NewAgentPool(process.ExitContext(),
 			reversetunnel.AgentPoolConfig{
-				Component:   teleport.ComponentApp,
+				Component:   siriusec.ComponentApp,
 				HostUUID:    conn.ServerIdentity.ID.HostUUID,
 				ProxyAddr:   tunnelAddr,
 				Client:      conn.Client,
@@ -3299,7 +3307,7 @@ func warnOnErr(err error, log logrus.FieldLogger) {
 
 // initAuthStorage initializes the storage backend for the auth service.
 func (process *SiriusecProcess) initAuthStorage() (bk backend.Backend, err error) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	bc := &process.Config.Auth.StorageConfig
 	process.log.Debugf("Using %v backend.", bc.Type)
 	switch bc.Type {
@@ -3325,7 +3333,7 @@ func (process *SiriusecProcess) initAuthStorage() (bk backend.Backend, err error
 		return nil, trace.Wrap(err)
 	}
 	reporter, err := backend.NewReporter(backend.ReporterConfig{
-		Component: teleport.ComponentBackend,
+		Component: siriusec.ComponentBackend,
 		Backend:   backend.NewSanitizer(bk),
 	})
 	if err != nil {
@@ -3415,7 +3423,7 @@ func validateConfig(cfg *Config) error {
 	}
 
 	if cfg.Console == nil {
-		cfg.Console = ioutil.Discard
+		cfg.Console = io.Discard
 	}
 
 	if len(cfg.AuthServers) == 0 {
@@ -3469,10 +3477,10 @@ func initSelfSignedHTTPSCert(cfg *Config) (err error) {
 		return trace.Wrap(err)
 	}
 
-	if err := ioutil.WriteFile(keyPath, creds.PrivateKey, 0600); err != nil {
+	if err := os.WriteFile(keyPath, creds.PrivateKey, 0600); err != nil {
 		return trace.Wrap(err, "error writing key PEM")
 	}
-	if err := ioutil.WriteFile(certPath, creds.Cert, 0600); err != nil {
+	if err := os.WriteFile(certPath, creds.Cert, 0600); err != nil {
 		return trace.Wrap(err, "error writing key PEM")
 	}
 	return nil
@@ -3505,7 +3513,7 @@ func (process *SiriusecProcess) singleProcessMode() (string, bool) {
 		return "", false
 	}
 	if len(process.Config.Proxy.TunnelPublicAddrs) == 0 {
-		return net.JoinHostPort(string(teleport.PrincipalLocalhost), strconv.Itoa(defaults.SSHProxyTunnelListenPort)), true
+		return net.JoinHostPort(string(siriusec.PrincipalLocalhost), strconv.Itoa(defaults.SSHProxyTunnelListenPort)), true
 	}
 	return process.Config.Proxy.TunnelPublicAddrs[0].String(), true
 }
@@ -3602,9 +3610,9 @@ func newHTTPFileSystem() (http.FileSystem, error) {
 	return fs, nil
 }
 
-// isDebugMode determines if teleport is running in a "debug" mode.
+// isDebugMode determines if siriusec is running in a "debug" mode.
 // It looks at DEBUG environment variable
 func isDebugMode() bool {
-	v, _ := strconv.ParseBool(os.Getenv(teleport.DebugEnvVar))
+	v, _ := strconv.ParseBool(os.Getenv(siriusec.DebugEnvVar))
 	return v
 }

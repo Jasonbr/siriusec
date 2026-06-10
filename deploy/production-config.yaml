@@ -1,0 +1,28 @@
+# Siriusec 生产环境配置模板
+# 安全默认值，部署前请根据实际环境修改
+
+teleport:
+  nodename: ${HOSTNAME}
+  data_dir: /var/lib/siriusec
+  log:
+    output: /var/log/siriusec/siriusec.log
+    severity: INFO
+  diag_addr: 0.0.0.0:3000
+
+auth_service:
+  enabled: yes
+  listen_addr: 0.0.0.0:3025
+  cluster_name: ${SIRIUSEC_CLUSTER_NAME}
+  authentication:
+    type: local
+    second_factor: otp
+  tokens:
+    - "${SIRIUSEC_JOIN_TOKEN}"
+
+ssh_service:
+  enabled: yes
+
+proxy_service:
+  enabled: yes
+  web_listen_addr: 0.0.0.0:3080
+  tunnel_listen_addr: 0.0.0.0:3024

@@ -74,7 +74,7 @@ chmod +x /usr/local/bin/siriusec /usr/local/bin/sctl /usr/local/bin/tsh
 
 ```bash
 cat > /etc/siriusec/siriusec.yaml << 'EOF'
-teleport:
+siriusec:
   nodename: node-01
   data_dir: /var/lib/siriusec
   log:

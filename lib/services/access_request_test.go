@@ -414,7 +414,7 @@ func TestReviewThresholds(t *testing.T) {
 			// from "conqueror".  this may be unexpected behavior for some people since it
 			// effectively allows a third role to open up the ability for the reviewer to
 			// trigger a threshold which they would not otherwise be able to trigger.  while
-			// unintuitive, this effect only manifests as teleport being overly-eager
+			// unintuitive, this effect only manifests as siriusec being overly-eager
 			// about denying requests (i.e. erring on the side of caution).
 			desc:      "multi-role requestor denial via short-circuit on default",
 			requestor: "dave", // permitted by conqueror, general, *and* populist

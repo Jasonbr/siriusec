@@ -30,7 +30,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/utils/keypaths"
 	"github.com/siriusec/siriusec/lib/auth/testauthority"
@@ -95,12 +95,12 @@ func (s *KeyAgentTestSuite) TearDownSuite(c *check.C) {
 
 // TestAddKey ensures correct adding of ssh keys. This test checks the following:
 //   * When adding a key it's written to disk.
-//   * When we add a key, it's added to both the teleport ssh agent as well
+//   * When we add a key, it's added to both the siriusec ssh agent as well
 //     as the system ssh agent.
 //   * When we add a key, both the certificate and private key are added into
-//     the both the teleport ssh agent and the system ssh agent.
+//     the both the siriusec ssh agent and the system ssh agent.
 //   * When we add a key, it's tagged with a comment that indicates that it's
-//     a teleport key with the teleport username.
+//     a siriusec key with the siriusec username.
 func (s *KeyAgentTestSuite) TestAddKey(c *check.C) {
 	// make a new local agent
 	keystore, err := NewFSLocalKeyStore(s.keyDir)
@@ -131,37 +131,37 @@ func (s *KeyAgentTestSuite) TestAddKey(c *check.C) {
 		c.Assert(err, check.IsNil)
 	}
 
-	// get all agent keys from teleport agent and system agent
-	teleportAgentKeys, err := lka.Agent.List()
+	// get all agent keys from siriusec agent and system agent
+	siriusecAgentKeys, err := lka.Agent.List()
 	c.Assert(err, check.IsNil)
 	systemAgentKeys, err := lka.sshAgent.List()
 	c.Assert(err, check.IsNil)
 
-	// check that we've loaded a cert as well as a private key into the teleport agent
+	// check that we've loaded a cert as well as a private key into the siriusec agent
 	// and it's for the user we expected to add a certificate for
-	c.Assert(teleportAgentKeys, check.HasLen, 2)
-	c.Assert(teleportAgentKeys[0].Type(), check.Equals, "ssh-rsa-cert-v01@openssh.com")
-	c.Assert(teleportAgentKeys[0].Comment, check.Equals, "teleport:"+s.username)
-	c.Assert(teleportAgentKeys[1].Type(), check.Equals, "ssh-rsa")
-	c.Assert(teleportAgentKeys[1].Comment, check.Equals, "teleport:"+s.username)
+	c.Assert(siriusecAgentKeys, check.HasLen, 2)
+	c.Assert(siriusecAgentKeys[0].Type(), check.Equals, "ssh-rsa-cert-v01@openssh.com")
+	c.Assert(siriusecAgentKeys[0].Comment, check.Equals, "siriusec:"+s.username)
+	c.Assert(siriusecAgentKeys[1].Type(), check.Equals, "ssh-rsa")
+	c.Assert(siriusecAgentKeys[1].Comment, check.Equals, "siriusec:"+s.username)
 
 	// check that we've loaded a cert as well as a private key into the system again
 	found := false
 	for _, sak := range systemAgentKeys {
-		if sak.Comment == "teleport:"+s.username && sak.Type() == "ssh-rsa" {
+		if sak.Comment == "siriusec:"+s.username && sak.Type() == "ssh-rsa" {
 			found = true
 		}
 	}
 	c.Assert(true, check.Equals, found)
 	found = false
 	for _, sak := range systemAgentKeys {
-		if sak.Comment == "teleport:"+s.username && sak.Type() == "ssh-rsa-cert-v01@openssh.com" {
+		if sak.Comment == "siriusec:"+s.username && sak.Type() == "ssh-rsa-cert-v01@openssh.com" {
 			found = true
 		}
 	}
 	c.Assert(true, check.Equals, found)
 
-	// unload all keys for this user from the teleport agent and system agent
+	// unload all keys for this user from the siriusec agent and system agent
 	err = lka.UnloadKey()
 	c.Assert(err, check.IsNil)
 }
@@ -190,10 +190,10 @@ func (s *KeyAgentTestSuite) TestLoadKey(c *check.C) {
 	err = lka.UnloadKey()
 	c.Assert(err, check.IsNil)
 
-	// get all the keys in the teleport and system agent
-	teleportAgentKeys, err := lka.Agent.List()
+	// get all the keys in the siriusec and system agent
+	siriusecAgentKeys, err := lka.Agent.List()
 	c.Assert(err, check.IsNil)
-	teleportAgentInitialKeyCount := len(teleportAgentKeys)
+	siriusecAgentInitialKeyCount := len(siriusecAgentKeys)
 	systemAgentKeys, err := lka.sshAgent.List()
 	c.Assert(err, check.IsNil)
 	systemAgentInitialKeyCount := len(systemAgentKeys)
@@ -205,18 +205,18 @@ func (s *KeyAgentTestSuite) TestLoadKey(c *check.C) {
 	_, err = lka.LoadKey(*s.key)
 	c.Assert(err, check.IsNil)
 
-	// get all the keys in the teleport and system agent
-	teleportAgentKeys, err = lka.Agent.List()
+	// get all the keys in the siriusec and system agent
+	siriusecAgentKeys, err = lka.Agent.List()
 	c.Assert(err, check.IsNil)
 	systemAgentKeys, err = lka.sshAgent.List()
 	c.Assert(err, check.IsNil)
 
 	// check if we have the correct counts
-	c.Assert(teleportAgentKeys, check.HasLen, teleportAgentInitialKeyCount+2)
+	c.Assert(siriusecAgentKeys, check.HasLen, siriusecAgentInitialKeyCount+2)
 	c.Assert(systemAgentKeys, check.HasLen, systemAgentInitialKeyCount+2)
 
-	// now sign data using the teleport agent and system agent
-	teleportAgentSignature, err := lka.Agent.Sign(teleportAgentKeys[0], userdata)
+	// now sign data using the siriusec agent and system agent
+	siriusecAgentSignature, err := lka.Agent.Sign(siriusecAgentKeys[0], userdata)
 	c.Assert(err, check.IsNil)
 	systemAgentSignature, err := lka.sshAgent.Sign(systemAgentKeys[0], userdata)
 	c.Assert(err, check.IsNil)
@@ -228,13 +228,13 @@ func (s *KeyAgentTestSuite) TestLoadKey(c *check.C) {
 	c.Assert(err, check.IsNil)
 	sshPublicKey := sshSigner.PublicKey()
 
-	// verify data signed by both the teleport agent and system agent was signed correctly
-	err = sshPublicKey.Verify(userdata, teleportAgentSignature)
+	// verify data signed by both the siriusec agent and system agent was signed correctly
+	err = sshPublicKey.Verify(userdata, siriusecAgentSignature)
 	c.Assert(err, check.IsNil)
 	err = sshPublicKey.Verify(userdata, systemAgentSignature)
 	c.Assert(err, check.IsNil)
 
-	// unload all keys from the teleport agent and system agent
+	// unload all keys from the siriusec agent and system agent
 	err = lka.UnloadKey()
 	c.Assert(err, check.IsNil)
 }
@@ -269,7 +269,7 @@ func (s *KeyAgentTestSuite) TestHostCertVerification(c *check.C) {
 	// Generate a host certificate for node with role "node".
 	_, hostPub, err := keygen.GenerateKeyPair("")
 	c.Assert(err, check.IsNil)
-	roles, err := types.ParseTeleportRoles("node")
+	roles, err := types.ParseSiriusecRoles("node")
 	c.Assert(err, check.IsNil)
 	hostCertBytes, err := keygen.GenerateHostCert(services.HostCertParams{
 		CASigner:      caSigner,
@@ -511,7 +511,7 @@ func (s *KeyAgentTestSuite) makeKey(username string, allowedLogins []string, ttl
 func startDebugAgent() (closer func(), err error) {
 	rand.Seed(time.Now().Unix())
 	socketpath := filepath.Join(os.TempDir(),
-		fmt.Sprintf("teleport-%d-%d.socket", os.Getpid(), rand.Uint32()))
+		fmt.Sprintf("siriusec-%d-%d.socket", os.Getpid(), rand.Uint32()))
 
 	listener, err := net.Listen("unix", socketpath)
 	if err != nil {
@@ -519,7 +519,7 @@ func startDebugAgent() (closer func(), err error) {
 	}
 
 	systemAgent := agent.NewKeyring()
-	os.Setenv(teleport.SSHAuthSock, socketpath)
+	os.Setenv(siriusec.SSHAuthSock, socketpath)
 
 	startedC := make(chan struct{})
 	doneC := make(chan struct{})
@@ -527,7 +527,7 @@ func startDebugAgent() (closer func(), err error) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		defer os.Setenv(teleport.SSHAuthSock, "")
+		defer os.Setenv(siriusec.SSHAuthSock, "")
 		// agent is listening and environment variable is set, unblock now
 		close(startedC)
 		for {

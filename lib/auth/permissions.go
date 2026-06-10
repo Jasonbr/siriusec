@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/types/wrappers"
 	"github.com/siriusec/siriusec/api/utils"
@@ -86,7 +86,7 @@ type Context struct {
 	//   a. local user identity
 	//   b. remote user identity remapped to local identity based on trusted
 	//      cluster role mapping.
-	// 2. If caller is a teleport instance, Identity holds their identity as-is
+	// 2. If caller is a siriusec instance, Identity holds their identity as-is
 	//    (because there's no role mapping for non-human roles)
 	Identity IdentityGetter
 	// UnmappedIdentity holds the original caller identity. If this is a remote
@@ -179,11 +179,11 @@ func (a *authorizer) authorizeRemoteUser(u RemoteUser) (*Context, error) {
 	// passing exact logins, Kubernetes users/groups and database users/names
 	// to the remote cluster.
 	traits := map[string][]string{
-		teleport.TraitLogins:     u.Principals,
-		teleport.TraitKubeGroups: u.KubernetesGroups,
-		teleport.TraitKubeUsers:  u.KubernetesUsers,
-		teleport.TraitDBNames:    u.DatabaseNames,
-		teleport.TraitDBUsers:    u.DatabaseUsers,
+		siriusec.TraitLogins:     u.Principals,
+		siriusec.TraitKubeGroups: u.KubernetesGroups,
+		siriusec.TraitKubeUsers:  u.KubernetesUsers,
+		siriusec.TraitDBNames:    u.DatabaseNames,
+		siriusec.TraitDBUsers:    u.DatabaseUsers,
 	}
 	// Prior to Siriusec 6.2 no user traits were passed to remote clusters
 	// except for the internal ones specified above.
@@ -678,7 +678,7 @@ type contextKey string
 
 const (
 	// ContextUser is a user set in the context of the request
-	ContextUser contextKey = "teleport-user"
+	ContextUser contextKey = "siriusec-user"
 	// ContextClientAddr is a client address set in the context of the request
 	ContextClientAddr contextKey = "client-addr"
 )
@@ -688,16 +688,16 @@ var WithDelegator = utils.WithDelegator
 
 // ClientUsername returns the username of a remote HTTP client making the call.
 // If ctx didn't pass through auth middleware or did not come from an HTTP
-// request, teleport.UserSystem is returned.
+// request, siriusec.UserSystem is returned.
 func ClientUsername(ctx context.Context) string {
 	userI := ctx.Value(ContextUser)
 	userWithIdentity, ok := userI.(IdentityGetter)
 	if !ok {
-		return teleport.UserSystem
+		return siriusec.UserSystem
 	}
 	identity := userWithIdentity.GetIdentity()
 	if identity.Username == "" {
-		return teleport.UserSystem
+		return siriusec.UserSystem
 	}
 	return identity.Username
 }

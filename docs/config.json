@@ -116,7 +116,7 @@
           "slug": "/server-access/guides/",
           "entries": [
             { "title": "Ansible", "slug": "/server-access/guides/ansible/" },
-            { "title": "Using Teleport with PAM", "slug": "/server-access/guides/ssh-pam/" },
+            { "title": "Using Siriusec with PAM", "slug": "/server-access/guides/ssh-pam/" },
             { "title": "Using TSH", "slug": "/server-access/guides/tsh/" },
             { "title": "OpenSSH Guide", "slug": "/server-access/guides/openssh/" },
             {"title": "BPF Session Recording", "slug": "/server-access/guides/bpf-session-recording/"},
@@ -147,7 +147,7 @@
             { "title": "CI/CD", "slug": "/kubernetes-access/guides/cicd/" },
             { "title": "Federation", "slug": "/kubernetes-access/guides/federation/" },
             { "title": "Migration", "slug": "/kubernetes-access/guides/migration/" },
-            { "title": "Standalone", "slug": "/kubernetes-access/guides/standalone-teleport/" }
+            { "title": "Standalone", "slug": "/kubernetes-access/guides/standalone-siriusec/" }
           ]
         },
         {
@@ -241,7 +241,7 @@
     },
     {
       "icon": "building",
-      "title": "Teleport Enterprise",
+      "title": "Siriusec Enterprise",
       "entries": [
         { "title": "Introduction", "slug": "/enterprise/introduction/" },
         {
@@ -297,10 +297,10 @@
       "title": "Architecture",
       "entries": [
         { "title": "Architecture Overview", "slug": "/architecture/overview/" },
-        { "title": "Teleport Users", "slug": "/architecture/users/" },
-        { "title": "Teleport Nodes", "slug": "/architecture/nodes/" },
-        { "title": "Teleport Auth", "slug": "/architecture/authentication/" },
-        { "title": "Teleport Proxy", "slug": "/architecture/proxy/" },
+        { "title": "Siriusec Users", "slug": "/architecture/users/" },
+        { "title": "Siriusec Nodes", "slug": "/architecture/nodes/" },
+        { "title": "Siriusec Auth", "slug": "/architecture/authentication/" },
+        { "title": "Siriusec Proxy", "slug": "/architecture/proxy/" },
         { "title": "Trusted Clusters", "slug": "/trustedclusters/" }
       ]
     }
@@ -357,15 +357,15 @@
     "mysql": {
       "dbeaver_min_ver": "8.0.3"
     },
-    "teleport": {
+    "siriusec": {
       "version": "7.3.2",
       "golang": "1.16",
       "plugin": {
         "version": "7.3.2"
       },
-      "helm_repo_url": "https://charts.releases.teleport.dev",
-      "latest_oss_docker_image": "quay.io/gravitational/teleport:7",
-      "latest_ent_docker_image": "quay.io/gravitational/teleport-ent:7"
+      "helm_repo_url": "https://charts.releases.siriusec.dev",
+      "latest_oss_docker_image": "registry.siriusec.com/siriusec:7",
+      "latest_ent_docker_image": "registry.siriusec.com/siriusec-ent:7"
     }
   },
   "redirects": [
@@ -530,7 +530,7 @@
       "permanent": true
     },
     {
-      "source": "/openssh-teleport/",
+      "source": "/openssh-siriusec/",
       "destination": "/server-access/guides/openssh/",
       "permanent": true
     },

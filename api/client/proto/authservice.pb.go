@@ -1600,9 +1600,9 @@ func (m *PingRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PingRequest proto.InternalMessageInfo
 
-// PingResponse contains data about the teleport auth server.
+// PingResponse contains data about the siriusec auth server.
 type PingResponse struct {
-	// ClusterName is the name of the teleport cluster.
+	// ClusterName is the name of the siriusec cluster.
 	ClusterName string `protobuf:"bytes,1,opt,name=ClusterName,proto3" json:"cluster_name"`
 	// ServerVersion is the version of the auth server.
 	ServerVersion string `protobuf:"bytes,2,opt,name=ServerVersion,proto3" json:"server_version"`

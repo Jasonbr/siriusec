@@ -41,13 +41,13 @@ if [ -z "${t}" ] || [ -z "${v}" ] || [ -z "${p}" ]; then
     usage
 fi
 
-TELEPORT_TYPE=${t}
-TELEPORT_VERSION=${v}
+SIRIUSEC_TYPE=${t}
+SIRIUSEC_VERSION=${v}
 PACKAGE_TYPE=${p}
 ARCH=${a}
 RUNTIME=${r}
 BUILD_MODE=${m}
-TARBALL_DIRECTORY=/tmp/teleport-tarballs
+TARBALL_DIRECTORY=/tmp/siriusec-tarballs
 DOWNLOAD_IF_NEEDED=true
 GNUPG_DIR=${GNUPG_DIR:-/tmp/gnupg}
 if [[ "${s}" != "" ]]; then
@@ -64,8 +64,8 @@ LINUX_DATA_DIR=/var/lib/siriusec
 # extra package information for linux
 MAINTAINER="info@siriusec.com"
 LICENSE="Apache-2.0"
-VENDOR="Gravitational"
-DESCRIPTION="Teleport is a gateway for managing access to clusters of Linux servers via SSH or the Kubernetes API"
+VENDOR="Siriusec"
+DESCRIPTION="Siriusec is a gateway for managing access to clusters of Linux servers via SSH or the Kubernetes API"
 DOCS_URL="https://siriusec.com/docs"
 
 # SHA1 fingerprints of certificates used for signing mac artifacts (certificates must be pre-loaded into the keychain on the build box)
@@ -73,7 +73,7 @@ DEVELOPER_ID_APPLICATION="0FFD3E3413AB4C599C53FBB1D8CA690915E33D83" # used for s
 DEVELOPER_ID_INSTALLER="82B625AD327C241B378A54B4B254BB08CE71B5DF" # used for signing packages
 
 # download root for packages
-DOWNLOAD_ROOT="https://get.gravitational.com"
+DOWNLOAD_ROOT="https://get.siriusec.com"
 
 # check that curl is installed
 if [[ ! $(type curl) ]]; then
@@ -167,7 +167,7 @@ else
     fi
 fi
 
-# handle differences between 'gravitational' arch and system arch
+# handle differences between 'siriusec' arch and system arch
 FILENAME_ARCH=${ARCH}
 if [[ "${ARCH}" == "i386" ]]; then
     FILENAME_ARCH="386"
@@ -198,8 +198,8 @@ if [[ "${RUNTIME}" == "fips" ]]; then
 fi
 
 # set variables appropriately depending on type of package being built
-if [[ "${TELEPORT_TYPE}" == "ent" ]]; then
-    TARBALL_FILENAME="siriusec-ent-v${TELEPORT_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
+if [[ "${SIRIUSEC_TYPE}" == "ent" ]]; then
+    TARBALL_FILENAME="siriusec-ent-v${SIRIUSEC_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
     URL="${DOWNLOAD_ROOT}/${TARBALL_FILENAME}"
     TAR_PATH="siriusec-ent"
     RPM_NAME="siriusec-ent"
@@ -210,7 +210,7 @@ if [[ "${TELEPORT_TYPE}" == "ent" ]]; then
         TYPE_DESCRIPTION="[${TEXT_ARCH} Enterprise edition]"
     fi
 else
-    TARBALL_FILENAME="siriusec-v${TELEPORT_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
+    TARBALL_FILENAME="siriusec-v${SIRIUSEC_VERSION}-${PLATFORM}-${FILENAME_ARCH}${OPTIONAL_RUNTIME_SECTION}-bin.tar.gz"
     URL="${DOWNLOAD_ROOT}/${TARBALL_FILENAME}"
     TAR_PATH="siriusec"
     RPM_NAME="siriusec"
@@ -230,24 +230,24 @@ if [[ "${PACKAGE_TYPE}" == "pkg" ]]; then
     if [[ "${BUILD_MODE}" == "tsh" ]]; then
         FILE_LIST="${TAR_PATH}/tsh"
         BUNDLE_ID="com.siriusec.siriusec.tsh"
-        PKG_FILENAME="tsh-${TELEPORT_VERSION}.${PACKAGE_TYPE}"
+        PKG_FILENAME="tsh-${SIRIUSEC_VERSION}.${PACKAGE_TYPE}"
     else
-        FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/teleport"
+        FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/siriusec"
         BUNDLE_ID="com.siriusec.siriusec"
-        if [[ "${TELEPORT_TYPE}" == "ent" ]]; then
-            PKG_FILENAME="teleport-ent-${TELEPORT_VERSION}.${PACKAGE_TYPE}"
+        if [[ "${SIRIUSEC_TYPE}" == "ent" ]]; then
+            PKG_FILENAME="siriusec-ent-${SIRIUSEC_VERSION}.${PACKAGE_TYPE}"
         else
-            PKG_FILENAME="teleport-${TELEPORT_VERSION}.${PACKAGE_TYPE}"
+            PKG_FILENAME="siriusec-${SIRIUSEC_VERSION}.${PACKAGE_TYPE}"
         fi
     fi
 else
-    FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/teleport ${TAR_PATH}/examples/systemd/siriusec.service"
-    LINUX_BINARY_FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/teleport"
+    FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/siriusec ${TAR_PATH}/examples/systemd/siriusec.service"
+    LINUX_BINARY_FILE_LIST="${TAR_PATH}/tsh ${TAR_PATH}/tctl ${TAR_PATH}/siriusec"
     LINUX_SYSTEMD_FILE_LIST="${TAR_PATH}/examples/systemd/siriusec.service"
     EXTRA_DOCKER_OPTIONS=""
     RPM_SIGN_STANZA=""
     if [[ "${PACKAGE_TYPE}" == "rpm" ]]; then
-        OUTPUT_FILENAME="${TAR_PATH}-${TELEPORT_VERSION}-1${OPTIONAL_RUNTIME_SECTION}.${ARCH}.rpm"
+        OUTPUT_FILENAME="${TAR_PATH}-${SIRIUSEC_VERSION}-1${OPTIONAL_RUNTIME_SECTION}.${ARCH}.rpm"
         FILE_PERMISSIONS_STANZA="--rpm-user root --rpm-group root --rpm-use-file-permissions "
         # the rpm/rpmmacros file suppresses the creation of .build-id files (see https://github.com.siriusec.siriusec/issues/7040)
         EXTRA_DOCKER_OPTIONS="-v $(pwd)/rpm/rpmmacros:/root/.rpmmacros"
@@ -258,18 +258,18 @@ else
         else
             # the GNUPG_DIR location here is assumed to contain a complete ~/.gnupg directory structure
             # with pubring.kbx and trustdb.gpg files, plus a private-keys-v1.d directory with signing keys
-            # it needs to contain the "Gravitational, Inc" private key and signing key.
+            # it needs to contain the "Siriusec, Inc" private key and signing key.
             # we also use the rpm-sign/rpmmacros file instead which contains extra directives used for signing.
             EXTRA_DOCKER_OPTIONS="-v $(pwd)/rpm-sign/rpmmacros:/root/.rpmmacros -v $(pwd)/rpm-sign/popt-override:/etc/popt.d/rpmsign-override -v ${GNUPG_DIR}:/root/.gnupg"
             RPM_SIGN_STANZA="--rpm-sign"
         fi
     elif [[ "${PACKAGE_TYPE}" == "deb" ]]; then
-        OUTPUT_FILENAME="${TAR_PATH}_${TELEPORT_VERSION}${OPTIONAL_RUNTIME_SECTION}_${ARCH}.deb"
+        OUTPUT_FILENAME="${TAR_PATH}_${SIRIUSEC_VERSION}${OPTIONAL_RUNTIME_SECTION}_${ARCH}.deb"
         FILE_PERMISSIONS_STANZA="--deb-user root --deb-group root "
     fi
 fi
 
-# create a temporary directory and download specified Teleport version
+# create a temporary directory and download specified Siriusec version
 pushd "$(mktemp -d)"
 PACKAGE_TEMPDIR=$(pwd)
 # automatically clean up on exit
@@ -335,7 +335,7 @@ if [[ "${PACKAGE_TYPE}" == "pkg" ]]; then
     pkgbuild \
         --root ${PACKAGE_TEMPDIR}/${TAR_PATH} \
         --identifier ${BUNDLE_ID} \
-        --version ${TELEPORT_VERSION} \
+        --version ${SIRIUSEC_VERSION} \
         --install-location /usr/local/bin \
         ${PKG_FILENAME}
 
@@ -386,7 +386,7 @@ else
         --input-type dir \
         --output-type ${PACKAGE_TYPE} \
         --name ${RPM_NAME} \
-        --version "${TELEPORT_VERSION}" \
+        --version "${SIRIUSEC_VERSION}" \
         --maintainer "${MAINTAINER}" \
         --url "${DOCS_URL}" \
         --license "${LICENSE}" \

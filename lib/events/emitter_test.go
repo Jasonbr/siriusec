@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/session"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -303,7 +303,7 @@ func TestExport(t *testing.T) {
 	require.NoError(t, err)
 
 	buf := &bytes.Buffer{}
-	err = Export(ctx, f, buf, teleport.JSON)
+	err = Export(ctx, f, buf, siriusec.JSON)
 	require.NoError(t, err)
 
 	count := 0

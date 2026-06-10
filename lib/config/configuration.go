@@ -23,7 +23,6 @@ package config
 import (
 	"bufio"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -36,7 +35,7 @@ import (
 
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	apiutils "github.com/siriusec/siriusec/api/utils"
@@ -134,7 +133,7 @@ type CommandLineFlags struct {
 	DatabaseGCPInstanceID string
 }
 
-// ReadConfigFile reads /etc/teleport.yaml (or whatever is passed via --config flag)
+// ReadConfigFile reads /etc/siriusec.yaml (or whatever is passed via --config flag)
 // and overrides values in 'cfg' structure
 func ReadConfigFile(cliConfigPath string) (*FileConfig, error) {
 	configFilePath := defaults.ConfigFilePath
@@ -399,7 +398,7 @@ func applyLogConfig(loggerConfig Log, logger *log.Logger) error {
 		logger.SetOutput(os.Stderr)
 	case "stdout", "out", "1":
 		logger.SetOutput(os.Stdout)
-	case teleport.Syslog:
+	case siriusec.Syslog:
 		err := utils.SwitchLoggerToSyslog(logger)
 		if err != nil {
 			// this error will go to stderr
@@ -419,7 +418,7 @@ func applyLogConfig(loggerConfig Log, logger *log.Logger) error {
 		logger.SetLevel(log.InfoLevel)
 	case "err", "error":
 		logger.SetLevel(log.ErrorLevel)
-	case teleport.DebugLevel:
+	case siriusec.DebugLevel:
 		logger.SetLevel(log.DebugLevel)
 	case "warn", "warning":
 		logger.SetLevel(log.WarnLevel)
@@ -833,7 +832,7 @@ func applySSHConfig(fc *FileConfig, cfg *service.Config) (err error) {
 			if !pam.BuildHasPAM() {
 				errorMessage := "Unable to start Siriusec: PAM was enabled in file configuration but this \n" +
 					"Siriusec binary was built without PAM support. To continue either download a \n" +
-					"Siriusec binary build with PAM support from https://siriusec.com/teleport \n" +
+					"Siriusec binary build with PAM support from https://siriusec.com/siriusec \n" +
 					"or disable PAM in file configuration."
 				return trace.BadParameter(errorMessage)
 			}
@@ -937,7 +936,7 @@ func applyDatabasesConfig(fc *FileConfig, cfg *service.Config) error {
 		var caBytes []byte
 		var err error
 		if database.CACertFile != "" {
-			caBytes, err = ioutil.ReadFile(database.CACertFile)
+			caBytes, err = os.ReadFile(database.CACertFile)
 			if err != nil {
 				return trace.Wrap(err)
 			}
@@ -1078,11 +1077,11 @@ func parseKnownHosts(bytes []byte, allowedLogins []string) (types.CertAuthority,
 	if err != nil {
 		return nil, nil, trace.BadParameter("invalid public key")
 	}
-	teleportOpts, err := url.ParseQuery(comment)
+	siriusecOpts, err := url.ParseQuery(comment)
 	if err != nil {
 		return nil, nil, trace.BadParameter("invalid key comment: '%s'", comment)
 	}
-	authType := types.CertAuthType(teleportOpts.Get("type"))
+	authType := types.CertAuthType(siriusecOpts.Get("type"))
 	if authType != types.HostCA && authType != types.UserCA {
 		return nil, nil, trace.BadParameter("unsupported CA type: '%s'", authType)
 	}
@@ -1122,9 +1121,9 @@ func certificateAuthorityFormat(bytes []byte) (string, error) {
 		if err != nil {
 			return "", trace.BadParameter("unknown ca format")
 		}
-		return teleport.KnownHosts, nil
+		return siriusec.KnownHosts, nil
 	}
-	return teleport.AuthorizedKeys, nil
+	return siriusec.AuthorizedKeys, nil
 }
 
 // parseCAKey parses bytes either in known_hosts or authorized_keys format
@@ -1135,7 +1134,7 @@ func parseCAKey(bytes []byte, allowedLogins []string) (types.CertAuthority, type
 		return nil, nil, trace.Wrap(err)
 	}
 
-	if caFormat == teleport.AuthorizedKeys {
+	if caFormat == siriusec.AuthorizedKeys {
 		return parseAuthorizedKeys(bytes, allowedLogins)
 	}
 	return parseKnownHosts(bytes, allowedLogins)
@@ -1232,7 +1231,7 @@ func Configure(clf *CommandLineFlags, cfg *service.Config) error {
 	// pass the value of --insecure flag to the runtime
 	lib.SetInsecureDevMode(clf.InsecureMode)
 
-	// load /etc/teleport.yaml and apply it's values:
+	// load /etc/siriusec.yaml and apply it's values:
 	fileConf, err := ReadConfigFile(clf.ConfigFile)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1266,7 +1265,7 @@ func Configure(clf *CommandLineFlags, cfg *service.Config) error {
 			log.SetLevel(log.DebugLevel)
 			cfg.Log.SetLevel(log.DebugLevel)
 		} else {
-			fileConf.Logger.Severity = teleport.DebugLevel
+			fileConf.Logger.Severity = siriusec.DebugLevel
 		}
 	}
 
@@ -1311,7 +1310,7 @@ func Configure(clf *CommandLineFlags, cfg *service.Config) error {
 		}
 		var caBytes []byte
 		if clf.DatabaseCACertFile != "" {
-			caBytes, err = ioutil.ReadFile(clf.DatabaseCACertFile)
+			caBytes, err = os.ReadFile(clf.DatabaseCACertFile)
 			if err != nil {
 				return trace.Wrap(err)
 			}
@@ -1401,7 +1400,7 @@ func Configure(clf *CommandLineFlags, cfg *service.Config) error {
 
 	// apply --debug flag to config:
 	if clf.Debug {
-		cfg.Console = ioutil.Discard
+		cfg.Console = io.Discard
 		cfg.Debug = clf.Debug
 	}
 

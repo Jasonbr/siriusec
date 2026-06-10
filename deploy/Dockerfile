@@ -1,4 +1,4 @@
-FROM golang:1.16 AS builder
+FROM golang:1.20 AS builder
 
 WORKDIR /src
 
@@ -33,11 +33,16 @@ RUN echo "stage1-cache-bust-20260602-1341"
 COPY --from=builder /bin/siriusec /usr/local/bin/siriusec
 COPY --from=builder /bin/sctl /usr/local/bin/sctl
 
-RUN mkdir -p /var/lib/siriusec /etc/siriusec
+RUN mkdir -p /var/lib/siriusec /etc/siriusec && \
+    groupadd -r siriusec && \
+    useradd -r -g siriusec -d /var/lib/siriusec -s /sbin/nologin siriusec && \
+    chown -R siriusec:siriusec /var/lib/siriusec /etc/siriusec
 
 EXPOSE 3022 3023 3024 3025 3080
 
 VOLUME ["/var/lib/siriusec", "/etc/siriusec"]
+
+USER siriusec
 
 STOPSIGNAL SIGQUIT
 

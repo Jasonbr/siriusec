@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/gravitational/trace"
 )
@@ -37,7 +37,7 @@ func EnsureLocalPath(customPath string, defaultLocalDir, defaultLocalPath string
 	if customPath == "" {
 		homeDir := getHomeDir()
 		if homeDir == "" {
-			return "", trace.BadParameter("no path provided and environment variable %v is not not set", teleport.EnvHome)
+			return "", trace.BadParameter("no path provided and environment variable %v is not not set", siriusec.EnvHome)
 		}
 		customPath = filepath.Join(homeDir, defaultLocalDir, defaultLocalPath)
 	}
@@ -45,7 +45,7 @@ func EnsureLocalPath(customPath string, defaultLocalDir, defaultLocalPath string
 	_, err := StatDir(baseDir)
 	if err != nil {
 		if trace.IsNotFound(err) {
-			if err := MkdirAll(baseDir, teleport.PrivateDirMode); err != nil {
+			if err := MkdirAll(baseDir, siriusec.PrivateDirMode); err != nil {
 				return "", trace.Wrap(err)
 			}
 		} else {
@@ -159,11 +159,11 @@ func StatDir(path string) (os.FileInfo, error) {
 func getHomeDir() string {
 	switch runtime.GOOS {
 	case constants.LinuxOS:
-		return os.Getenv(teleport.EnvHome)
+		return os.Getenv(siriusec.EnvHome)
 	case constants.DarwinOS:
-		return os.Getenv(teleport.EnvHome)
+		return os.Getenv(siriusec.EnvHome)
 	case constants.WindowsOS:
-		return os.Getenv(teleport.EnvUserProfile)
+		return os.Getenv(siriusec.EnvUserProfile)
 	}
 	return ""
 }

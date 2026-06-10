@@ -1,2 +1,2 @@
 #!/bin/bash
-teleport start -c teleport.yaml -d
+siriusec start -c siriusec.yaml -d

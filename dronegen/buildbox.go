@@ -8,7 +8,7 @@ func buildboxPipelineSteps() []step {
 			Name:  "Check out code",
 			Image: "docker:git",
 			Commands: []string{
-				`git clone --depth 1 --single-branch --branch ${DRONE_SOURCE_BRANCH:-master} https://github.com/gravitational/${DRONE_REPO_NAME}.git .`,
+				`git clone --depth 1 --single-branch --branch ${DRONE_SOURCE_BRANCH:-master} https://github.com/siriusec/${DRONE_REPO_NAME}.git .`,
 				`git checkout ${DRONE_COMMIT}`,
 			},
 		},
@@ -49,7 +49,7 @@ func buildboxPipelineStep(buildboxName string, fips bool) step {
 			`chown -R $UID:$GID /go`,
 			`docker login -u="$$QUAYIO_DOCKER_USERNAME" -p="$$QUAYIO_DOCKER_PASSWORD" quay.io`,
 			fmt.Sprintf(`make -C build.assets %s`, buildboxName),
-			fmt.Sprintf(`docker push quay.io/gravitational/teleport-%s:$RUNTIME`, buildboxName),
+			fmt.Sprintf(`docker push quay.io/siriusec/siriusec-%s:$RUNTIME`, buildboxName),
 		},
 	}
 }

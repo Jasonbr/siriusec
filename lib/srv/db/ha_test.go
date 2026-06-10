@@ -22,7 +22,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/defaults"
@@ -53,7 +53,7 @@ func TestHA(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      net.JoinHostPort("localhost", postgresServer.Port()),
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   offlineHostID,
 		})
@@ -70,7 +70,7 @@ func TestHA(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      net.JoinHostPort("localhost", postgresServer.Port()),
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   onlineHostID,
 		})

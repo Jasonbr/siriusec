@@ -1,4 +1,4 @@
-// Configuration data for teleport.yaml generation
+// Configuration data for siriusec.yaml generation
 data "template_file" "node_user_data" {
   template = file("data.tpl")
 
@@ -7,9 +7,9 @@ data "template_file" "node_user_data" {
     cluster_name             = var.cluster_name
     email                    = var.email
     domain_name              = var.route53_domain
-    dynamo_table_name        = aws_dynamodb_table.teleport.name
-    dynamo_events_table_name = aws_dynamodb_table.teleport_events.name
-    locks_table_name         = aws_dynamodb_table.teleport_locks.name
+    dynamo_table_name        = aws_dynamodb_table.siriusec.name
+    dynamo_events_table_name = aws_dynamodb_table.siriusec_events.name
+    locks_table_name         = aws_dynamodb_table.siriusec_locks.name
     license_path             = var.license_path
     s3_bucket                = var.s3_bucket_name
     use_acm                  = var.use_acm
@@ -17,7 +17,7 @@ data "template_file" "node_user_data" {
   }
 }
 
-// Auth, node, proxy (aka Teleport Cluster) on single AWS instance
+// Auth, node, proxy (aka Siriusec Cluster) on single AWS instance
 resource "aws_instance" "cluster" {
   key_name                    = var.key_name
   ami                         = data.aws_ami.base.id

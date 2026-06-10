@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package reversetunnel sets up persistent reverse tunnel
-// between remote site and teleport proxy, when site agents
-// dial to teleport proxy's socket and teleport proxy can connect
+// between remote site and siriusec proxy, when site agents
+// dial to siriusec proxy's socket and siriusec proxy can connect
 // to any server through this tunnel.
 package reversetunnel
 
@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -86,7 +86,7 @@ type AgentConfig struct {
 	ReverseTunnelServer Server
 	// LocalClusterName is the name of the cluster this agent is running in.
 	LocalClusterName string
-	// Component is the teleport component that this agent runs in.
+	// Component is the siriusec component that this agent runs in.
 	// It's important for routing incoming requests for local services (like an
 	// IoT node or kubernetes service).
 	Component string
@@ -129,7 +129,7 @@ func (a *AgentConfig) CheckAndSetDefaults() error {
 		logger = log.StandardLogger()
 	}
 	a.Log = logger.WithFields(log.Fields{
-		trace.Component: teleport.Component(a.Component, teleport.ComponentReverseTunnelAgent),
+		trace.Component: siriusec.Component(a.Component, siriusec.ComponentReverseTunnelAgent),
 		trace.ComponentFields: log.Fields{
 			"target":  a.Addr.String(),
 			"leaseID": a.Lease.ID(),
@@ -138,7 +138,7 @@ func (a *AgentConfig) CheckAndSetDefaults() error {
 	return nil
 }
 
-// Agent is a reverse tunnel agent running as a part of teleport Proxies
+// Agent is a reverse tunnel agent running as a part of siriusec Proxies
 // to establish outbound reverse tunnels to remote proxies.
 //
 // There are two operation modes for agents:
@@ -306,7 +306,7 @@ func (a *Agent) handleGlobalRequests(ctx context.Context, requestCh <-chan *ssh.
 
 			switch r.Type {
 			case versionRequest:
-				err := r.Reply(true, []byte(teleport.Version))
+				err := r.Reply(true, []byte(siriusec.Version))
 				if err != nil {
 					log.Debugf("Failed to reply to %v request: %v.", r.Type, err)
 					continue
@@ -482,7 +482,7 @@ func (a *Agent) processRequests(conn *ssh.Client) error {
 // server, that informs agent about proxies registered in the remote
 // cluster and the reverse tunnels already established
 //
-// ch   : SSH channel which received "teleport-transport" out-of-band request
+// ch   : SSH channel which received "siriusec-transport" out-of-band request
 // reqC : request payload
 func (a *Agent) handleDiscovery(ch ssh.Channel, reqC <-chan *ssh.Request) {
 	a.log.Debugf("handleDiscovery requests channel.")
@@ -515,8 +515,8 @@ func (a *Agent) handleDiscovery(ch ssh.Channel, reqC <-chan *ssh.Request) {
 }
 
 const (
-	chanHeartbeat    = "teleport-heartbeat"
-	chanDiscovery    = "teleport-discovery"
+	chanHeartbeat    = "siriusec-heartbeat"
+	chanDiscovery    = "siriusec-discovery"
 	chanDiscoveryReq = "discovery"
 )
 
@@ -530,5 +530,5 @@ const (
 	// LocalKubernetes is a special non-resolvable address that indicates that clients
 	// requests a connection to the kubernetes endpoint of the local proxy.
 	// This has to be a valid domain name, so it lacks @
-	LocalKubernetes = "remote.kube.proxy.teleport.cluster.local"
+	LocalKubernetes = "remote.kube.proxy.siriusec.cluster.local"
 )

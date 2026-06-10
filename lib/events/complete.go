@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types/events"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -63,7 +63,7 @@ func (cfg *UploadCompleterConfig) CheckAndSetDefaults() error {
 		cfg.GracePeriod = defaults.UploadGracePeriod
 	}
 	if cfg.Component == "" {
-		cfg.Component = teleport.ComponentAuth
+		cfg.Component = siriusec.ComponentAuth
 	}
 	if cfg.CheckPeriod == 0 {
 		cfg.CheckPeriod = defaults.LowResPollingPeriod
@@ -84,7 +84,7 @@ func NewUploadCompleter(cfg UploadCompleterConfig) (*UploadCompleter, error) {
 	u := &UploadCompleter{
 		cfg: cfg,
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.Component(cfg.Component, "completer"),
+			trace.Component: siriusec.Component(cfg.Component, "completer"),
 		}),
 		cancel:   cancel,
 		closeCtx: ctx,

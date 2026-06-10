@@ -10,7 +10,7 @@
 * Copyright (c) 2017 Microsoft Corp.
 * All rights reserved
 *
-* Modifications for use in Teleport Copyright 2021 Gravitational, Inc.
+* Modifications for use in Siriusec Copyright 2021 Gravitational, Inc.
 *
 * This file is responsible for console reading calls for building an emulator
 * over Windows Console.

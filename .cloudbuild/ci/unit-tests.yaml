@@ -13,7 +13,7 @@ steps:
 
   # Run the unit tests. Actual content of this job depends on the changes 
   # detected in the PR
-  - name: us-docker.pkg.dev/ci-account/teleport/buildbox-root:teleport7-v0.1.0
+  - name: us-docker.pkg.dev/ci-account/siriusec/buildbox-root:siriusec7-v0.1.0
     id: run-tests
     dir: /workspace/.cloudbuild/scripts
     entrypoint: bash 

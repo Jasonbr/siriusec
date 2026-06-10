@@ -38,7 +38,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestAuthPOST tests the handler of POST /x-teleport-auth.
+// TestAuthPOST tests the handler of POST /x-siriusec-auth.
 func TestAuthPOST(t *testing.T) {
 	const (
 		stateValue  = "012ac605867e5a7d693cd6f49c7ff0fb"
@@ -85,7 +85,7 @@ func TestAuthPOST(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			status := p.makeRequest(t, "POST", "/x-teleport-auth", test.stateInCookie, req)
+			status := p.makeRequest(t, "POST", "/x-siriusec-auth", test.stateInCookie, req)
 			require.Equal(t, test.outStatusCode, status)
 		})
 	}

@@ -6,7 +6,7 @@ const (
 	usageNotes = `Notes:
   --roles=node,proxy,auth,app
 
-  This flag tells Teleport which services to run. By default it runs auth,
+  This flag tells Siriusec which services to run. By default it runs auth,
   proxy, and node. In a production environment you may want to separate them.
 
   --token=xyz
@@ -18,13 +18,13 @@ const (
 `
 
 	appUsageExamples = `
-> teleport app start --token=xyz --auth-server=proxy.example.com:3080 \
+> siriusec app start --token=xyz --auth-server=proxy.example.com:3080 \
     --name="example-app" \
     --uri="http://localhost:8080"
   Starts an app server that proxies the application "example-app" running at
   http://localhost:8080.
 
-> teleport app start --token=xyz --auth-server=proxy.example.com:3080 \
+> siriusec app start --token=xyz --auth-server=proxy.example.com:3080 \
     --name="example-app" \
     --uri="http://localhost:8080" \
     --labels=group=dev
@@ -32,15 +32,15 @@ const (
   allows access to users with the role "group=dev".`
 
 	dbUsageExamples = `
-> teleport db start --token=xyz --auth-server=proxy.example.com:3080 \
+> siriusec db start --token=xyz --auth-server=proxy.example.com:3080 \
   --name="example-db" \
   --protocol="postgres" \
   --uri="localhost:5432"
 Starts a database server that proxies PostgreSQL database "example-db" running
-at localhost:5432. The database must be configured with Teleport CA and key
+at localhost:5432. The database must be configured with Siriusec CA and key
 pair issued by "tctl auth sign --format=db".
 
-> teleport db start --token=xyz --auth-server=proxy.example.com:3080 \
+> siriusec db start --token=xyz --auth-server=proxy.example.com:3080 \
   --name="aurora-db" \
   --protocol="mysql" \
   --uri="example.cluster-abcdefghij.us-west-1.rds.amazonaws.com:3306" \
@@ -54,15 +54,15 @@ var (
 	usageExamples = fmt.Sprintf(`
 Examples:
 
-> teleport start
-  By default without any configuration, teleport starts running as a single-node
+> siriusec start
+  By default without any configuration, siriusec starts running as a single-node
   cluster. It's the equivalent of running with --roles=node,proxy,auth
 
-> teleport start --roles=node --auth-server=10.1.0.1 --token=xyz --nodename=db
+> siriusec start --roles=node --auth-server=10.1.0.1 --token=xyz --nodename=db
   Starts a node named 'db' running in strictly SSH mode role, joining the cluster
   serviced by the auth server running on 10.1.0.1
 
-> teleport start --roles=node --auth-server=10.1.0.1 --labels=db=master
+> siriusec start --roles=node --auth-server=10.1.0.1 --labels=db=master
   Same as the above, but the node runs with db=master label and can be connected
   to using that label in addition to its name.
 %v
@@ -71,7 +71,7 @@ Examples:
 
 const (
 	sampleConfComment = `#
-# A Sample Teleport configuration file.
+# A Sample Siriusec configuration file.
 # Creates a single proxy, auth and node server.
 #
 # Things to update:

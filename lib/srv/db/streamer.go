@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	libevents "github.com/siriusec/siriusec/lib/events"
@@ -61,7 +61,7 @@ func (s *Server) newStreamWriter(sessionCtx *common.Session) (libevents.StreamWr
 		Namespace:    apidefaults.Namespace,
 		ServerID:     sessionCtx.Server.GetHostID(),
 		RecordOutput: recConfig.GetMode() != types.RecordOff,
-		Component:    teleport.ComponentDatabase,
+		Component:    siriusec.ComponentDatabase,
 		ClusterName:  clusterName.GetClusterName(),
 	})
 }
@@ -77,7 +77,7 @@ func (s *Server) newStreamer(ctx context.Context, sessionID string, recConfig ty
 	}
 	s.log.Debugf("Using async streamer for session %v.", sessionID)
 	uploadDir := filepath.Join(
-		s.cfg.DataDir, teleport.LogsDir, teleport.ComponentUpload,
+		s.cfg.DataDir, siriusec.LogsDir, siriusec.ComponentUpload,
 		libevents.StreamingLogsDir, apidefaults.Namespace)
 	// Make sure the upload dir exists, otherwise file streamer will fail.
 	_, err := utils.StatDir(uploadDir)

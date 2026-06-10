@@ -28,7 +28,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types/wrappers"
 
 	"github.com/gravitational/trace"
@@ -37,7 +37,7 @@ import (
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentAuthority,
+	trace.Component: siriusec.ComponentAuthority,
 })
 
 // FromCertAndSigner returns a CertAuthority with the given raw certificate and signer.
@@ -109,7 +109,7 @@ type Identity struct {
 	// allows Siriusec web proxy to route HTTP requests to the appropriate
 	// cluster and Siriusec application proxy within the cluster.
 	RouteToApp RouteToApp
-	// SiriusecCluster is the name of the teleport cluster that this identity
+	// SiriusecCluster is the name of the siriusec cluster that this identity
 	// originated from. For TLS certs this may not be the same as cert issuer,
 	// in case of multi-hop requests that originate from a remote cluster.
 	SiriusecCluster string
@@ -231,7 +231,7 @@ var (
 	AppPublicAddrASN1ExtensionOID = asn1.ObjectIdentifier{1, 3, 9999, 1, 6}
 
 	// SiriusecClusterASN1ExtensionOID is an extension ID used when encoding/decoding
-	// origin teleport cluster name into certificates.
+	// origin siriusec cluster name into certificates.
 	SiriusecClusterASN1ExtensionOID = asn1.ObjectIdentifier{1, 3, 9999, 1, 7}
 
 	// MFAVerifiedASN1ExtensionOID is an extension ID used when encoding/decoding

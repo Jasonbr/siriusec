@@ -168,7 +168,7 @@ func (c *cloud) GetAWSSigninURL(req AWSSigninRequest) (*AWSSigninResponse, error
 		return nil, trace.Wrap(err)
 	}
 
-	respBytes, err := io.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

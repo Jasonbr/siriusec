@@ -24,7 +24,7 @@ import (
 	"github.com/gravitational/trace"
 	"github.com/stretchr/testify/require"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/defaults"
@@ -38,7 +38,7 @@ func TestCreateResetPasswordToken(t *testing.T) {
 	srv.Auth().emitter = mockEmitter
 
 	username := "joe@example.com"
-	pass := "pass123"
+	pass := "Pass12345678"
 	_, _, err := CreateUserAndRole(srv.Auth(), username, []string{username})
 	require.NoError(t, err)
 
@@ -67,7 +67,7 @@ func TestCreateResetPasswordToken(t *testing.T) {
 	event := mockEmitter.LastEvent()
 	require.Equal(t, event.GetType(), events.ResetPasswordTokenCreateEvent)
 	require.Equal(t, event.(*apievents.ResetPasswordTokenCreate).Name, "joe@example.com")
-	require.Equal(t, event.(*apievents.ResetPasswordTokenCreate).User, teleport.UserSystem)
+	require.Equal(t, event.(*apievents.ResetPasswordTokenCreate).User, siriusec.UserSystem)
 
 	// verify that user has no MFA devices
 	devs, err := srv.Auth().GetMFADevices(ctx, username)

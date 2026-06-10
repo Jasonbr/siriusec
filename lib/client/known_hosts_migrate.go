@@ -19,7 +19,7 @@ package client
 import (
 	"bytes"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/gravitational/trace"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -114,7 +114,7 @@ func canPruneOldHostsEntry(oldEntry *knownHostEntry, newEntries []*knownHostEntr
 // duplicate entry exists. This may modify order of host keys, but will not
 // change their content.
 func pruneOldHostKeys(output []string) []string {
-	log := logrus.WithField(trace.Component, teleport.ComponentMigrate)
+	log := logrus.WithField(trace.Component, siriusec.ComponentMigrate)
 
 	var (
 		oldEntries   = make([]*knownHostEntry, 0)

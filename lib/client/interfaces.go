@@ -21,7 +21,7 @@ import (
 	"crypto/x509"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/identityfile"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -263,7 +263,7 @@ func (k *Key) CertRoles() ([]string, error) {
 	// Extract roles from certificate. Note, if the certificate is in old format,
 	// this will be empty.
 	var roles []string
-	rawRoles, ok := cert.Extensions[teleport.CertExtensionTeleportRoles]
+	rawRoles, ok := cert.Extensions[siriusec.CertExtensionTeleportRoles]
 	if ok {
 		roles, err = services.UnmarshalCertRoles(rawRoles)
 		if err != nil {
@@ -376,7 +376,7 @@ func (k *Key) ActiveRequests() (services.RequestIDs, error) {
 	if err != nil {
 		return activeRequests, trace.Wrap(err)
 	}
-	rawRequests, ok := sshCert.Extensions[teleport.CertExtensionTeleportActiveRequests]
+	rawRequests, ok := sshCert.Extensions[siriusec.CertExtensionTeleportActiveRequests]
 	if ok {
 		if err := activeRequests.Unmarshal([]byte(rawRequests)); err != nil {
 			return activeRequests, trace.Wrap(err)

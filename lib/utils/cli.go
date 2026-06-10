@@ -22,7 +22,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	stdlog "log"
 	"math"
 	"os"
@@ -32,7 +31,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 
 	"github.com/sirupsen/logrus"
@@ -64,7 +63,7 @@ func InitLogger(purpose LoggingPurpose, level log.Level, verbose ...bool) {
 			})
 			log.SetOutput(os.Stderr)
 		} else {
-			log.SetOutput(ioutil.Discard)
+			log.SetOutput(io.Discard)
 		}
 	case LoggingForDaemon:
 		log.SetFormatter(&trace.TextFormatter{
@@ -89,7 +88,7 @@ func InitLoggerForTests() {
 		return
 	}
 	logger.SetLevel(log.WarnLevel)
-	logger.SetOutput(ioutil.Discard)
+	logger.SetOutput(io.Discard)
 }
 
 // NewLoggerForTests creates a new logger for test environment
@@ -138,7 +137,7 @@ func FatalError(err error) {
 // GetIterations provides a simple way to add iterations to the test
 // by setting environment variable "ITERATIONS", by default it returns 1
 func GetIterations() int {
-	out := os.Getenv(teleport.IterationsEnvVar)
+	out := os.Getenv(siriusec.IterationsEnvVar)
 	if out == "" {
 		return 1
 	}
@@ -244,7 +243,7 @@ func formatCertError(err error) string {
   SSL_CERT_FILE and SSL_CERT_DIR environment variables respectively and try
   again.
 
-  If you think something malicious may be occurring, contact your Teleport
+  If you think something malicious may be occurring, contact your Siriusec
   system administrator to resolve this issue.
 `
 	case x509.CertificateInvalidError:
@@ -252,7 +251,7 @@ func formatCertError(err error) string {
 
   The certificate presented by the proxy is invalid: %v.
 
-  Contact your Teleport system administrator to resolve this issue.`, innerError)
+  Contact your Siriusec system administrator to resolve this issue.`, innerError)
 	default:
 		return ""
 	}

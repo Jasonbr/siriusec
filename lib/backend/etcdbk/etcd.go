@@ -18,12 +18,12 @@ limitations under the License.
 package etcdbk
 
 import (
+	"os"
 	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"io/ioutil"
 	"sort"
 	"strings"
 	"time"
@@ -48,7 +48,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 )
 
 var (
@@ -236,10 +236,10 @@ func New(ctx context.Context, params backend.Params) (*EtcdBackend, error) {
 		}
 
 		ver := semver.New(status.Version)
-		min := semver.New(teleport.MinimumEtcdVersion)
+		min := semver.New(siriusec.MinimumEtcdVersion)
 		if ver.LessThan(*min) {
 			return nil, trace.BadParameter("unsupported version of etcd %v for node %v, must be %v or greater",
-				status.Version, n, teleport.MinimumEtcdVersion)
+				status.Version, n, siriusec.MinimumEtcdVersion)
 		}
 	}
 
@@ -278,7 +278,7 @@ func (cfg *Config) Validate() error {
 		cfg.DialTimeout = apidefaults.DefaultDialTimeout
 	}
 	if cfg.PasswordFile != "" {
-		out, err := ioutil.ReadFile(cfg.PasswordFile)
+		out, err := os.ReadFile(cfg.PasswordFile)
 		if err != nil {
 			return trace.ConvertSystemError(err)
 		}
@@ -314,11 +314,11 @@ func (b *EtcdBackend) reconnect(ctx context.Context) error {
 	tlsConfig := utils.TLSConfig(nil)
 
 	if b.cfg.TLSCertFile != "" {
-		clientCertPEM, err := ioutil.ReadFile(b.cfg.TLSCertFile)
+		clientCertPEM, err := os.ReadFile(b.cfg.TLSCertFile)
 		if err != nil {
 			return trace.ConvertSystemError(err)
 		}
-		clientKeyPEM, err := ioutil.ReadFile(b.cfg.TLSKeyFile)
+		clientKeyPEM, err := os.ReadFile(b.cfg.TLSKeyFile)
 		if err != nil {
 			return trace.ConvertSystemError(err)
 		}
@@ -330,7 +330,7 @@ func (b *EtcdBackend) reconnect(ctx context.Context) error {
 	}
 
 	if b.cfg.TLSCAFile != "" {
-		caCertPEM, err := ioutil.ReadFile(b.cfg.TLSCAFile)
+		caCertPEM, err := os.ReadFile(b.cfg.TLSCAFile)
 		if err != nil {
 			return trace.ConvertSystemError(err)
 		}

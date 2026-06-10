@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -44,8 +44,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// teleportTestUser is additional user used for tests
-const teleportTestUser = "teleport-test"
+// siriusecTestUser is additional user used for tests
+const siriusecTestUser = "siriusec-test"
 
 // wildcardAllow is used in tests to allow access to all labels.
 var wildcardAllow = types.Labels{
@@ -70,11 +70,11 @@ func TestRootUTMPEntryExists(t *testing.T) {
 
 	ctx := context.Background()
 	s := newSrvCtx(ctx, t)
-	up, err := newUpack(ctx, s, teleportTestUser, []string{teleportTestUser}, wildcardAllow)
+	up, err := newUpack(ctx, s, siriusecTestUser, []string{siriusecTestUser}, wildcardAllow)
 	require.NoError(t, err)
 
 	sshConfig := &ssh.ClientConfig{
-		User:            teleportTestUser,
+		User:            siriusecTestUser,
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(up.certSigner)},
 		HostKeyCallback: ssh.FixedHostKey(s.signer.PublicKey()),
 	}
@@ -103,7 +103,7 @@ func TestRootUTMPEntryExists(t *testing.T) {
 	start := time.Now()
 	for time.Since(start) < 5*time.Minute {
 		time.Sleep(time.Second)
-		entryExists := uacc.UserWithPtyInDatabase(s.utmpPath, teleportTestUser)
+		entryExists := uacc.UserWithPtyInDatabase(s.utmpPath, siriusecTestUser)
 		if entryExists == nil {
 			return
 		}
@@ -235,7 +235,7 @@ func newSrvCtx(ctx context.Context, t *testing.T) *SrvCtx {
 
 	lockWatcher, err := services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentNode,
+			Component: siriusec.ComponentNode,
 			Client:    s.nodeClient,
 		},
 	})

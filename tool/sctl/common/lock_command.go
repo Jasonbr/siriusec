@@ -56,7 +56,7 @@ func (c *LockCommand) Initialize(app *kingpin.Application, config *service.Confi
 
 // TryRun attempts to run subcommands.
 func (c *LockCommand) TryRun(cmd string, client auth.ClientI) (match bool, err error) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	switch cmd {
 	case c.mainCmd.FullCommand():
 		err = c.CreateLock(ctx, client)

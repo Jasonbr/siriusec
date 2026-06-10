@@ -20,7 +20,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/defaults"
@@ -38,7 +38,7 @@ func TestInitCACert(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      "localhost:5432",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   "host-id",
 		})
@@ -48,7 +48,7 @@ func TestInitCACert(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      "localhost:5432",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   "host-id",
 			AWS:      types.AWS{Region: "us-east-1"},
@@ -59,7 +59,7 @@ func TestInitCACert(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      "localhost:5432",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   "host-id",
 			AWS:      types.AWS{Region: "us-east-1"},
@@ -71,7 +71,7 @@ func TestInitCACert(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      "localhost:5432",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   "host-id",
 			AWS:      types.AWS{Region: "us-east-1", Redshift: types.Redshift{ClusterID: "cluster-id"}},
@@ -82,7 +82,7 @@ func TestInitCACert(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      "localhost:5432",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   "host-id",
 			GCP:      types.GCPCloudSQL{ProjectID: "project-id", InstanceID: "instance-id"},
@@ -150,7 +150,7 @@ func TestInitCACertCaching(t *testing.T) {
 		types.DatabaseServerSpecV3{
 			Protocol: defaults.ProtocolPostgres,
 			URI:      "localhost:5432",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 			Hostname: constants.APIDomain,
 			HostID:   "host-id",
 			AWS:      types.AWS{Region: "us-east-1"},

@@ -1,0 +1,8 @@
+name: siriusec-kube-agent
+apiVersion: v2
+version: "1.0.0"
+appVersion: "1.0.0"
+description: Siriusec provides a secure SSH and Kubernetes remote access solution that doesn't get in the way.
+icon: https://siriusec.com/images/logos/logo-siriusec-square.svg
+keywords:
+  - Siriusec

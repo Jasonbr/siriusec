@@ -90,7 +90,7 @@ func (s *PasswordSuite) TearDownTest(c *C) {
 
 func (s *PasswordSuite) TestTiming(c *C) {
 	username := "foo"
-	password := "barbaz"
+	password := "Barbaz123456"
 
 	err := s.a.UpsertPassword(username, []byte(password))
 	c.Assert(err, IsNil)
@@ -158,7 +158,7 @@ func (s *PasswordSuite) TestTiming(c *C) {
 
 func (s *PasswordSuite) TestUserNotFound(c *C) {
 	username := "unknown-user"
-	password := "barbaz"
+	password := "Barbaz123456"
 
 	err := s.a.checkPasswordWOToken(username, []byte(password))
 	c.Assert(err, NotNil)
@@ -167,12 +167,12 @@ func (s *PasswordSuite) TestUserNotFound(c *C) {
 }
 
 func (s *PasswordSuite) TestChangePassword(c *C) {
-	req, err := s.prepareForPasswordChange("user1", []byte("abc123"), constants.SecondFactorOff)
+	req, err := s.prepareForPasswordChange("user1", []byte("Abc123456789"), constants.SecondFactorOff)
 	c.Assert(err, IsNil)
 
 	fakeClock := clockwork.NewFakeClock()
 	s.a.SetClock(fakeClock)
-	req.NewPassword = []byte("abce456")
+	req.NewPassword = []byte("Abce45678901")
 
 	err = s.a.ChangePassword(req)
 	c.Assert(err, IsNil)
@@ -184,13 +184,13 @@ func (s *PasswordSuite) TestChangePassword(c *C) {
 	// advance time and make sure we can login again
 	fakeClock.Advance(defaults.AccountLockInterval + time.Second)
 	req.OldPassword = req.NewPassword
-	req.NewPassword = []byte("abc5555")
+	req.NewPassword = []byte("Abc555567890")
 	err = s.a.ChangePassword(req)
 	c.Assert(err, IsNil)
 }
 
 func (s *PasswordSuite) TestChangePasswordWithOTP(c *C) {
-	req, err := s.prepareForPasswordChange("user2", []byte("abc123"), constants.SecondFactorOTP)
+	req, err := s.prepareForPasswordChange("user2", []byte("Abc123456789"), constants.SecondFactorOTP)
 	c.Assert(err, IsNil)
 
 	fakeClock := clockwork.NewFakeClock()
@@ -207,7 +207,7 @@ func (s *PasswordSuite) TestChangePasswordWithOTP(c *C) {
 	c.Assert(err, IsNil)
 
 	// change password
-	req.NewPassword = []byte("abce456")
+	req.NewPassword = []byte("Abce45678901")
 	req.SecondFactorToken = validToken
 	err = s.a.ChangePassword(req)
 	c.Assert(err, IsNil)
@@ -219,7 +219,7 @@ func (s *PasswordSuite) TestChangePasswordWithOTP(c *C) {
 
 	validToken, _ = totp.GenerateCode(otpSecret, s.a.GetClock().Now())
 	req.OldPassword = req.NewPassword
-	req.NewPassword = []byte("abc5555")
+	req.NewPassword = []byte("Abc555567890")
 	req.SecondFactorToken = validToken
 	err = s.a.ChangePassword(req)
 	c.Assert(err, IsNil)
@@ -237,7 +237,7 @@ func (s *PasswordSuite) TestChangePasswordWithToken(c *C) {
 	c.Assert(err, IsNil)
 
 	username := "joe@example.com"
-	password := []byte("qweqweqwe")
+	password := []byte("Qweqwe123456")
 	_, _, err = CreateUserAndRole(s.a, username, []string{username})
 	c.Assert(err, IsNil)
 
@@ -269,7 +269,7 @@ func (s *PasswordSuite) TestChangePasswordWithTokenOTP(c *C) {
 	c.Assert(err, IsNil)
 
 	username := "joe@example.com"
-	password := []byte("qweqweqwe")
+	password := []byte("Qweqwe123456")
 	_, _, err = CreateUserAndRole(s.a, username, []string{username})
 	c.Assert(err, IsNil)
 
@@ -300,7 +300,7 @@ func (s *PasswordSuite) TestChangePasswordWithTokenOTP(c *C) {
 func (s *PasswordSuite) TestChangePasswordWithOptional2ndFactor(c *C) {
 	var (
 		user = "alice"
-		pass = []byte("abc123")
+		pass = []byte("Abc123456789")
 	)
 
 	_, err := s.prepareForPasswordChange(user, pass, constants.SecondFactorOptional)
@@ -308,14 +308,14 @@ func (s *PasswordSuite) TestChangePasswordWithOptional2ndFactor(c *C) {
 
 	c.Assert(s.a.ChangePassword(services.ChangePasswordReq{
 		User:        user,
-		OldPassword: []byte("invalid"),
-		NewPassword: []byte("newpass"),
+		OldPassword: []byte("InvalidPass123!"),
+		NewPassword: []byte("Newpass12345"),
 	}), NotNil)
 
 	c.Assert(s.a.ChangePassword(services.ChangePasswordReq{
 		User:        user,
 		OldPassword: pass,
-		NewPassword: []byte("newpass"),
+		NewPassword: []byte("Newpass12345"),
 	}), IsNil)
 }
 
@@ -336,7 +336,7 @@ func (s *PasswordSuite) TestChangePasswordWithTokenErrors(c *C) {
 	})
 	c.Assert(err, IsNil)
 
-	validPassword := []byte("qweQWE1")
+	validPassword := []byte("QweQWE123456")
 	validTokenID := token.GetName()
 
 	type testCase struct {
@@ -359,7 +359,7 @@ func (s *PasswordSuite) TestChangePasswordWithTokenErrors(c *C) {
 			desc:         "invalid password",
 			req: ChangePasswordWithTokenRequest{
 				TokenID:  validTokenID,
-				Password: []byte("short"),
+				Password: []byte("Short12345"),
 			},
 		},
 		{

@@ -3,7 +3,7 @@ package types;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
-import "github.com/gravitational/teleport/api/types/wrappers/wrappers.proto";
+import "github.com/siriusec/siriusec/api/types/wrappers/wrappers.proto";
 
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.unmarshaler_all) = true;
@@ -40,7 +40,7 @@ message Metadata {
     // Name is an object name
     string Name = 1 [ (gogoproto.jsontag) = "name" ];
     // Namespace is object namespace. The field should be called "namespace"
-    // when it returns in Teleport 2.4.
+    // when it returns in Siriusec 2.4.
     string Namespace = 2 [ (gogoproto.jsontag) = "-" ];
     // Description is object description
     string Description = 3 [ (gogoproto.jsontag) = "description,omitempty" ];
@@ -160,7 +160,7 @@ message DatabaseServerSpecV3 {
     bytes CACert = 4 [ (gogoproto.jsontag) = "ca_cert,omitempty" ];
     // AWS contains AWS specific settings for RDS/Aurora databases.
     AWS AWS = 5 [ (gogoproto.nullable) = false, (gogoproto.jsontag) = "aws" ];
-    // Version is the Teleport version that the server is running.
+    // Version is the Siriusec version that the server is running.
     string Version = 6 [ (gogoproto.jsontag) = "version" ];
     // Hostname is the database server hostname.
     string Hostname = 7 [ (gogoproto.jsontag) = "hostname" ];
@@ -199,7 +199,7 @@ message GCPCloudSQL {
     string InstanceID = 2 [ (gogoproto.jsontag) = "instance_id,omitempty" ];
 }
 
-// ServerV2 represents a Node, App, Database, Proxy or Auth server in a Teleport cluster.
+// ServerV2 represents a Node, App, Database, Proxy or Auth server in a Siriusec cluster.
 message ServerV2 {
     option (gogoproto.goproto_stringer) = false;
     option (gogoproto.stringer) = false;
@@ -242,7 +242,7 @@ message ServerSpecV2 {
     // UseTunnel indicates that connections to this server should occur over a
     // reverse tunnel.
     bool UseTunnel = 6 [ (gogoproto.jsontag) = "use_tunnel,omitempty" ];
-    // TeleportVersion is the teleport version that the server is running on
+    // SiriusecVersion is the siriusec version that the server is running on
     string Version = 7 [ (gogoproto.jsontag) = "version" ];
     // Apps is a list of applications this server is proxying.
     repeated App Apps = 9 [ (gogoproto.jsontag) = "apps,omitempty" ];
@@ -251,7 +251,7 @@ message ServerSpecV2 {
     //
     // Important: jsontag must not be "kubernetes_clusters", because a
     // different field with that jsontag existed in 4.4:
-    // https://github.com/gravitational/teleport/issues/4862
+    // https://github.com/siriusec/siriusec/issues/4862
     repeated KubernetesCluster KubernetesClusters = 10
         [ (gogoproto.jsontag) = "kube_clusters,omitempty" ];
 }
@@ -640,7 +640,7 @@ message ClusterAuditConfigSpecV2 {
     wrappers.StringValues AuditEventsURI = 4 [
         (gogoproto.nullable) = false,
         (gogoproto.jsontag) = "audit_events_uri,omitempty",
-        (gogoproto.customtype) = "github.com/gravitational/teleport/api/types/wrappers.Strings"
+        (gogoproto.customtype) = "github.com/siriusec/siriusec/api/types/wrappers.Strings"
     ];
 
     // EnableContinuousBackups is used to enable (or disable) PITR (Point-In-Time Recovery).
@@ -707,7 +707,7 @@ message ClusterNetworkingConfigSpecV2 {
     int64 WebIdleTimeout = 6
         [ (gogoproto.jsontag) = "web_idle_timeout", (gogoproto.casttype) = "Duration" ];
 
-    // ProxyListenerMode is proxy listener mode used by Teleport Proxies.
+    // ProxyListenerMode is proxy listener mode used by Siriusec Proxies.
     ProxyListenerMode ProxyListenerMode = 7
         [ (gogoproto.jsontag) = "proxy_listener_mode,omitempty" ];
 
@@ -718,7 +718,7 @@ message ClusterNetworkingConfigSpecV2 {
 // ProxyListenerMode represents the cluster proxy listener mode.
 enum ProxyListenerMode {
     // Separate is the proxy listener mode indicating that proxies are running
-    // in separate listener mode where Teleport Proxy services use different listeners.
+    // in separate listener mode where Siriusec Proxy services use different listeners.
     Separate = 0;
     // Multiplex is the proxy listener mode indicating the proxy should use multiplex mode
     // where all proxy services are multiplexed on a single proxy port.
@@ -799,7 +799,7 @@ message AuthPreferenceSpecV2 {
     // SecondFactor is the type of second factor.
     string SecondFactor = 2 [
         (gogoproto.jsontag) = "second_factor,omitempty",
-        (gogoproto.casttype) = "github.com/gravitational/teleport/api/constants.SecondFactorType"
+        (gogoproto.casttype) = "github.com/siriusec/siriusec/api/constants.SecondFactorType"
     ];
 
     // ConnectorName is the name of the OIDC or SAML connector. If this value is
@@ -833,7 +833,7 @@ message AuthPreferenceSpecV2 {
     // LockingMode is the cluster-wide locking mode default.
     string LockingMode = 9 [
         (gogoproto.jsontag) = "locking_mode,omitempty",
-        (gogoproto.casttype) = "github.com/gravitational/teleport/api/constants.LockingMode"
+        (gogoproto.casttype) = "github.com/siriusec/siriusec/api/constants.LockingMode"
     ];
 }
 
@@ -972,7 +972,7 @@ message AccessReviewThreshold {
 
 // AccessReview is a review to be applied to an access request.
 message AccessReview {
-    // Author is the teleport username of the review author.
+    // Author is the siriusec username of the review author.
     string Author = 1 [ (gogoproto.jsontag) = "author" ];
     // Roles is a list used for role-subselection (not yet fully supported).
     repeated string Roles = 2 [ (gogoproto.jsontag) = "roles,omitempty" ];
@@ -991,7 +991,7 @@ message AccessReview {
     wrappers.LabelValues Annotations = 6 [
         (gogoproto.nullable) = false,
         (gogoproto.jsontag) = "annotations,omitempty",
-        (gogoproto.customtype) = "github.com/gravitational/teleport/api/types/wrappers.Traits"
+        (gogoproto.customtype) = "github.com/siriusec/siriusec/api/types/wrappers.Traits"
     ];
 
     // ThresholdIndexes stores the indexes of thresholds which this review matches
@@ -1077,18 +1077,18 @@ message AccessRequestSpecV3 {
     wrappers.LabelValues ResolveAnnotations = 8 [
         (gogoproto.nullable) = false,
         (gogoproto.jsontag) = "resolve_annotations,omitempty",
-        (gogoproto.customtype) = "github.com/gravitational/teleport/api/types/wrappers.Traits"
+        (gogoproto.customtype) = "github.com/siriusec/siriusec/api/types/wrappers.Traits"
     ];
 
     // SystemAnnotations is a set of programmatically generated annotations attached
-    // to pending access requests by teleport.  These annotations are generated by
+    // to pending access requests by siriusec.  These annotations are generated by
     // applying variable interpolation to the RoleConditions.Request.Annotations block
     // of a user's role(s).  These annotations serve as a mechanism for administrators
     // to pass extra information to plugins when they process pending access requests.
     wrappers.LabelValues SystemAnnotations = 9 [
         (gogoproto.nullable) = false,
         (gogoproto.jsontag) = "system_annotations,omitempty",
-        (gogoproto.customtype) = "github.com/gravitational/teleport/api/types/wrappers.Traits"
+        (gogoproto.customtype) = "github.com/siriusec/siriusec/api/types/wrappers.Traits"
     ];
 
     // Thresholds is a list of review thresholds relevant to this request.  Order must be
@@ -1100,7 +1100,7 @@ message AccessRequestSpecV3 {
     // the review threshold requirements for the given role (internal use only).
     // By storing a representation of which thresholds must pass for each requested role, we
     // both eliminate the need to cache the requestor's roles directly, and allow future
-    // versions of teleport to become smarter about calculating more granular requirements
+    // versions of siriusec to become smarter about calculating more granular requirements
     // in a backwards-compatible manner (i.e. calculation can become smarter in minor releases).
     // Storing this relationship on the request is necessary in order to avoid unexpected or
     // inconsistent behavior due to review submission timing.
@@ -1111,7 +1111,7 @@ message AccessRequestSpecV3 {
     repeated AccessReview Reviews = 12
         [ (gogoproto.nullable) = false, (gogoproto.jsontag) = "reviews,omitempty" ];
 
-    // SuggestedReviewers is a list of reviewer suggestions.  These can be teleport usernames, but
+    // SuggestedReviewers is a list of reviewer suggestions.  These can be siriusec usernames, but
     // that is not a requirement.
     repeated string SuggestedReviewers = 13
         [ (gogoproto.jsontag) = "suggested_reviewers,omitempty" ];
@@ -1317,7 +1317,7 @@ message RoleOptions {
     // the role.
     string Lock = 14 [
         (gogoproto.jsontag) = "lock,omitempty",
-        (gogoproto.casttype) = "github.com/gravitational/teleport/api/constants.LockingMode"
+        (gogoproto.casttype) = "github.com/siriusec/siriusec/api/constants.LockingMode"
     ];
 }
 
@@ -1328,7 +1328,7 @@ message RoleConditions {
     repeated string Logins = 1 [ (gogoproto.jsontag) = "logins,omitempty" ];
 
     // Namespaces is a list of namespaces (used to partition a cluster). The
-    // field should be called "namespaces" when it returns in Teleport 2.4.
+    // field should be called "namespaces" when it returns in Siriusec 2.4.
     repeated string Namespaces = 2 [ (gogoproto.jsontag) = "-" ];
 
     // NodeLabels is a map of node labels (used to dynamically grant access to
@@ -1404,7 +1404,7 @@ message AccessRequestConditions {
     // Roles is the name of roles which will match the request rule.
     repeated string Roles = 1 [ (gogoproto.jsontag) = "roles,omitempty" ];
 
-    // ClaimsToRoles specifies a mapping from claims (traits) to teleport roles.
+    // ClaimsToRoles specifies a mapping from claims (traits) to siriusec roles.
     repeated ClaimMapping ClaimsToRoles = 2
         [ (gogoproto.nullable) = false, (gogoproto.jsontag) = "claims_to_roles,omitempty" ];
 
@@ -1418,7 +1418,7 @@ message AccessRequestConditions {
     wrappers.LabelValues Annotations = 3 [
         (gogoproto.nullable) = false,
         (gogoproto.jsontag) = "annotations,omitempty",
-        (gogoproto.customtype) = "github.com/gravitational/teleport/api/types/wrappers.Traits"
+        (gogoproto.customtype) = "github.com/siriusec/siriusec/api/types/wrappers.Traits"
     ];
 
     // Thresholds is a list of thresholds, one of which must be met in order for reviews
@@ -1427,7 +1427,7 @@ message AccessRequestConditions {
     repeated AccessReviewThreshold Thresholds = 4
         [ (gogoproto.nullable) = false, (gogoproto.jsontag) = "thresholds,omitempty" ];
 
-    // SuggestedReviewers is a list of reviewer suggestions.  These can be teleport usernames, but
+    // SuggestedReviewers is a list of reviewer suggestions.  These can be siriusec usernames, but
     // that is not a requirement.
     repeated string SuggestedReviewers = 5
         [ (gogoproto.jsontag) = "suggested_reviewers,omitempty" ];
@@ -1439,7 +1439,7 @@ message AccessReviewConditions {
     // Roles is the name of roles which may be reviewed.
     repeated string Roles = 1 [ (gogoproto.jsontag) = "roles,omitempty" ];
 
-    // ClaimsToRoles specifies a mapping from claims (traits) to teleport roles.
+    // ClaimsToRoles specifies a mapping from claims (traits) to siriusec roles.
     repeated ClaimMapping ClaimsToRoles = 2
         [ (gogoproto.nullable) = false, (gogoproto.jsontag) = "claims_to_roles,omitempty" ];
 
@@ -1448,13 +1448,13 @@ message AccessReviewConditions {
     string Where = 3 [ (gogoproto.jsontag) = "where,omitempty" ];
 }
 
-// ClaimMapping maps a claim to teleport roles.
+// ClaimMapping maps a claim to siriusec roles.
 message ClaimMapping {
     // Claim is a claim name.
     string Claim = 1 [ (gogoproto.jsontag) = "claim" ];
     // Value is a claim value to match.
     string Value = 2 [ (gogoproto.jsontag) = "value" ];
-    // Roles is a list of static teleport roles to match.
+    // Roles is a list of static siriusec roles to match.
     repeated string Roles = 3 [ (gogoproto.jsontag) = "roles,omitempty" ];
 }
 
@@ -1530,7 +1530,7 @@ message UserSpecV2 {
     wrappers.LabelValues Traits = 5 [
         (gogoproto.nullable) = false,
         (gogoproto.jsontag) = "traits,omitempty",
-        (gogoproto.customtype) = "github.com/gravitational/teleport/api/types/wrappers.Traits"
+        (gogoproto.customtype) = "github.com/siriusec/siriusec/api/types/wrappers.Traits"
     ];
 
     // Status is a login status of the user
@@ -2050,7 +2050,7 @@ message OIDCConnectorV2List {
 message OIDCConnectorSpecV2 {
     // IssuerURL is the endpoint of the provider, e.g. https://accounts.google.com.
     string IssuerURL = 1 [ (gogoproto.jsontag) = "issuer_url" ];
-    // ClientID is the id of the authentication client (Teleport Auth server).
+    // ClientID is the id of the authentication client (Siriusec Auth server).
     string ClientID = 2 [ (gogoproto.jsontag) = "client_id" ];
     // ClientSecret is used to authenticate the client.
     string ClientSecret = 3 [ (gogoproto.jsontag) = "client_secret" ];
@@ -2114,11 +2114,11 @@ message SAMLConnectorSpecV2 {
     // Display controls how this connector is displayed.
     string Display = 4 [ (gogoproto.jsontag) = "display" ];
     // AssertionConsumerService is a URL for assertion consumer service
-    // on the service provider (Teleport's side).
+    // on the service provider (Siriusec's side).
     string AssertionConsumerService = 5 [ (gogoproto.jsontag) = "acs" ];
     // Audience uniquely identifies our service provider.
     string Audience = 6 [ (gogoproto.jsontag) = "audience" ];
-    // ServiceProviderIssuer is the issuer of the service provider (Teleport).
+    // ServiceProviderIssuer is the issuer of the service provider (Siriusec).
     string ServiceProviderIssuer = 7 [ (gogoproto.jsontag) = "service_provider_issuer" ];
     // EntityDescriptor is XML with descriptor. It can be used to supply configuration
     // parameters in one XML file rather than supplying them in the individual elements.
@@ -2138,13 +2138,13 @@ message SAMLConnectorSpecV2 {
         [ (gogoproto.nullable) = true, (gogoproto.jsontag) = "assertion_key_pair,omitempty" ];
 }
 
-// AttributeMapping maps a SAML attribute statement to teleport roles.
+// AttributeMapping maps a SAML attribute statement to siriusec roles.
 message AttributeMapping {
     // Name is an attribute statement name.
     string Name = 1 [ (gogoproto.jsontag) = "name" ];
     // Value is an attribute statement value to match.
     string Value = 2 [ (gogoproto.jsontag) = "value" ];
-    // Roles is a list of static teleport roles to map to.
+    // Roles is a list of static siriusec roles to map to.
     repeated string Roles = 3 [ (gogoproto.jsontag) = "roles,omitempty" ];
 }
 
@@ -2249,7 +2249,7 @@ message TrustedClusterSpecV2 {
 }
 
 // LockV2 represents a lock.
-// Locks are used to restrict access to a Teleport environment by disabling
+// Locks are used to restrict access to a Siriusec environment by disabling
 // interactions involving a user, an RBAC role, a node, etc.
 // See rfd/0009-locking.md for more details.
 message LockV2 {
@@ -2284,7 +2284,7 @@ message LockTarget {
     option (gogoproto.goproto_stringer) = false;
     option (gogoproto.stringer) = false;
 
-    // User specifies the name of a Teleport user.
+    // User specifies the name of a Siriusec user.
     string User = 1 [ (gogoproto.jsontag) = "user,omitempty" ];
 
     // Role specifies the name of an RBAC role known to the root cluster.
@@ -2294,7 +2294,7 @@ message LockTarget {
     // Login specifies the name of a local UNIX user.
     string Login = 3 [ (gogoproto.jsontag) = "login,omitempty" ];
 
-    // Node specifies the UUID of a Teleport node.
+    // Node specifies the UUID of a Siriusec node.
     // A matching node is also prevented from heartbeating to the auth server.
     string Node = 4 [ (gogoproto.jsontag) = "node,omitempty" ];
 

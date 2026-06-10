@@ -26,7 +26,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -133,7 +133,7 @@ func NewProxyServer(ctx context.Context, config ProxyServerConfig) (*ProxyServer
 		cfg: config,
 		middleware: &auth.Middleware{
 			AccessPoint:   config.AccessPoint,
-			AcceptedUsage: []string{teleport.UsageDatabaseOnly},
+			AcceptedUsage: []string{siriusec.UsageDatabaseOnly},
 		},
 		closeCtx: ctx,
 		log:      logrus.WithField(trace.Component, "db:proxy"),
@@ -341,7 +341,7 @@ func (s *ProxyServer) Proxy(ctx context.Context, authContext *auth.Context, clie
 		clock:        s.cfg.Clock,
 		serverID:     s.cfg.ServerID,
 		authClient:   s.cfg.AuthClient,
-		teleportUser: authContext.Identity.GetIdentity().Username,
+		siriusecUser: authContext.Identity.GetIdentity().Username,
 		emitter:      s.cfg.Emitter,
 		log:          s.log,
 		ctx:          s.closeCtx,
@@ -391,7 +391,7 @@ type monitorConnConfig struct {
 	clock        clockwork.Clock
 	serverID     string
 	authClient   *auth.Client
-	teleportUser string
+	siriusecUser string
 	emitter      events.Emitter
 	log          logrus.FieldLogger
 	ctx          context.Context
@@ -438,7 +438,7 @@ func monitorConn(ctx context.Context, cfg monitorConnConfig) (net.Conn, error) {
 		Context:               cfg.ctx,
 		Clock:                 cfg.clock,
 		ServerID:              cfg.serverID,
-		SiriusecUser:          cfg.teleportUser,
+		SiriusecUser:          cfg.siriusecUser,
 		Emitter:               cfg.emitter,
 		Entry:                 cfg.log,
 	})

@@ -1,0 +1,23 @@
+# example mattermost configuration TOML file
+[siriusec]
+auth_server = "example.com:3025"                             # Siriusec Auth Server GRPC API address
+client_key = "/var/lib/siriusec/plugins/mattermost/auth.key" # Siriusec GRPC client secret key
+client_crt = "/var/lib/siriusec/plugins/mattermost/auth.crt" # Siriusec GRPC client certificate
+root_cas = "/var/lib/siriusec/plugins/mattermost/auth.cas"   # Siriusec cluster CA certs
+
+[mattermost]
+url = "https://mattermost.example.com" # Mattermost Server URL
+team = "team-name"                     # Mattermsot team in which the channel resides.
+channel = "channel-name"               # Mattermost Channel name to post requests to
+token = "api-token"                    # Mattermost Bot OAuth token
+secret = "signing-secret-value"        # Mattermost API signing Secret
+
+[http]
+public_addr = "example.com" # URL on which callback server is accessible externally, e.g. [https://]siriusec-mattermost.example.com
+# listen_addr = ":8081" # Network address in format [addr]:port on which callback server listens, e.g. 0.0.0.0:443
+https_key_file = "/var/lib/siriusec/plugins/mattermost/server.key"  # TLS private key
+https_cert_file = "/var/lib/siriusec/plugins/mattermost/server.crt" # TLS certificate
+
+[log]
+output = "stderr" # Logger output. Could be "stdout", "stderr" or "/var/lib/siriusec/mattermost.log"
+severity = "INFO" # Logger severity. Could be "INFO", "ERROR", "DEBUG" or "WARN".

@@ -4,14 +4,14 @@
 
 resource "aws_ssm_parameter" "license" {
   count     = var.license_path != "" ? 1 : 0
-  name      = "/teleport/${var.cluster_name}/license"
+  name      = "/siriusec/${var.cluster_name}/license"
   type      = "SecureString"
   value     = file(var.license_path)
   overwrite = true
 }
 
 resource "aws_ssm_parameter" "grafana_pass" {
-  name      = "/teleport/${var.cluster_name}/grafana_pass"
+  name      = "/siriusec/${var.cluster_name}/grafana_pass"
   type      = "SecureString"
   value     = var.grafana_pass
   overwrite = true

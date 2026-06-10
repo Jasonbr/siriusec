@@ -31,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -86,7 +86,7 @@ const (
 
 // ForwarderConfig specifies configuration for proxy forwarder
 type ForwarderConfig struct {
-	// ReverseTunnelSrv is the teleport reverse tunnel server
+	// ReverseTunnelSrv is the siriusec reverse tunnel server
 	ReverseTunnelSrv reversetunnel.Server
 	// ClusterName is a local cluster name
 	ClusterName string
@@ -172,7 +172,7 @@ func (f *ForwarderConfig) CheckAndSetDefaults() error {
 		f.Namespace = apidefaults.Namespace
 	}
 	if f.Context == nil {
-		f.Context = context.TODO()
+		f.Context = context.Background()
 	}
 	if f.Clock == nil {
 		f.Clock = clockwork.NewRealClock()
@@ -192,7 +192,7 @@ func (f *ForwarderConfig) CheckAndSetDefaults() error {
 	}
 	if f.KubeClusterName == "" && f.KubeconfigPath == "" && f.KubeServiceType == LegacyProxyService {
 		// Running without a kubeconfig and explicit k8s cluster name. Use
-		// teleport cluster name instead, to ask kubeutils.GetKubeConfig to
+		// siriusec cluster name instead, to ask kubeutils.GetKubeConfig to
 		// attempt loading the in-cluster credentials.
 		f.KubeClusterName = f.ClusterName
 	}
@@ -264,9 +264,9 @@ type Forwarder struct {
 	cfg    ForwarderConfig
 	// clientCredentials is an expiring cache of ephemeral client credentials.
 	// Forwarder requests credentials with client identity, when forwarding to
-	// another teleport process (but not when forwarding to k8s API).
+	// another siriusec process (but not when forwarding to k8s API).
 	//
-	// TODO(klizhentas): flush certs on teleport CA rotation?
+	// TODO(klizhentas): flush certs on siriusec CA rotation?
 	clientCredentials *ttlmap.TTLMap
 	// activeRequests is a map used to serialize active CSR requests to the auth server
 	activeRequests map[string]context.Context
@@ -297,7 +297,7 @@ type authContext struct {
 	kubeGroups      map[string]struct{}
 	kubeUsers       map[string]struct{}
 	kubeCluster     string
-	teleportCluster teleportClusterClient
+	siriusecCluster siriusecClusterClient
 	recordingConfig types.SessionRecordingConfig
 	// clientIdleTimeout sets information on client idle timeout
 	clientIdleTimeout time.Duration
@@ -309,13 +309,13 @@ type authContext struct {
 }
 
 func (c authContext) String() string {
-	return fmt.Sprintf("user: %v, users: %v, groups: %v, teleport cluster: %v, kube cluster: %v", c.User.GetName(), c.kubeUsers, c.kubeGroups, c.teleportCluster.name, c.kubeCluster)
+	return fmt.Sprintf("user: %v, users: %v, groups: %v, siriusec cluster: %v, kube cluster: %v", c.User.GetName(), c.kubeUsers, c.kubeGroups, c.siriusecCluster.name, c.kubeCluster)
 }
 
 func (c *authContext) key() string {
 	// it is important that the context key contains user, kubernetes groups and certificate expiry,
 	// so that new logins with different parameters will not reuse this context
-	return fmt.Sprintf("%v:%v:%v:%v:%v:%v", c.teleportCluster.name, c.User.GetName(), c.kubeUsers, c.kubeGroups, c.kubeCluster, c.disconnectExpiredCert.UTC().Unix())
+	return fmt.Sprintf("%v:%v:%v:%v:%v:%v", c.siriusecCluster.name, c.User.GetName(), c.kubeUsers, c.kubeGroups, c.kubeCluster, c.disconnectExpiredCert.UTC().Unix())
 }
 
 func (c *authContext) eventClusterMeta() apievents.KubernetesClusterMetadata {
@@ -328,9 +328,9 @@ func (c *authContext) eventClusterMeta() apievents.KubernetesClusterMetadata {
 
 type dialFunc func(ctx context.Context, network, addr, serverID string) (net.Conn, error)
 
-// teleportClusterClient is a client for either a k8s endpoint in local cluster or a
+// siriusecClusterClient is a client for either a k8s endpoint in local cluster or a
 // proxy endpoint in a remote cluster.
-type teleportClusterClient struct {
+type siriusecClusterClient struct {
 	remoteAddr     utils.NetAddr
 	name           string
 	dial           dialFunc
@@ -339,7 +339,7 @@ type teleportClusterClient struct {
 }
 
 // dialEndpoint dials a connection to a kube cluster using the given kube cluster endpoint
-func (c *teleportClusterClient) dialEndpoint(ctx context.Context, network string, endpoint kubeClusterEndpoint) (net.Conn, error) {
+func (c *siriusecClusterClient) dialEndpoint(ctx context.Context, network string, endpoint kubeClusterEndpoint) (net.Conn, error) {
 	return c.dial(ctx, network, endpoint.addr, endpoint.serverID)
 }
 
@@ -469,11 +469,11 @@ func (f *Forwarder) setupContext(ctx auth.Context, req *http.Request, isRemoteUs
 	sessionTTL := roles.AdjustSessionTTL(time.Hour)
 
 	identity := ctx.Identity.GetIdentity()
-	teleportClusterName := identity.RouteToCluster
-	if teleportClusterName == "" {
-		teleportClusterName = f.cfg.ClusterName
+	siriusecClusterName := identity.RouteToCluster
+	if siriusecClusterName == "" {
+		siriusecClusterName = f.cfg.ClusterName
 	}
-	isRemoteCluster := f.cfg.ClusterName != teleportClusterName
+	isRemoteCluster := f.cfg.ClusterName != siriusecClusterName
 
 	if isRemoteCluster && isRemoteUser {
 		return nil, trace.AccessDenied("access denied: remote user can not access remote cluster")
@@ -503,22 +503,22 @@ func (f *Forwarder) setupContext(ctx auth.Context, req *http.Request, isRemoteUs
 	// any user to access common API methods, e.g. discovery methods
 	// required for initial client usage, without it, restricted user's
 	// kubectl clients will not work
-	if !apiutils.SliceContainsStr(kubeGroups, teleport.KubeSystemAuthenticated) {
-		kubeGroups = append(kubeGroups, teleport.KubeSystemAuthenticated)
+	if !apiutils.SliceContainsStr(kubeGroups, siriusec.KubeSystemAuthenticated) {
+		kubeGroups = append(kubeGroups, siriusec.KubeSystemAuthenticated)
 	}
 
 	// Get a dialer for either a k8s endpoint in current cluster or a tunneled
-	// endpoint for a leaf teleport cluster.
+	// endpoint for a leaf siriusec cluster.
 	var dialFn dialFunc
 	var isRemoteClosed func() bool
 	if isRemoteCluster {
-		// Tunnel is nil for a teleport process with "kubernetes_service" but
+		// Tunnel is nil for a siriusec process with "kubernetes_service" but
 		// not "proxy_service".
 		if f.cfg.ReverseTunnelSrv == nil {
 			return nil, trace.BadParameter("this Siriusec process can not dial Kubernetes endpoints in remote Sirius clusters; only proxy_service supports this, make sure a Sirius proxy is first in the request path")
 		}
 
-		targetCluster, err := f.cfg.ReverseTunnelSrv.GetSite(teleportClusterName)
+		targetCluster, err := f.cfg.ReverseTunnelSrv.GetSite(siriusecClusterName)
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
@@ -575,8 +575,8 @@ func (f *Forwarder) setupContext(ctx auth.Context, req *http.Request, isRemoteUs
 		kubeGroups:        utils.StringsSet(kubeGroups),
 		kubeUsers:         utils.StringsSet(kubeUsers),
 		recordingConfig:   recordingConfig,
-		teleportCluster: teleportClusterClient{
-			name:           teleportClusterName,
+		siriusecCluster: siriusecClusterClient{
+			name:           siriusecClusterName,
 			remoteAddr:     utils.NetAddr{AddrNetwork: "tcp", Addr: req.RemoteAddr},
 			dial:           dialFn,
 			isRemote:       isRemoteCluster,
@@ -586,14 +586,14 @@ func (f *Forwarder) setupContext(ctx auth.Context, req *http.Request, isRemoteUs
 
 	authCtx.kubeCluster = identity.KubernetesCluster
 	if !isRemoteCluster {
-		kubeCluster, err := kubeutils.CheckOrSetKubeCluster(req.Context(), f.cfg.CachingAuthClient, identity.KubernetesCluster, teleportClusterName)
+		kubeCluster, err := kubeutils.CheckOrSetKubeCluster(req.Context(), f.cfg.CachingAuthClient, identity.KubernetesCluster, siriusecClusterName)
 		if err != nil {
 			if !trace.IsNotFound(err) {
 				return nil, trace.Wrap(err)
 			}
 			// Fallback for old clusters and old user certs. Assume that the
 			// user is trying to access the default cluster name.
-			kubeCluster = teleportClusterName
+			kubeCluster = siriusecClusterName
 		}
 		authCtx.kubeCluster = kubeCluster
 	}
@@ -612,7 +612,7 @@ func (f *Forwarder) setupContext(ctx auth.Context, req *http.Request, isRemoteUs
 }
 
 func (f *Forwarder) authorize(ctx context.Context, actx *authContext) error {
-	if actx.teleportCluster.isRemote {
+	if actx.siriusecCluster.isRemote {
 		// Authorization for a remote kube cluster will happen on the remote
 		// end (by their proxy), after that cluster has remapped used roles.
 		f.log.WithField("auth_context", actx.String()).Debug("Skipping authorization for a remote kubernetes cluster name")
@@ -670,7 +670,7 @@ func (f *Forwarder) newStreamer(ctx *authContext) (events.Streamer, error) {
 	}
 	f.log.Debugf("Using async streamer for session.")
 	dir := filepath.Join(
-		f.cfg.DataDir, teleport.LogsDir, teleport.ComponentUpload,
+		f.cfg.DataDir, siriusec.LogsDir, siriusec.ComponentUpload,
 		events.StreamingLogsDir, apidefaults.Namespace,
 	)
 	fileStreamer, err := filesessions.NewStreamer(dir)
@@ -696,7 +696,7 @@ func (f *Forwarder) exec(ctx *authContext, w http.ResponseWriter, req *http.Requ
 	sess, err := f.newClusterSession(*ctx)
 	if err != nil {
 		// This error goes to kubernetes client and is not visible in the logs
-		// of the teleport server if not logged here.
+		// of the siriusec server if not logged here.
 		f.log.Errorf("Failed to create cluster session: %v.", err)
 		return nil, trace.Wrap(err)
 	}
@@ -733,7 +733,7 @@ func (f *Forwarder) exec(ctx *authContext, w http.ResponseWriter, req *http.Requ
 		}
 		// create session recorder
 		// get the audit log from the server and create a session recorder. this will
-		// be a discard audit log if the proxy is in recording mode and a teleport
+		// be a discard audit log if the proxy is in recording mode and a siriusec
 		// node so we don't create double recordings.
 		recorder, err = events.NewAuditWriter(events.AuditWriterConfig{
 			// Audit stream is using server context, not session context,
@@ -745,7 +745,7 @@ func (f *Forwarder) exec(ctx *authContext, w http.ResponseWriter, req *http.Requ
 			ServerID:     f.cfg.ServerID,
 			Namespace:    f.cfg.Namespace,
 			RecordOutput: ctx.recordingConfig.GetMode() != types.RecordOff,
-			Component:    teleport.Component(teleport.ComponentSession, teleport.ComponentProxyKube),
+			Component:    siriusec.Component(siriusec.ComponentSession, siriusec.ComponentProxyKube),
 			ClusterName:  f.cfg.ClusterName,
 		})
 		if err != nil {
@@ -812,7 +812,7 @@ func (f *Forwarder) exec(ctx *authContext, w http.ResponseWriter, req *http.Requ
 			ServerMetadata: apievents.ServerMetadata{
 				ServerID:        f.cfg.ServerID,
 				ServerNamespace: f.cfg.Namespace,
-				ServerHostname:  sess.teleportCluster.name,
+				ServerHostname:  sess.siriusecCluster.name,
 				ServerAddr:      sess.kubeAddress,
 			},
 			SessionMetadata: apievents.SessionMetadata{
@@ -1016,7 +1016,7 @@ func (f *Forwarder) portForward(ctx *authContext, w http.ResponseWriter, req *ht
 	sess, err := f.newClusterSession(*ctx)
 	if err != nil {
 		// This error goes to kubernetes client and is not visible in the logs
-		// of the teleport server if not logged here.
+		// of the siriusec server if not logged here.
 		f.log.Errorf("Failed to create cluster session: %v.", err)
 		return nil, trace.Wrap(err)
 	}
@@ -1106,7 +1106,7 @@ func (f *Forwarder) setupForwardingHeaders(sess *clusterSession, req *http.Reque
 	req.RequestURI = req.URL.Path + "?" + req.URL.RawQuery
 
 	// We only have a direct host to provide when using local creds.
-	// Otherwise, use teleport.cluster.local to pass TLS handshake.
+	// Otherwise, use siriusec.cluster.local to pass TLS handshake.
 	req.URL.Host = constants.APIDomain
 	if sess.creds != nil {
 		req.URL.Host = sess.creds.targetAddr
@@ -1166,7 +1166,7 @@ func setupImpersonationHeaders(log log.FieldLogger, ctx authContext, headers htt
 	// otherwise there will be no way to exclude the user from the list).
 	//
 	// If the `kubernetes_users` role set includes only one user
-	// (quite frequently that's the real intent), teleport will default to it,
+	// (quite frequently that's the real intent), siriusec will default to it,
 	// otherwise it will refuse to select.
 	//
 	// This will enable the use case when `kubernetes_users` has just one field to
@@ -1196,7 +1196,7 @@ func setupImpersonationHeaders(log log.FieldLogger, ctx authContext, headers htt
 		}
 	}
 
-	if !ctx.teleportCluster.isRemote {
+	if !ctx.siriusecCluster.isRemote {
 		headers.Set(ImpersonateUserHeader, impersonateUser)
 
 		// Make sure to overwrite the exiting headers, instead of appending to
@@ -1214,14 +1214,14 @@ func (f *Forwarder) catchAll(ctx *authContext, w http.ResponseWriter, req *http.
 	sess, err := f.newClusterSession(*ctx)
 	if err != nil {
 		// This error goes to kubernetes client and is not visible in the logs
-		// of the teleport server if not logged here.
+		// of the siriusec server if not logged here.
 		f.log.Errorf("Failed to create cluster session: %v.", err)
 		return nil, trace.Wrap(err)
 	}
 
 	if err := f.setupForwardingHeaders(sess, req); err != nil {
 		// This error goes to kubernetes client and is not visible in the logs
-		// of the teleport server if not logged here.
+		// of the siriusec server if not logged here.
 		f.log.Errorf("Failed to set up forwarding headers: %v.", err)
 		return nil, trace.Wrap(err)
 	}
@@ -1321,7 +1321,7 @@ type clusterSession struct {
 	creds     *kubeCreds
 	tlsConfig *tls.Config
 	forwarder *forward.Forwarder
-	// noAuditEvents is true if this teleport service should leave audit event
+	// noAuditEvents is true if this siriusec service should leave audit event
 	// logging to another service.
 	noAuditEvents        bool
 	kubeClusterEndpoints []kubeClusterEndpoint
@@ -1397,7 +1397,7 @@ func (s *clusterSession) dial(ctx context.Context, network string) (net.Conn, er
 
 	errs := []error{}
 	for _, endpoint := range shuffledEndpoints {
-		conn, err := s.teleportCluster.dialEndpoint(ctx, network, endpoint)
+		conn, err := s.siriusecCluster.dialEndpoint(ctx, network, endpoint)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -1410,7 +1410,7 @@ func (s *clusterSession) dial(ctx context.Context, network string) (net.Conn, er
 
 // TODO(awly): unit test this
 func (f *Forwarder) newClusterSession(ctx authContext) (*clusterSession, error) {
-	if ctx.teleportCluster.isRemote {
+	if ctx.siriusecCluster.isRemote {
 		return f.newClusterSessionRemoteCluster(ctx)
 	}
 	return f.newClusterSessionSameCluster(ctx)
@@ -1430,7 +1430,7 @@ func (f *Forwarder) newClusterSessionRemoteCluster(ctx authContext) (*clusterSes
 		// Proxy uses reverse tunnel dialer to connect to Kubernetes in a leaf cluster
 		// and the targetKubernetes cluster endpoint is determined from the identity
 		// encoded in the TLS certificate. We're setting the dial endpoint to a hardcoded
-		// `kube.teleport.cluster.local` value to indicate this is a Kubernetes proxy request
+		// `kube.siriusec.cluster.local` value to indicate this is a Kubernetes proxy request
 		kubeClusterEndpoints: []kubeClusterEndpoint{{addr: reversetunnel.LocalKubernetes}},
 		tlsConfig:            tlsConfig,
 	}
@@ -1461,7 +1461,7 @@ func (f *Forwarder) newClusterSessionSameCluster(ctx authContext) (*clusterSessi
 		return nil, trace.Wrap(err)
 	}
 
-	if len(kubeServices) == 0 && ctx.kubeCluster == ctx.teleportCluster.name {
+	if len(kubeServices) == 0 && ctx.kubeCluster == ctx.siriusecCluster.name {
 		return nil, trace.Wrap(localErr)
 	}
 
@@ -1475,14 +1475,14 @@ outer:
 			}
 			// TODO(awly): check RBAC
 			endpoints = append(endpoints, kubeClusterEndpoint{
-				serverID: fmt.Sprintf("%s.%s", s.GetName(), ctx.teleportCluster.name),
+				serverID: fmt.Sprintf("%s.%s", s.GetName(), ctx.siriusecCluster.name),
 				addr:     s.GetAddr(),
 			})
 			continue outer
 		}
 	}
 	if len(endpoints) == 0 {
-		return nil, trace.NotFound("kubernetes cluster %q is not found in teleport cluster %q", ctx.kubeCluster, ctx.teleportCluster.name)
+		return nil, trace.NotFound("kubernetes cluster %q is not found in siriusec cluster %q", ctx.kubeCluster, ctx.siriusecCluster.name)
 	}
 	return f.newClusterSessionDirect(ctx, endpoints)
 }
@@ -1711,7 +1711,7 @@ func (f *Forwarder) requestCertificate(ctx authContext) (*tls.Config, error) {
 
 	response, err := f.cfg.AuthClient.ProcessKubeCSR(auth.KubeCSR{
 		Username:    ctx.User.GetName(),
-		ClusterName: ctx.teleportCluster.name,
+		ClusterName: ctx.siriusecCluster.name,
 		CSR:         csrPEM,
 	})
 	if err != nil {

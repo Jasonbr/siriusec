@@ -1,8 +1,0 @@
-name: teleport-cluster
-apiVersion: v2
-version: "1.0.0"
-appVersion: "1.0.0"
-description: Siriusec is a unified access plane for your infrastructure
-icon: https://siriusec.com/images/logos/logo-teleport-square.svg
-keywords:
-  - Siriusec

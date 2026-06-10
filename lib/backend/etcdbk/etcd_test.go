@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	examplePrefix = "/teleport.secrets/"
+	examplePrefix = "/siriusec.secrets/"
 	customPrefix  = "/custom/"
 )
 
@@ -57,7 +57,7 @@ type EtcdSuite struct {
 var _ = check.Suite(&EtcdSuite{})
 
 func (s *EtcdSuite) SetUpSuite(c *check.C) {
-	// This config must match examples/etcd/teleport.yaml
+	// This config must match examples/etcd/siriusec.yaml
 	s.config = backend.Params{
 		"peers":         []string{"https://127.0.0.1:2379"},
 		"prefix":        examplePrefix,
@@ -203,7 +203,7 @@ func TestCompareAndSwapOversizedValue(t *testing.T) {
 	const maxClientMsgSize = 128
 	bk, err := New(context.Background(), backend.Params{
 		"peers":                          []string{"https://127.0.0.1:2379"},
-		"prefix":                         "/teleport",
+		"prefix":                         "/siriusec",
 		"tls_key_file":                   "../../../examples/etcd/certs/client-key.pem",
 		"tls_cert_file":                  "../../../examples/etcd/certs/client-cert.pem",
 		"tls_ca_file":                    "../../../examples/etcd/certs/ca-cert.pem",

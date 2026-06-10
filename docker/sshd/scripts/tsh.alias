@@ -1,4 +1,4 @@
 #!/bin/bash
 
-/usr/local/bin/tsh --insecure --proxy=proxy.luna.teleport -i /mnt/shared/certs/bot.pem "$@"
+/usr/local/bin/tsh --insecure --proxy=proxy.luna.siriusec -i /mnt/shared/certs/bot.pem "$@"
 

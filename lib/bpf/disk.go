@@ -19,7 +19,7 @@ limitations under the License.
 package bpf
 
 import (
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/utils"
 	"github.com/gravitational/trace"
 
@@ -35,7 +35,7 @@ var diskBPF []byte
 var (
 	lostDiskEvents = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricLostDiskEvents,
+			Name: siriusec.MetricLostDiskEvents,
 			Help: "Number of lost disk events.",
 		},
 	)

@@ -120,7 +120,7 @@ func pushPipeline(b buildType) pipeline {
 			Name:  "Send Slack notification",
 			Image: "plugins/slack",
 			Settings: map[string]value{
-				"webhook": value{fromSecret: "SLACK_WEBHOOK_DEV_TELEPORT"},
+				"webhook": value{fromSecret: "SLACK_WEBHOOK_DEV_SIRIUSEC"},
 			},
 			Template: []string{
 				`*{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: ` + "`{{ build.event }}`" + `)

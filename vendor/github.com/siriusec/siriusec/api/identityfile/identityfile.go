@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package identityfile implements parsing and serialization of Teleport identity files.
+// Package identityfile implements parsing and serialization of Siriusec identity files.
 package identityfile
 
 import (

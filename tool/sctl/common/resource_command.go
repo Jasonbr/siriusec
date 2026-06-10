@@ -23,7 +23,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apiutils "github.com/siriusec/siriusec/api/utils"
@@ -125,7 +125,7 @@ func (rc *ResourceCommand) Initialize(app *kingpin.Application, config *service.
 
 	rc.getCmd = app.Command("get", "Print a YAML declaration of various Sirius resources")
 	rc.getCmd.Arg("resources", "Resource spec: 'type/[name][,...]' or 'all'").Required().SetValue(&rc.refs)
-	rc.getCmd.Flag("format", "Output format: 'yaml', 'json' or 'text'").Default(teleport.YAML).StringVar(&rc.format)
+	rc.getCmd.Flag("format", "Output format: 'yaml', 'json' or 'text'").Default(siriusec.YAML).StringVar(&rc.format)
 	rc.getCmd.Flag("namespace", "Namespace of the resources").Hidden().Default(apidefaults.Namespace).StringVar(&rc.namespace)
 	rc.getCmd.Flag("with-secrets", "Include secrets in resources like certificate authorities or OIDC connectors").Default("false").BoolVar(&rc.withSecrets)
 
@@ -182,18 +182,18 @@ func (rc *ResourceCommand) Get(client auth.ClientI) error {
 	// Note that only YAML is officially supported. Support for text and JSON
 	// is experimental.
 	switch rc.format {
-	case teleport.Text:
+	case siriusec.Text:
 		return collection.writeText(os.Stdout)
-	case teleport.YAML:
+	case siriusec.YAML:
 		return writeYAML(collection, os.Stdout)
-	case teleport.JSON:
+	case siriusec.JSON:
 		return writeJSON(collection, os.Stdout)
 	}
 	return trace.BadParameter("unsupported format")
 }
 
 func (rc *ResourceCommand) GetMany(client auth.ClientI) error {
-	if rc.format != teleport.YAML {
+	if rc.format != siriusec.YAML {
 		return trace.BadParameter("mixed resource types only support YAML formatting")
 	}
 	var resources []types.Resource
@@ -259,7 +259,7 @@ func (rc *ResourceCommand) Create(client auth.ClientI) (err error) {
 		if !found {
 			// if we're trying to create an OIDC/SAML connector with the OSS version of tctl, return a specific error
 			if raw.Kind == "oidc" || raw.Kind == "saml" {
-				return trace.BadParameter("creating resources of type %q is only supported in Sirius Enterprise.  If you connecting to a Sirius Enterprise Cluster you must install the enterprise version of tctl.  https://siriusec.com/teleport/docs/enterprise/", raw.Kind)
+				return trace.BadParameter("creating resources of type %q is only supported in Sirius Enterprise.  If you connecting to a Sirius Enterprise Cluster you must install the enterprise version of tctl.  https://siriusec.com/siriusec/docs/enterprise/", raw.Kind)
 			}
 			return trace.BadParameter("creating resources of type %q is not supported", raw.Kind)
 		}
@@ -276,7 +276,7 @@ func (rc *ResourceCommand) Create(client auth.ClientI) (err error) {
 
 // createTrustedCluster implements `tctl create cluster.yaml` command
 func (rc *ResourceCommand) createTrustedCluster(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	tc, err := services.UnmarshalTrustedCluster(raw.Raw)
 	if err != nil {
 		return trace.Wrap(err)
@@ -328,7 +328,7 @@ func (rc *ResourceCommand) createCertAuthority(client auth.ClientI, raw services
 
 // createGithubConnector creates a Github connector
 func (rc *ResourceCommand) createGithubConnector(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	connector, err := services.UnmarshalGithubConnector(raw.Raw)
 	if err != nil {
 		return trace.Wrap(err)
@@ -353,7 +353,7 @@ func (rc *ResourceCommand) createGithubConnector(client auth.ClientI, raw servic
 
 // createRole implements `tctl create role.yaml` command.
 func (rc *ResourceCommand) createRole(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	role, err := services.UnmarshalRole(raw.Raw)
 	if err != nil {
 		return trace.Wrap(err)
@@ -407,13 +407,13 @@ func (rc *ResourceCommand) createUser(client auth.ClientI, raw services.UnknownR
 		// This field should not be allowed to be overwritten.
 		user.SetCreatedBy(existingUser.GetCreatedBy())
 
-		if err := client.UpdateUser(context.TODO(), user); err != nil {
+		if err := client.UpdateUser(context.Background(), user); err != nil {
 			return trace.Wrap(err)
 		}
 		fmt.Printf("user %q has been updated\n", userName)
 
 	} else {
-		if err := client.CreateUser(context.TODO(), user); err != nil {
+		if err := client.CreateUser(context.Background(), user); err != nil {
 			return trace.Wrap(err)
 		}
 		fmt.Printf("user %q has been created\n", userName)
@@ -424,7 +424,7 @@ func (rc *ResourceCommand) createUser(client auth.ClientI, raw services.UnknownR
 
 // createAuthPreference implements `tctl create cap.yaml` command.
 func (rc *ResourceCommand) createAuthPreference(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	newAuthPref, err := services.UnmarshalAuthPreference(raw.Raw)
 	if err != nil {
 		return trace.Wrap(err)
@@ -447,7 +447,7 @@ func (rc *ResourceCommand) createAuthPreference(client auth.ClientI, raw service
 
 // createClusterNetworkingConfig implements `tctl create netconfig.yaml` command.
 func (rc *ResourceCommand) createClusterNetworkingConfig(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	newNetConfig, err := services.UnmarshalClusterNetworkingConfig(raw.Raw)
 	if err != nil {
@@ -471,7 +471,7 @@ func (rc *ResourceCommand) createClusterNetworkingConfig(client auth.ClientI, ra
 
 // createSessionRecordingConfig implements `tctl create recconfig.yaml` command.
 func (rc *ResourceCommand) createSessionRecordingConfig(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	newRecConfig, err := services.UnmarshalSessionRecordingConfig(raw.Raw)
 	if err != nil {
@@ -495,7 +495,7 @@ func (rc *ResourceCommand) createSessionRecordingConfig(client auth.ClientI, raw
 
 // createLock implements `tctl create lock.yaml` command.
 func (rc *ResourceCommand) createLock(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	lock, err := services.UnmarshalLock(raw.Raw)
 	if err != nil {
 		return trace.Wrap(err)
@@ -522,7 +522,7 @@ func (rc *ResourceCommand) createLock(client auth.ClientI, raw services.UnknownR
 
 // createNetworkRestrictions implements `tctl create net_restrict.yaml` command.
 func (rc *ResourceCommand) createNetworkRestrictions(client auth.ClientI, raw services.UnknownResource) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	newNetRestricts, err := services.UnmarshalNetworkRestrictions(raw.Raw)
 	if err != nil {
@@ -557,7 +557,7 @@ func (rc *ResourceCommand) Delete(client auth.ClientI) (err error) {
 		return trace.BadParameter("provide a full resource name to delete, for example:\n$ tctl rm cluster/east\n")
 	}
 
-	ctx := context.TODO()
+	ctx := context.Background()
 	switch rc.ref.Kind {
 	case types.KindNode:
 		if err = client.DeleteNode(ctx, apidefaults.Namespace, rc.ref.Name); err != nil {
@@ -734,7 +734,8 @@ func (rc *ResourceCommand) Update(clt auth.ClientI) error {
 	}
 
 	// TODO: pass the context from CLI to terminate requests on Ctrl-C
-	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	switch rc.ref.Kind {
 	case types.KindRemoteCluster:
 		cluster, err := clt.GetRemoteCluster(rc.ref.Name)
@@ -771,7 +772,7 @@ func (rc *ResourceCommand) getCollection(client auth.ClientI) (ResourceCollectio
 	}
 
 	// TODO: pass the context from CLI to terminate requests on Ctrl-C
-	ctx := context.TODO()
+	ctx := context.Background()
 	switch rc.ref.Kind {
 	case types.KindUser:
 		if rc.ref.Name == "" {
@@ -1108,11 +1109,11 @@ func checkCreateResourceWithOrigin(storedRes types.ResourceWithOrigin, resDesc s
 		return trace.AlreadyExists("non-default %s already exists", resDesc)
 	}
 	if managedByStatic := (storedRes.Origin() == types.OriginConfigFile); managedByStatic && !confirm {
-		return trace.BadParameter(`The %s resource is managed by static configuration. We recommend removing configuration from teleport.yaml, restarting the servers and trying this command again.
+		return trace.BadParameter(`The %s resource is managed by static configuration. We recommend removing configuration from siriusec.yaml, restarting the servers and trying this command again.
 
 If you would still like to proceed, re-run the command with both --force and --confirm flags.`, resDesc)
 	}
 	return nil
 }
 
-const managedByStaticDeleteMsg = `This resource is managed by static configuration. In order to reset it to defaults, remove relevant configuration from teleport.yaml and restart the servers.`
+const managedByStaticDeleteMsg = `This resource is managed by static configuration. In order to reset it to defaults, remove relevant configuration from siriusec.yaml and restart the servers.`

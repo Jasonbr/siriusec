@@ -27,7 +27,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/backend/memory"
@@ -56,13 +56,13 @@ var _ = check.Suite(&ServiceTestSuite{})
 
 func (s *ServiceTestSuite) TestDebugModeEnv(c *check.C) {
 	c.Assert(isDebugMode(), check.Equals, false)
-	os.Setenv(teleport.DebugEnvVar, "no")
+	os.Setenv(siriusec.DebugEnvVar, "no")
 	c.Assert(isDebugMode(), check.Equals, false)
-	os.Setenv(teleport.DebugEnvVar, "0")
+	os.Setenv(siriusec.DebugEnvVar, "0")
 	c.Assert(isDebugMode(), check.Equals, false)
-	os.Setenv(teleport.DebugEnvVar, "1")
+	os.Setenv(siriusec.DebugEnvVar, "1")
 	c.Assert(isDebugMode(), check.Equals, true)
-	os.Setenv(teleport.DebugEnvVar, "true")
+	os.Setenv(siriusec.DebugEnvVar, "true")
 	c.Assert(isDebugMode(), check.Equals, true)
 }
 
@@ -86,13 +86,13 @@ func TestMonitor(t *testing.T) {
 	cfg := MakeDefaultConfig()
 	cfg.Clock = fakeClock
 	var err error
-	cfg.DataDir, err = ioutil.TempDir("", "teleport")
+	cfg.DataDir, err = ioutil.TempDir("", "siriusec")
 	require.NoError(t, err)
 	defer os.RemoveAll(cfg.DataDir)
 	cfg.DiagnosticAddr = utils.NetAddr{AddrNetwork: "tcp", Addr: "127.0.0.1:0"}
 	cfg.AuthServers = []utils.NetAddr{{AddrNetwork: "tcp", Addr: "127.0.0.1:0"}}
 	cfg.Auth.Enabled = true
-	cfg.Auth.StorageConfig.Params["path"], err = ioutil.TempDir("", "teleport")
+	cfg.Auth.StorageConfig.Params["path"], err = ioutil.TempDir("", "siriusec")
 	require.NoError(t, err)
 	defer os.RemoveAll(cfg.DataDir)
 	cfg.Auth.SSHAddr = utils.NetAddr{AddrNetwork: "tcp", Addr: "127.0.0.1:0"}
@@ -122,46 +122,46 @@ func TestMonitor(t *testing.T) {
 	}{
 		{
 			desc:       "degraded event causes degraded state",
-			event:      Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentAuth},
+			event:      Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentAuth},
 			wantStatus: []int{http.StatusServiceUnavailable, http.StatusBadRequest},
 		},
 		{
 			desc:       "ok event causes recovering state",
-			event:      Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
+			event:      Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentAuth},
 			wantStatus: []int{http.StatusBadRequest},
 		},
 		{
 			desc:       "ok event remains in recovering state because not enough time passed",
-			event:      Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
+			event:      Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentAuth},
 			wantStatus: []int{http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event after enough time causes OK state",
-			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
+			event:        Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentAuth},
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
 			wantStatus:   []int{http.StatusOK},
 		},
 		{
 			desc:       "degraded event in a new component causes degraded state",
-			event:      Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentNode},
+			event:      Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentNode},
 			wantStatus: []int{http.StatusServiceUnavailable, http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event in one component keeps overall status degraded due to other component",
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
-			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentAuth},
+			event:        Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentAuth},
 			wantStatus:   []int{http.StatusServiceUnavailable, http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event in new component causes overall recovering state",
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
-			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentNode},
+			event:        Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentNode},
 			wantStatus:   []int{http.StatusBadRequest},
 		},
 		{
 			desc:         "ok event in new component causes overall OK state",
 			advanceClock: defaults.HeartbeatCheckPeriod*2 + 1,
-			event:        Event{Name: SiriusecOKEvent, Payload: teleport.ComponentNode},
+			event:        Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentNode},
 			wantStatus:   []int{http.StatusOK},
 		},
 	}
@@ -256,9 +256,9 @@ func (s *ServiceTestSuite) TestInitExternalLog(c *check.C) {
 		// no URIs => no external logger
 		{isNil: true},
 		// local-only event uri w/o hostname => ok
-		{events: []string{"file:///tmp/teleport-test/events"}},
+		{events: []string{"file:///tmp/siriusec-test/events"}},
 		// local-only event uri w/ localhost => ok
-		{events: []string{"file://localhost/tmp/teleport-test/events"}},
+		{events: []string{"file://localhost/tmp/siriusec-test/events"}},
 		// invalid host parameter => rejected
 		{events: []string{"file://example.com/should/fail"}, isErr: true},
 		// missing path specifier => rejected
@@ -337,9 +337,9 @@ func TestGetAdditionalPrincipals(t *testing.T) {
 				"proxy-public-1",
 				"proxy-public-2",
 				defaults.BindIP,
-				string(teleport.PrincipalLocalhost),
-				string(teleport.PrincipalLoopbackV4),
-				string(teleport.PrincipalLoopbackV6),
+				string(siriusec.PrincipalLocalhost),
+				string(siriusec.PrincipalLoopbackV4),
+				string(siriusec.PrincipalLoopbackV6),
 				reversetunnel.LocalKubernetes,
 				"proxy-ssh-public-1",
 				"proxy-ssh-public-2",
@@ -392,9 +392,9 @@ func TestGetAdditionalPrincipals(t *testing.T) {
 			role: types.RoleKube,
 			wantPrincipals: []string{
 				"global-hostname",
-				string(teleport.PrincipalLocalhost),
-				string(teleport.PrincipalLoopbackV4),
-				string(teleport.PrincipalLoopbackV6),
+				string(siriusec.PrincipalLocalhost),
+				string(siriusec.PrincipalLoopbackV4),
+				string(siriusec.PrincipalLoopbackV6),
 				reversetunnel.LocalKubernetes,
 				"kube-public-1",
 				"kube-public-2",

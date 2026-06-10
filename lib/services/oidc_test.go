@@ -21,7 +21,7 @@ import (
 
 	"github.com/coreos/go-oidc/jose"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 
 	"github.com/stretchr/testify/require"
@@ -42,7 +42,7 @@ func TestOIDCRoleMappingEmpty(t *testing.T) {
 
 	// create some claims
 	var claims = make(jose.Claims)
-	claims.Add("roles", "teleport-user")
+	claims.Add("roles", "siriusec-user")
 	claims.Add("email", "foo@example.com")
 	claims.Add("nickname", "foo")
 	claims.Add("full_name", "foo bar")
@@ -67,7 +67,7 @@ func TestOIDCRoleMapping(t *testing.T) {
 		ClaimsToRoles: []types.ClaimMapping{
 			{
 				Claim: "roles",
-				Value: "teleport-user",
+				Value: "siriusec-user",
 				Roles: []string{"user"},
 			},
 		},
@@ -76,7 +76,7 @@ func TestOIDCRoleMapping(t *testing.T) {
 
 	// create some claims
 	var claims = make(jose.Claims)
-	claims.Add("roles", "teleport-user")
+	claims.Add("roles", "siriusec-user")
 	claims.Add("email", "foo@example.com")
 	claims.Add("nickname", "foo")
 	claims.Add("full_name", "foo bar")
@@ -107,7 +107,7 @@ func TestOIDCUnmarshal(t *testing.T) {
           "scope": ["roles"],
           "claims_to_roles": [{
             "claim": "roles",
-            "value": "teleport-user",
+            "value": "siriusec-user",
             "roles": ["dictator"]
           }],
           "prompt": "consent login"
@@ -188,7 +188,7 @@ func TestOIDCUnmarshalPromptDefault(t *testing.T) {
 	require.Equal(t, "id-from-google.apps.googleusercontent.com", oc.GetClientID())
 	require.Equal(t, "https://localhost:3080/v1/webapi/oidc/callback", oc.GetRedirectURL())
 	require.Equal(t, "whatever", oc.GetDisplay())
-	require.Equal(t, teleport.OIDCPromptSelectAccount, oc.GetPrompt())
+	require.Equal(t, siriusec.OIDCPromptSelectAccount, oc.GetPrompt())
 }
 
 // TestOIDCUnmarshalInvalid unmarshals and fails validation of the connector
@@ -209,7 +209,7 @@ func TestOIDCUnmarshalInvalid(t *testing.T) {
           "scope": ["roles"],
           "claims_to_roles": [{
             "claim": "roles",
-            "value": "teleport-user",
+            "value": "siriusec-user",
           }]
         }
       }

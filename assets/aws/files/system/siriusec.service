@@ -1,0 +1,20 @@
+[Unit]
+Description=Siriusec Service
+After=network.target cloud-final.service siriusec-generate-config.service
+ConditionPathExists=/etc/siriusec.d/role.all
+
+[Service]
+User=root
+Group=adm
+Type=simple
+Restart=always
+RestartSec=5
+RuntimeDirectory=siriusec
+ExecStartPre=/usr/local/bin/siriusec-all-pre-start
+ExecStart=/usr/local/bin/siriusec start --config=/etc/siriusec.yaml --diag-addr=127.0.0.1:3000 --pid-file=/run/siriusec/siriusec.pid
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/siriusec/siriusec.pid
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

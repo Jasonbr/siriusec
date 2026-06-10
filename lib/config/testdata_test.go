@@ -23,7 +23,7 @@ const StaticConfigString = `
 teleport:
   nodename: edsger.example.com
   advertise_ip: 10.10.10.1:3022
-  pid_file: /var/run/teleport.pid
+  pid_file: /var/run/siriusec.pid
   auth_servers:
     - auth0.server.example.org:3024
     - auth1.server.example.org:3024
@@ -87,7 +87,7 @@ const SmallConfigString = `
 teleport:
   nodename: cat.example.com
   advertise_ip: 10.10.10.1
-  pid_file: /var/run/teleport.pid
+  pid_file: /var/run/siriusec.pid
   auth_token: %v
   auth_servers:
     - auth0.server.example.org:3024

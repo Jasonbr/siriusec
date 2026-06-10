@@ -3,12 +3,12 @@ variable "region" {
   type = string
 }
 
-// Teleport cluster name to set up
+// Siriusec cluster name to set up
 variable "cluster_name" {
   type = string
 }
 
-// Path to Teleport Enterprise license file
+// Path to Siriusec Enterprise license file
 variable "license_path" {
   type    = string
   default = ""
@@ -25,7 +25,7 @@ variable "route53_zone" {
   type = string
 }
 
-// Domain name to use for Teleport proxy,
+// Domain name to use for Siriusec proxy,
 // e.g. proxy.example.com
 variable "route53_domain" {
   type = string

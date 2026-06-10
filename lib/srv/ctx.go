@@ -29,7 +29,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	apiutils "github.com/siriusec/siriusec/api/utils"
@@ -336,7 +336,7 @@ func NewServerContext(ctx context.Context, parent *sshutils.ConnectionContext, s
 		"local":        child.ServerConn.LocalAddr(),
 		"remote":       child.ServerConn.RemoteAddr(),
 		"login":        child.Identity.Login,
-		"teleportUser": child.Identity.SiriusecUser,
+		"siriusecUser": child.Identity.SiriusecUser,
 		"id":           child.id,
 	}
 	if !child.disconnectExpiredCert.IsZero() {
@@ -577,11 +577,11 @@ func (c *ServerContext) reportStats(conn utils.Stater) {
 	// Never emit session data events for the proxy or from a Siriusec node if
 	// sessions are being recorded at the proxy (this would result in double
 	// events).
-	if c.GetServer().Component() == teleport.ComponentProxy {
+	if c.GetServer().Component() == siriusec.ComponentProxy {
 		return
 	}
 	if services.IsRecordAtProxy(c.SessionRecordingConfig.GetMode()) &&
-		c.GetServer().Component() == teleport.ComponentNode {
+		c.GetServer().Component() == siriusec.ComponentNode {
 		return
 	}
 
@@ -604,7 +604,7 @@ func (c *ServerContext) reportStats(conn utils.Stater) {
 		},
 		SessionMetadata: apievents.SessionMetadata{
 			SessionID: string(c.SessionID()),
-			WithMFA:   c.Identity.Certificate.Extensions[teleport.CertExtensionMFAVerified],
+			WithMFA:   c.Identity.Certificate.Extensions[siriusec.CertExtensionMFAVerified],
 		},
 		UserMetadata: apievents.UserMetadata{
 			User:         c.Identity.SiriusecUser,
@@ -713,7 +713,7 @@ func (c *ServerContext) String() string {
 
 func getPAMConfig(c *ServerContext) (*PAMConfig, error) {
 	// PAM should be disabled.
-	if c.srv.Component() != teleport.ComponentNode {
+	if c.srv.Component() != siriusec.ComponentNode {
 		return nil, nil
 	}
 
@@ -752,7 +752,7 @@ func getPAMConfig(c *ServerContext) (*PAMConfig, error) {
 				return nil, trace.Wrap(err)
 			}
 
-			if expr.Namespace() != teleport.TraitExternalPrefix && expr.Namespace() != parse.LiteralNamespace {
+			if expr.Namespace() != siriusec.TraitExternalPrefix && expr.Namespace() != parse.LiteralNamespace {
 				return nil, trace.BadParameter("PAM environment interpolation only supports external traits, found %q", value)
 			}
 
@@ -864,17 +864,17 @@ func buildEnvironment(ctx *ServerContext) []string {
 			env = append(env, fmt.Sprintf("SSH_TTY=%s", session.term.TTY().Name()))
 		}
 		if session.id != "" {
-			env = append(env, fmt.Sprintf("%s=%s", teleport.SSHSessionID, session.id))
+			env = append(env, fmt.Sprintf("%s=%s", siriusec.SSHSessionID, session.id))
 		}
 	}
 
 	// Set some Siriusec specific environment variables: SSH_TELEPORT_USER,
 	// SSH_SESSION_WEBPROXY_ADDR, SSH_TELEPORT_HOST_UUID, and
 	// SSH_TELEPORT_CLUSTER_NAME.
-	env = append(env, teleport.SSHSessionWebproxyAddr+"="+ctx.ProxyPublicAddress())
-	env = append(env, teleport.SSHTeleportHostUUID+"="+ctx.srv.ID())
-	env = append(env, teleport.SSHSiriusecClusterName+"="+ctx.ClusterName)
-	env = append(env, teleport.SSHSiriusecUser+"="+ctx.Identity.SiriusecUser)
+	env = append(env, siriusec.SSHSessionWebproxyAddr+"="+ctx.ProxyPublicAddress())
+	env = append(env, siriusec.SSHSiriusecHostUUID+"="+ctx.srv.ID())
+	env = append(env, siriusec.SSHSiriusecClusterName+"="+ctx.ClusterName)
+	env = append(env, siriusec.SSHSiriusecUser+"="+ctx.Identity.SiriusecUser)
 
 	return env
 }
@@ -931,6 +931,6 @@ func ComputeLockTargets(s Server, id IdentityContext) ([]types.LockTarget, error
 		{Login: id.Login},
 		{Node: s.HostUUID()},
 		{Node: auth.HostFQDN(s.HostUUID(), clusterName.GetClusterName())},
-		{MFADevice: id.Certificate.Extensions[teleport.CertExtensionMFAVerified]},
+		{MFADevice: id.Certificate.Extensions[siriusec.CertExtensionMFAVerified]},
 	}, roleTargets...), nil
 }

@@ -29,7 +29,7 @@ import (
 	"github.com/jonboulle/clockwork"
 	"gopkg.in/check.v1"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/types/events"
@@ -132,7 +132,7 @@ func (a *AuditTestSuite) TestSessionsOnOneAuthServer(c *check.C) {
 	forwarder, err := NewForwarder(ForwarderConfig{
 		Namespace:      apidefaults.Namespace,
 		SessionID:      session.ID(sessionID),
-		ServerID:       teleport.ComponentUpload,
+		ServerID:       siriusec.ComponentUpload,
 		DataDir:        uploadDir,
 		RecordSessions: true,
 		IAuditLog:      alog,
@@ -252,7 +252,7 @@ func (a *AuditTestSuite) TestSessionRecordingOff(c *check.C) {
 	forwarder, err := NewForwarder(ForwarderConfig{
 		Namespace:      apidefaults.Namespace,
 		SessionID:      session.ID(sessionID),
-		ServerID:       teleport.ComponentUpload,
+		ServerID:       siriusec.ComponentUpload,
 		DataDir:        uploadDir,
 		RecordSessions: false,
 		IAuditLog:      alog,
@@ -432,7 +432,7 @@ func (a *AuditTestSuite) TestLegacyHandler(c *check.C) {
 	// Download the session in the old format
 	ctx := context.TODO()
 
-	tarball, err := ioutil.TempFile("", "teleport-legacy")
+	tarball, err := ioutil.TempFile("", "siriusec-legacy")
 	c.Assert(err, check.IsNil)
 	defer os.RemoveAll(tarball.Name())
 

@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
 	"github.com/gravitational/trace"
 
@@ -35,7 +35,7 @@ import (
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentConnectProxy,
+	trace.Component: siriusec.ComponentConnectProxy,
 })
 
 // dialWithDeadline works around the case when net.DialWithTimeout
@@ -180,10 +180,10 @@ func dialProxy(ctx context.Context, proxyAddr string, addr string) (net.Conn, er
 
 func getProxyAddress(addr string) string {
 	envs := []string{
-		teleport.HTTPSProxy,
-		strings.ToLower(teleport.HTTPSProxy),
-		teleport.HTTPProxy,
-		strings.ToLower(teleport.HTTPProxy),
+		siriusec.HTTPSProxy,
+		strings.ToLower(siriusec.HTTPSProxy),
+		siriusec.HTTPProxy,
+		strings.ToLower(siriusec.HTTPProxy),
 	}
 
 	for _, v := range envs {

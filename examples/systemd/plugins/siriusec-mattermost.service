@@ -1,0 +1,13 @@
+[Unit]
+Description=Siriusec Mattermost Plugin
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/siriusec-mattermost start --config=/etc/siriusec-mattermost.toml
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/siriusec-mattermost.pid
+
+[Install]
+WantedBy=multi-user.target

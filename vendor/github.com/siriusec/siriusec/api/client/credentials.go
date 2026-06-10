@@ -47,7 +47,7 @@ type Credentials interface {
 
 // LoadTLS is used to load Credentials directly from a *tls.Config.
 //
-// TLS creds can only be used to connect directly to a Teleport Auth server.
+// TLS creds can only be used to connect directly to a Siriusec Auth server.
 func LoadTLS(tlsConfig *tls.Config) Credentials {
 	return &tlsConfigCreds{
 		tlsConfig: tlsConfig,
@@ -79,7 +79,7 @@ func (c *tlsConfigCreds) SSHClientConfig() (*ssh.ClientConfig, error) {
 
 // LoadKeyPair is used to load Credentials from a certicate keypair on disk.
 //
-// KeyPair Credentials can only be used to connect directly to a Teleport Auth server.
+// KeyPair Credentials can only be used to connect directly to a Siriusec Auth server.
 //
 // New KeyPair files can be generated with tsh or tctl.
 //  $ tctl auth sign --format=tls --user=api-user --out=path/to/certs

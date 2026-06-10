@@ -21,7 +21,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	"github.com/gravitational/trace"
 )
@@ -114,10 +114,10 @@ func (p *PTYReqParams) Check() error {
 // are within default values.
 func (p *PTYReqParams) CheckAndSetDefaults() error {
 	if p.W > maxSize || p.W < minSize {
-		p.W = teleport.DefaultTerminalWidth
+		p.W = siriusec.DefaultTerminalWidth
 	}
 	if p.H > maxSize || p.H < minSize {
-		p.H = teleport.DefaultTerminalHeight
+		p.H = siriusec.DefaultTerminalHeight
 	}
 
 	return nil
@@ -134,7 +134,7 @@ type SubsystemReq struct {
 }
 
 // SessionEnvVar is environment variable for SSH session
-const SessionEnvVar = "TELEPORT_SESSION"
+const SessionEnvVar = "SIRIUSEC_SESSION"
 
 const (
 	// ExecRequest is a request to run a command.

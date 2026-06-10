@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package profile handles management of the Teleport profile directory (~/.tsh).
+// Package profile handles management of the Siriusec profile directory (~/.tsh).
 package profile
 
 import (
@@ -65,7 +65,7 @@ type Profile struct {
 	// MySQLProxyAddr is the host:port the MySQL proxy can be accessed at.
 	MySQLProxyAddr string `yaml:"mysql_proxy_addr,omitempty"`
 
-	// Username is the Teleport username for the client.
+	// Username is the Siriusec username for the client.
 	Username string `yaml:"user,omitempty"`
 
 	// AuthType (like "google")

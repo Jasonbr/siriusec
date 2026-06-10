@@ -64,7 +64,7 @@ func TestChaosUpload(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	scanDir, err := ioutil.TempDir("", "teleport-streams")
+	scanDir, err := ioutil.TempDir("", "siriusec-streams")
 	require.NoError(t, err)
 	defer os.RemoveAll(scanDir)
 

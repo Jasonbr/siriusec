@@ -1,0 +1,7 @@
+siriusec:
+  data_dir: data/siriusec
+  storage:
+      type: etcd
+      peers: ["http://127.0.0.1:2379"]
+      prefix: /siriusec.secrets/
+      insecure: true

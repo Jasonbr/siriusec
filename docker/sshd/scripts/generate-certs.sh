@@ -1,17 +1,17 @@
 #!/bin/bash
 set -x
 
-TCTL="/usr/local/bin/tctl --auth-server=proxy.luna.teleport:3025"
+TCTL="/usr/local/bin/tctl --auth-server=proxy.luna.siriusec:3025"
 cd /mnt/shared/certs || exit 1
 
 generate_certs() {
-    $TCTL auth export --type=user | sed s/cert-authority\ // > ./teleport.pub || return
-    $TCTL auth export --type=host | sed s/*.teleport/luna.teleport,*.luna.teleport,*.openssh.teleport/ > ./teleport-known_hosts.pub || return
-    $TCTL create -f /etc/teleport.d/scripts/resources.yaml || return
+    $TCTL auth export --type=user | sed s/cert-authority\ // > ./siriusec.pub || return
+    $TCTL auth export --type=host | sed s/*.siriusec/luna.siriusec,*.luna.siriusec,*.openssh.siriusec/ > ./siriusec-known_hosts.pub || return
+    $TCTL create -f /etc/siriusec.d/scripts/resources.yaml || return
     $TCTL auth sign --user=bot --format=openssh --out=bot --overwrite --ttl=10h || return
     $TCTL auth sign --user=bot --format=file --out=bot.pem --overwrite --ttl=10h || return
     $TCTL auth sign --user=editor --format=file --out=editor.pem --overwrite --ttl=10h || return
-    $TCTL auth sign --host=mars.openssh.teleport --format=openssh --overwrite --out=mars.openssh.teleport || return
+    $TCTL auth sign --host=mars.openssh.siriusec --format=openssh --overwrite --out=mars.openssh.siriusec || return
 }
 
 while true

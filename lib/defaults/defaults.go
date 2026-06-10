@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package defaults contains default constants set in various parts of
-// teleport codebase
+// siriusec codebase
 package defaults
 
 import (
@@ -34,7 +34,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// Default port numbers used by all teleport tools
+// Default port numbers used by all siriusec tools
 const (
 	// Web UI over HTTP(s)
 	HTTPListenPort = 3080
@@ -72,8 +72,9 @@ const (
 	// Name of events bolt database file stored in DataDir
 	EventsBoltFile = "events.db"
 
-	// By default SSH server (and SSH proxy) will bind to this IP
-	BindIP = "0.0.0.0"
+	// By default SSH server (and SSH proxy) will bind to this IP.
+	// Override to 0.0.0.0 in config to listen on all interfaces.
+	BindIP = "127.0.0.1"
 
 	// By default all users use /bin/bash
 	DefaultShell = "/bin/bash"
@@ -162,7 +163,7 @@ const (
 	HOTPTokenDigits = 6
 
 	// MinPasswordLength is minimum password length
-	MinPasswordLength = 6
+	MinPasswordLength = 12
 
 	// MaxPasswordLength is maximum password length (for sanity)
 	MaxPasswordLength = 128
@@ -255,6 +256,14 @@ const (
 	// CallbackTimeout is how long to wait for a response from SSO provider
 	// before timeout.
 	CallbackTimeout = 180 * time.Second
+
+	AuthRPCTimeout = 30 * time.Second
+
+	MaxHTTPRequestSize = 10 * 1024 * 1024
+
+	AuditLogMaxSize = 500 * 1024 * 1024
+
+	MaxGeneralReadSize = 100 * 1024 * 1024
 
 	// ConcurrentUploadsPerStream limits the amount of concurrent uploads
 	// per stream
@@ -434,7 +443,7 @@ const (
 	MaxAccessDuration = defaults.MaxCertDuration
 )
 
-// list of roles teleport service can run as:
+// list of roles siriusec service can run as:
 const (
 	// RoleNode is SSH stateless node
 	RoleNode = "node"
@@ -484,25 +493,25 @@ const (
 )
 
 var (
-	// ConfigFilePath is default path to teleport config file
-	ConfigFilePath = "/etc/teleport.yaml"
+	// ConfigFilePath is default path to siriusec config file
+	ConfigFilePath = "/etc/siriusec.yaml"
 
 	// DataDir is where all mutable data is stored (user keys, recorded sessions,
 	// registered SSH servers, etc):
-	DataDir = "/var/lib/teleport"
+	DataDir = "/var/lib/siriusec"
 
-	// StartRoles is default roles teleport assumes when started via 'start' command
+	// StartRoles is default roles siriusec assumes when started via 'start' command
 	StartRoles = []string{RoleProxy, RoleNode, RoleAuthService, RoleApp, RoleDatabase}
 
 	// ETCDPrefix is default key in ETCD clustered configurations
-	ETCDPrefix = "/teleport"
+	ETCDPrefix = "/siriusec"
 
-	// ConfigEnvar is a name of teleport's configuration environment variable
-	ConfigEnvar = "TELEPORT_CONFIG"
+	// ConfigEnvar is a name of siriusec's configuration environment variable
+	ConfigEnvar = "SIRIUSEC_CONFIG"
 
 	// ConfigFileEnvar is the name of the environment variable used to specify a path to
 	// the Siriusec configuration file that tctl reads on use
-	ConfigFileEnvar = "TELEPORT_CONFIG_FILE"
+	ConfigFileEnvar = "SIRIUSEC_CONFIG_FILE"
 
 	// LicenseFile is the default name of the license file
 	LicenseFile = "license.pem"

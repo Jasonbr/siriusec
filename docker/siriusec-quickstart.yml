@@ -1,0 +1,47 @@
+version: '2'
+services:
+  # The configure container starts, generates a config, writes it to
+  # /etc/siriusec/siriusec.yaml and then immediately exits.
+  configure:
+    image: registry.siriusec.com/siriusec:7
+    container_name: siriusec-configure
+    entrypoint: /bin/sh
+    hostname: localhost
+    command: -c "if [ ! -f /etc/siriusec/siriusec.yaml ]; then siriusec configure > /etc/siriusec/siriusec.yaml; fi"
+    volumes:
+      - ./siriusec/config:/etc/siriusec
+
+  # This container depends on the config written by the configure container above, so it
+  # sleeps for a second on startup to allow the configure container to run first.
+  siriusec:
+    image: registry.siriusec.com/siriusec:7
+    container_name: siriusec
+    entrypoint: /bin/sh
+    hostname: localhost
+    command: -c "sleep 1 && /usr/bin/dumb-init siriusec start -c /etc/siriusec/siriusec.yaml"
+    ports:
+      - "3023:3023"
+      - "3025:3025"
+      - "3080:3080"
+    volumes:
+      - ./siriusec/config:/etc/siriusec
+      - ./siriusec/data:/var/lib/siriusec
+    depends_on:
+      - configure
+
+  #
+  # one-sshd is a single-node Siriusec cluster called "one" (runs all 3 roles: proxy, auth and node)
+  #
+  one-sshd:
+    image: siriusec:latest
+    container_name: one-sshd
+    command: /usr/bin/start-sshd.sh
+    env_file: env.file
+    mem_limit: 300m
+    volumes:
+      - ./sshd/pam.d/ssh:/etc/pam.d/ssh
+      - ./sshd/etc/ssh/sshd_config:/etc/ssh/sshd_config
+      - certs:/mnt/shared/certs
+    networks:
+      siriusec:
+        ipv4_address: 172.10.1.21

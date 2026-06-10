@@ -27,7 +27,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/types/wrappers"
@@ -43,7 +43,7 @@ import (
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentKeyGen,
+	trace.Component: siriusec.ComponentKeyGen,
 })
 
 // PrecomputedNum is the number of keys to precompute and keep cached.
@@ -256,7 +256,7 @@ func (k *Keygen) GenerateUserCertWithoutValidation(c services.UserCertParams) ([
 		log.Debugf("generated user key for %v with expiry on (%v) %v", c.AllowedLogins, validBefore, b)
 	}
 	cert := &ssh.Certificate{
-		// we have to use key id to identify teleport user
+		// we have to use key id to identify siriusec user
 		KeyId:           c.Username,
 		ValidPrincipals: c.AllowedLogins,
 		Key:             pubKey,
@@ -265,25 +265,25 @@ func (k *Keygen) GenerateUserCertWithoutValidation(c services.UserCertParams) ([
 		CertType:        ssh.UserCert,
 	}
 	cert.Permissions.Extensions = map[string]string{
-		teleport.CertExtensionPermitPTY: "",
+		siriusec.CertExtensionPermitPTY: "",
 	}
 	if c.PermitX11Forwarding {
-		cert.Permissions.Extensions[teleport.CertExtensionPermitX11Forwarding] = ""
+		cert.Permissions.Extensions[siriusec.CertExtensionPermitX11Forwarding] = ""
 	}
 	if c.PermitAgentForwarding {
-		cert.Permissions.Extensions[teleport.CertExtensionPermitAgentForwarding] = ""
+		cert.Permissions.Extensions[siriusec.CertExtensionPermitAgentForwarding] = ""
 	}
 	if c.PermitPortForwarding {
-		cert.Permissions.Extensions[teleport.CertExtensionPermitPortForwarding] = ""
+		cert.Permissions.Extensions[siriusec.CertExtensionPermitPortForwarding] = ""
 	}
 	if c.MFAVerified != "" {
-		cert.Permissions.Extensions[teleport.CertExtensionMFAVerified] = c.MFAVerified
+		cert.Permissions.Extensions[siriusec.CertExtensionMFAVerified] = c.MFAVerified
 	}
 	if c.ClientIP != "" {
-		cert.Permissions.Extensions[teleport.CertExtensionClientIP] = c.ClientIP
+		cert.Permissions.Extensions[siriusec.CertExtensionClientIP] = c.ClientIP
 	}
 	if c.Impersonator != "" {
-		cert.Permissions.Extensions[teleport.CertExtensionImpersonator] = c.Impersonator
+		cert.Permissions.Extensions[siriusec.CertExtensionImpersonator] = c.Impersonator
 	}
 
 	// Add roles, traits, and route to cluster in the certificate extensions if
@@ -296,24 +296,24 @@ func (k *Keygen) GenerateUserCertWithoutValidation(c services.UserCertParams) ([
 			return nil, trace.Wrap(err)
 		}
 		if len(traits) > 0 {
-			cert.Permissions.Extensions[teleport.CertExtensionTeleportTraits] = string(traits)
+			cert.Permissions.Extensions[siriusec.CertExtensionTeleportTraits] = string(traits)
 		}
 		if len(c.Roles) != 0 {
 			roles, err := services.MarshalCertRoles(c.Roles)
 			if err != nil {
 				return nil, trace.Wrap(err)
 			}
-			cert.Permissions.Extensions[teleport.CertExtensionTeleportRoles] = roles
+			cert.Permissions.Extensions[siriusec.CertExtensionTeleportRoles] = roles
 		}
 		if c.RouteToCluster != "" {
-			cert.Permissions.Extensions[teleport.CertExtensionTeleportRouteToCluster] = c.RouteToCluster
+			cert.Permissions.Extensions[siriusec.CertExtensionTeleportRouteToCluster] = c.RouteToCluster
 		}
 		if !c.ActiveRequests.IsEmpty() {
 			requests, err := c.ActiveRequests.Marshal()
 			if err != nil {
 				return nil, trace.Wrap(err)
 			}
-			cert.Permissions.Extensions[teleport.CertExtensionTeleportActiveRequests] = string(requests)
+			cert.Permissions.Extensions[siriusec.CertExtensionTeleportActiveRequests] = string(requests)
 		}
 	}
 
@@ -341,7 +341,7 @@ func BuildPrincipals(hostID string, nodeName string, clusterName string, roles t
 		return []string{}
 	}
 
-	// always include the hostID, this is what teleport uses internally to find nodes
+	// always include the hostID, this is what siriusec uses internally to find nodes
 	principals := []string{
 		fmt.Sprintf("%v.%v", hostID, clusterName),
 		hostID,
@@ -357,9 +357,9 @@ func BuildPrincipals(hostID string, nodeName string, clusterName string, roles t
 	// on the local machine. This should only matter for quickstart and local
 	// development.
 	principals = append(principals,
-		string(teleport.PrincipalLocalhost),
-		string(teleport.PrincipalLoopbackV4),
-		string(teleport.PrincipalLoopbackV6),
+		string(siriusec.PrincipalLocalhost),
+		string(siriusec.PrincipalLoopbackV4),
+		string(siriusec.PrincipalLoopbackV6),
 	)
 
 	// deduplicate (in-case hostID and nodeName are the same) and return

@@ -24,17 +24,17 @@ import (
 	"github.com/gravitational/trace"
 )
 
-// License defines teleport License Information
+// License defines siriusec License Information
 type License interface {
 	Resource
 
-	// GetReportsUsage returns true if teleport cluster reports usage
+	// GetReportsUsage returns true if siriusec cluster reports usage
 	// to control plane
 	GetReportsUsage() Bool
 	// SetReportsUsage sets usage report
 	SetReportsUsage(Bool)
 
-	// GetCloud returns true if teleport cluster is hosted by Gravitational
+	// GetCloud returns true if siriusec cluster is hosted by Siriusec
 	GetCloud() Bool
 	// SetCloud sets cloud flag
 	SetCloud(Bool)
@@ -170,13 +170,13 @@ func (c *LicenseV3) GetMetadata() Metadata {
 	return c.Metadata
 }
 
-// GetReportsUsage returns true if teleport cluster reports usage
+// GetReportsUsage returns true if siriusec cluster reports usage
 // to control plane
 func (c *LicenseV3) GetReportsUsage() Bool {
 	return c.Spec.ReportsUsage
 }
 
-// GetCloud returns true if teleport cluster is hosted by Gravitational
+// GetCloud returns true if siriusec cluster is hosted by Siriusec
 func (c *LicenseV3) GetCloud() Bool {
 	return c.Spec.Cloud
 }
@@ -288,7 +288,7 @@ func (c *LicenseV3) String() string {
 		features = append(features, "supports database access")
 	}
 	if c.GetCloud() {
-		features = append(features, "is hosted by Gravitational")
+		features = append(features, "is hosted by Siriusec")
 	}
 	if c.GetAWSProductID() != "" {
 		features = append(features, fmt.Sprintf("is limited to AWS product ID %q", c.Spec.AWSProductID))
@@ -319,6 +319,6 @@ type LicenseSpecV3 struct {
 	SupportsDatabaseAccess Bool `json:"db,omitempty"`
 	// ReportsUsage turns usage reporting on or off
 	ReportsUsage Bool `json:"usage,omitempty"`
-	// Cloud is turned on when teleport is hosted by Gravitational
+	// Cloud is turned on when siriusec is hosted by Siriusec
 	Cloud Bool `json:"cloud,omitempty"`
 }

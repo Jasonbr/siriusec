@@ -31,7 +31,7 @@ import (
 // kubeCreds contain authentication-related fields from kubeconfig.
 //
 // TODO(awly): make this an interface, one implementation for local k8s cluster
-// and another for a remote teleport cluster.
+// and another for a remote siriusec cluster.
 type kubeCreds struct {
 	// tlsConfig contains (m)TLS configuration.
 	tlsConfig *tls.Config
@@ -93,14 +93,14 @@ func getKubeCreds(ctx context.Context, log logrus.FieldLogger, tpClusterName, ku
 		case KubeService:
 			return nil, trace.BadParameter("no Kubernetes credentials found; Kubernetes_service requires either a valid kubeconfig_path or to run inside of a Kubernetes pod")
 		case LegacyProxyService:
-			log.Debugf("Could not load Kubernetes credentials. This proxy will still handle Kubernetes requests for trusted teleport clusters or Kubernetes nodes in this teleport cluster")
+			log.Debugf("Could not load Kubernetes credentials. This proxy will still handle Kubernetes requests for trusted siriusec clusters or Kubernetes nodes in this siriusec cluster")
 		}
 		return map[string]*kubeCreds{}, nil
 	}
 
 	if serviceType == LegacyProxyService {
 		// Hack for legacy proxy service - register a k8s cluster named after
-		// the teleport cluster name to route legacy requests.
+		// the siriusec cluster name to route legacy requests.
 		//
 		// Also, remove all other contexts. Multiple kubeconfig entries are
 		// only supported for kubernetes_service.
@@ -138,15 +138,15 @@ func extractKubeCreds(ctx context.Context, cluster string, clientCfg *rest.Confi
 	// For each loaded cluster, check impersonation permissions. This
 	// check only logs when permissions are not configured, but does not fail startup.
 	if err := checkPermissions(ctx, cluster, client.AuthorizationV1().SelfSubjectAccessReviews()); err != nil {
-		log.WithError(err).Warning("Failed to test the necessary Kubernetes permissions. The target Kubernetes cluster may be down or have misconfigured RBAC. This teleport instance will still handle Kubernetes requests towards this Kubernetes cluster.")
+		log.WithError(err).Warning("Failed to test the necessary Kubernetes permissions. The target Kubernetes cluster may be down or have misconfigured RBAC. This siriusec instance will still handle Kubernetes requests towards this Kubernetes cluster.")
 		if serviceType != KubeService && kubeconfigPath != "" {
 			// We used to recommend users to set a dummy kubeconfig on root
 			// proxies to get kubernetes support working for leaf clusters:
-			// https://community.siriusec.com/t/enabling-teleport-to-act-as-a-kubernetes-proxy-for-trusted-leaf-clusters/418
+			// https://community.siriusec.com/t/enabling-siriusec-to-act-as-a-kubernetes-proxy-for-trusted-leaf-clusters/418
 			//
 			// Since this is no longer necessary, recommend them to clean up
 			// via logs.
-			log.Info("If this is a proxy and you provided a dummy kubeconfig_file, you can remove it from teleport.yaml to get rid of this warning")
+			log.Info("If this is a proxy and you provided a dummy kubeconfig_file, you can remove it from siriusec.yaml to get rid of this warning")
 		}
 	} else {
 		log.Debug("Have all necessary Kubernetes impersonation permissions.")
@@ -207,10 +207,10 @@ func checkImpersonationPermissions(ctx context.Context, cluster string, sarClien
 			},
 		}, metav1.CreateOptions{})
 		if err != nil {
-			return trace.Wrap(err, "failed to verify impersonation permissions for Kubernetes: %v; this may be due to missing the SelfSubjectAccessReview permission on the ClusterRole used by the proxy; please make sure that proxy has all the necessary permissions: https://siriusec.com/teleport/docs/kubernetes-ssh/#impersonation", err)
+			return trace.Wrap(err, "failed to verify impersonation permissions for Kubernetes: %v; this may be due to missing the SelfSubjectAccessReview permission on the ClusterRole used by the proxy; please make sure that proxy has all the necessary permissions: https://siriusec.com/siriusec/docs/kubernetes-ssh/#impersonation", err)
 		}
 		if !resp.Status.Allowed {
-			return trace.AccessDenied("proxy can't impersonate Kubernetes %s at the cluster level; please make sure that proxy has all the necessary permissions: https://siriusec.com/teleport/docs/kubernetes-ssh/#impersonation", resource)
+			return trace.AccessDenied("proxy can't impersonate Kubernetes %s at the cluster level; please make sure that proxy has all the necessary permissions: https://siriusec.com/siriusec/docs/kubernetes-ssh/#impersonation", resource)
 		}
 	}
 	return nil

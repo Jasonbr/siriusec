@@ -106,7 +106,7 @@ func NewRedirector(ctx context.Context, login SSHLoginSSO) (*Redirector, error) 
 	}
 
 	// callback is a callback URL communicated to the Siriusec proxy,
-	// after SAML/OIDC login, the teleport will redirect user's browser
+	// after SAML/OIDC login, the siriusec will redirect user's browser
 	// to this laptop-local URL
 	rd.mux.Handle("/callback", rd.wrapCallback(rd.callback))
 	// short path is a link-shortener style URL

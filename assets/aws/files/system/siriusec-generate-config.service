@@ -1,0 +1,14 @@
+[Unit]
+Description=Siriusec Config Generation Service
+After=network.target cloud-final.service
+Before=siriusec.service siriusec-acm.service
+
+[Service]
+User=root
+Group=adm
+Type=oneshot
+RuntimeDirectory=siriusec
+ExecStart=/usr/local/bin/siriusec-generate-config
+
+[Install]
+WantedBy=multi-user.target

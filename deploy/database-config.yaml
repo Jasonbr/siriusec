@@ -21,9 +21,9 @@ auth_service:
   cluster_name: siriusec-cluster
   authentication:
     type: local
-    second_factor: "off"
+    second_factor: "otp"
   tokens:
-    - "node,proxy,db:join-token-2024"
+    - "node,proxy,db:${SIRIUSEC_JOIN_TOKEN}"
 
 # Proxy 服务
 proxy_service:
@@ -75,7 +75,7 @@ db_service:
           command:
             - /bin/bash
             - -c
-            - "mysql -h 123.57.11.100 -P 3506 -u sample -p'sample' -e 'SELECT VERSION()' 2>/dev/null || echo 'unknown'"
+            - "mysql -h 123.57.11.100 -P 3506 -u ${DB_USER} -p'${DB_PASSWORD}' -e 'SELECT VERSION()' 2>/dev/null || echo 'unknown'"
           period: 10m
 
     # 第二个数据库 - 另一个 MySQL 示例

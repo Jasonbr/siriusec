@@ -91,7 +91,7 @@ func compareServers(a, b types.Server) int {
 	if !a.Expiry().Equal(b.Expiry()) {
 		return OnlyTimestampsDifferent
 	}
-	if a.GetTeleportVersion() != b.GetTeleportVersion() {
+	if a.GetSiriusecVersion() != b.GetSiriusecVersion() {
 		return Different
 	}
 
@@ -114,7 +114,7 @@ func compareDatabaseServers(a, b types.DatabaseServer) int {
 	if a.GetNamespace() != b.GetNamespace() {
 		return Different
 	}
-	if a.GetTeleportVersion() != b.GetTeleportVersion() {
+	if a.GetSiriusecVersion() != b.GetSiriusecVersion() {
 		return Different
 	}
 	r := a.GetRotation()
@@ -205,13 +205,13 @@ func GuessProxyHostAndVersion(proxies []types.Server) (string, string, error) {
 	for _, proxy := range proxies {
 		proxyHost := proxy.GetPublicAddr()
 		if proxyHost != "" {
-			return proxyHost, proxy.GetTeleportVersion(), nil
+			return proxyHost, proxy.GetSiriusecVersion(), nil
 		}
 	}
 
 	// No proxies have a public address set, return guessed value.
 	guessProxyHost := fmt.Sprintf("%v:%v", proxies[0].GetHostname(), defaults.HTTPListenPort)
-	return guessProxyHost, proxies[0].GetTeleportVersion(), nil
+	return guessProxyHost, proxies[0].GetSiriusecVersion(), nil
 }
 
 // UnmarshalServer unmarshals the Server resource from JSON.

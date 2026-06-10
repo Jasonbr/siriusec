@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/jwt"
 	"github.com/siriusec/siriusec/lib/modules"
@@ -72,7 +72,7 @@ func (s *Server) CreateAppSession(ctx context.Context, req types.CreateAppSessio
 		ttl:       ttl,
 		traits:    traits,
 		// Only allow this certificate to be used for applications.
-		usage: []string{teleport.UsageAppsOnly},
+		usage: []string{siriusec.UsageAppsOnly},
 		// Add in the application routing information.
 		appSessionID:   uuid.New(),
 		appPublicAddr:  req.PublicAddr,
@@ -119,7 +119,7 @@ func WaitForAppSession(ctx context.Context, sessionID, user string, ap AccessPoi
 	}
 	// Establish a watch on application session.
 	watcher, err := ap.NewWatcher(ctx, types.Watch{
-		Name: teleport.ComponentAppProxy,
+		Name: siriusec.ComponentAppProxy,
 		Kinds: []types.WatchKind{
 			{
 				Kind:    types.KindWebSession,
@@ -127,7 +127,7 @@ func WaitForAppSession(ctx context.Context, sessionID, user string, ap AccessPoi
 				Filter:  (&types.WebSessionFilter{User: user}).IntoMap(),
 			},
 		},
-		MetricComponent: teleport.ComponentAppProxy,
+		MetricComponent: siriusec.ComponentAppProxy,
 	})
 	if err != nil {
 		return trace.Wrap(err)

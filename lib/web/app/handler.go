@@ -25,7 +25,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/reversetunnel"
@@ -101,7 +101,7 @@ func NewHandler(ctx context.Context, c *HandlerConfig) (*Handler, error) {
 		c:            c,
 		closeContext: ctx,
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.ComponentAppProxy,
+			trace.Component: siriusec.ComponentAppProxy,
 		}),
 	}
 
@@ -121,9 +121,9 @@ func NewHandler(ctx context.Context, c *HandlerConfig) (*Handler, error) {
 
 	// Create the application routes.
 	h.router = httprouter.New()
-	h.router.GET("/x-teleport-auth", makeRouterHandler(h.handleFragment))
-	h.router.POST("/x-teleport-auth", makeRouterHandler(h.handleFragment))
-	h.router.GET("/teleport-logout", h.withRouterAuth(h.handleLogout))
+	h.router.GET("/x-siriusec-auth", makeRouterHandler(h.handleFragment))
+	h.router.POST("/x-siriusec-auth", makeRouterHandler(h.handleFragment))
+	h.router.GET("/siriusec-logout", h.withRouterAuth(h.handleLogout))
 	h.router.NotFound = h.withAuth(h.handleForward)
 
 	return h, nil
@@ -237,7 +237,7 @@ func extractCookie(r *http.Request) (string, error) {
 // HasFragment checks if the request is coming to the fragment authentication
 // endpoint.
 func HasFragment(r *http.Request) bool {
-	return r.URL.Path == "/x-teleport-auth"
+	return r.URL.Path == "/x-siriusec-auth"
 }
 
 // HasSession checks if an application specific cookie exists.

@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
@@ -134,9 +134,9 @@ func (s *NativeSuite) TestBuildPrincipals(c *check.C) {
 			outValidPrincipals: []string{
 				"11111111-1111-1111-1111-111111111111.example.com",
 				"11111111-1111-1111-1111-111111111111",
-				string(teleport.PrincipalLocalhost),
-				string(teleport.PrincipalLoopbackV4),
-				string(teleport.PrincipalLoopbackV6),
+				string(siriusec.PrincipalLocalhost),
+				string(siriusec.PrincipalLoopbackV4),
+				string(siriusec.PrincipalLoopbackV6),
 			},
 		},
 		{
@@ -150,9 +150,9 @@ func (s *NativeSuite) TestBuildPrincipals(c *check.C) {
 				"22222222-2222-2222-2222-222222222222",
 				"proxy.example.com",
 				"proxy",
-				string(teleport.PrincipalLocalhost),
-				string(teleport.PrincipalLoopbackV4),
-				string(teleport.PrincipalLoopbackV6),
+				string(siriusec.PrincipalLocalhost),
+				string(siriusec.PrincipalLoopbackV4),
+				string(siriusec.PrincipalLoopbackV6),
 			},
 		},
 		{
@@ -164,9 +164,9 @@ func (s *NativeSuite) TestBuildPrincipals(c *check.C) {
 			outValidPrincipals: []string{
 				"33333333-3333-3333-3333-333333333333.example.com",
 				"33333333-3333-3333-3333-333333333333",
-				string(teleport.PrincipalLocalhost),
-				string(teleport.PrincipalLoopbackV4),
-				string(teleport.PrincipalLoopbackV6),
+				string(siriusec.PrincipalLocalhost),
+				string(siriusec.PrincipalLoopbackV4),
+				string(siriusec.PrincipalLoopbackV6),
 			},
 		},
 	}
@@ -214,7 +214,7 @@ func (s *NativeSuite) TestUserCertCompatibility(c *check.C) {
 		},
 		// 1 - oldssh, no roles
 		{
-			teleport.CertificateFormatOldSSH,
+			siriusec.CertificateFormatOldSSH,
 			false,
 		},
 	}
@@ -242,7 +242,7 @@ func (s *NativeSuite) TestUserCertCompatibility(c *check.C) {
 		// Check that the signature algorithm is correct.
 		c.Assert(userCertificate.Signature.Format, check.Equals, defaults.CASignatureAlgorithm)
 		// check if we added the roles extension
-		_, ok := userCertificate.Extensions[teleport.CertExtensionTeleportRoles]
+		_, ok := userCertificate.Extensions[siriusec.CertExtensionTeleportRoles]
 		c.Assert(ok, check.Equals, tt.outHasRoles, comment)
 	}
 }

@@ -198,7 +198,7 @@ func (e *Engine) connect(ctx context.Context, sessionCtx *common.Session) (*clie
 
   %v
 
-Make sure that IAM auth is enabled for MySQL user %q and Teleport database
+Make sure that IAM auth is enabled for MySQL user %q and Siriusec database
 agent's IAM policy has "rds-connect" permissions:
 
 %v

@@ -28,7 +28,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TraitsToRoles maps the supplied traits to a list of teleport role names.
+// TraitsToRoles maps the supplied traits to a list of siriusec role names.
 // Returns the list of roles mapped from traits.
 // `warnings` optionally contains the list of warnings potentially interesting to the user.
 func TraitsToRoles(ms types.TraitMappingSet, traits map[string][]string) (warnings []string, roles []string) {
@@ -72,7 +72,7 @@ func TraitsToRoleMatchers(ms types.TraitMappingSet, traits map[string][]string) 
 	return matchers, nil
 }
 
-// traitsToRoles maps the supplied traits to teleport role names and passes them to a collector.
+// traitsToRoles maps the supplied traits to siriusec role names and passes them to a collector.
 func traitsToRoles(ms types.TraitMappingSet, traits map[string][]string, collect func(role string, expanded bool)) (warnings []string) {
 	for _, mapping := range ms {
 		for traitName, traitValues := range traits {

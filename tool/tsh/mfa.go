@@ -474,7 +474,7 @@ func showOTPQRCode(k *otp.Key) (cleanup func(), retErr error) {
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	imageFile, err := os.CreateTemp("", "teleport-otp-qr-code-*.png")
+	imageFile, err := os.CreateTemp("", "siriusec-otp-qr-code-*.png")
 	if err != nil {
 		return nil, trace.ConvertSystemError(err)
 	}

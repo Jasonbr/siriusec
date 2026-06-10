@@ -3,12 +3,13 @@ package auth
 import (
 	"context"
 	"crypto/subtle"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -66,6 +67,14 @@ func (s *Server) ResetPassword(username string) (string, error) {
 		return "", trace.Wrap(err)
 	}
 
+	// Ensure the generated password meets complexity requirements:
+	// hex output is lowercase (0-9a-f), so uppercase the first two
+	// hex characters to guarantee at least one uppercase letter.
+	// The hex output always contains digits, satisfying the digit requirement.
+	if len(password) >= 2 {
+		password = strings.ToUpper(password[:2]) + password[2:]
+	}
+
 	err = s.UpsertPassword(user.GetName(), []byte(password))
 	if err != nil {
 		return "", trace.Wrap(err)
@@ -76,7 +85,8 @@ func (s *Server) ResetPassword(username string) (string, error) {
 
 // ChangePassword updates users password based on the old password.
 func (s *Server) ChangePassword(req services.ChangePasswordReq) error {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	// validate new password
 	if err := services.VerifyPassword(req.NewPassword); err != nil {
 		return trace.Wrap(err)
@@ -232,7 +242,7 @@ func (s *Server) checkOTP(user string, otpToken string) (*types.MFADevice, error
 	}
 
 	switch otpType {
-	case teleport.HOTP:
+	case siriusec.HOTP:
 		otp, err := s.GetHOTP(user)
 		if err != nil {
 			return nil, trace.Wrap(err)
@@ -248,8 +258,9 @@ func (s *Server) checkOTP(user string, otpToken string) (*types.MFADevice, error
 		if err := s.UpsertHOTP(user, otp); err != nil {
 			return nil, trace.Wrap(err)
 		}
-	case teleport.TOTP:
-		ctx := context.TODO()
+	case siriusec.TOTP:
+		ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 
 		// get the previously used token to mitigate token replay attacks
 		usedToken, err := s.GetUsedTOTPToken(user)
@@ -292,8 +303,8 @@ func (s *Server) checkTOTP(ctx context.Context, user, otpToken string, dev *type
 	// we use totp.ValidateCustom over totp.Validate so we can use
 	// a fake clock in tests to get reliable results
 	valid, err := totp.ValidateCustom(otpToken, dev.GetTotp().Key, s.clock.Now(), totp.ValidateOpts{
-		Period:    teleport.TOTPValidityPeriod,
-		Skew:      teleport.TOTPSkew,
+		Period:    siriusec.TOTPValidityPeriod,
+		Skew:      siriusec.TOTPSkew,
 		Digits:    otp.DigitsSix,
 		Algorithm: otp.AlgorithmSHA1,
 	})
@@ -319,7 +330,8 @@ func (s *Server) checkTOTP(ctx context.Context, user, otpToken string, dev *type
 // CreateSignupU2FRegisterRequest initiates registration for a new U2F token.
 // The returned challenge should be sent to the client to sign.
 func (s *Server) CreateSignupU2FRegisterRequest(tokenID string) (*u2f.RegisterChallenge, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	cap, err := s.GetAuthPreference(ctx)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -330,7 +342,7 @@ func (s *Server) CreateSignupU2FRegisterRequest(tokenID string) (*u2f.RegisterCh
 		return nil, trace.Wrap(err)
 	}
 
-	_, err = s.GetResetPasswordToken(context.TODO(), tokenID)
+	_, err = s.GetResetPasswordToken(context.Background(), tokenID)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -344,15 +356,15 @@ func (s *Server) CreateSignupU2FRegisterRequest(tokenID string) (*u2f.RegisterCh
 
 // getOTPType returns the type of OTP token used, HOTP or TOTP.
 // Deprecated: Remove this method once HOTP support has been removed from Gravity.
-func (s *Server) getOTPType(user string) (teleport.OTPType, error) {
+func (s *Server) getOTPType(user string) (siriusec.OTPType, error) {
 	_, err := s.GetHOTP(user)
 	if err != nil {
 		if trace.IsNotFound(err) {
-			return teleport.TOTP, nil
+			return siriusec.TOTP, nil
 		}
 		return "", trace.Wrap(err)
 	}
-	return teleport.HOTP, nil
+	return siriusec.HOTP, nil
 }
 
 func (s *Server) changePasswordWithToken(ctx context.Context, req ChangePasswordWithTokenRequest) (types.User, error) {
@@ -408,7 +420,8 @@ func (s *Server) changePasswordWithToken(ctx context.Context, req ChangePassword
 }
 
 func (s *Server) changeUserSecondFactor(req ChangePasswordWithTokenRequest, token types.ResetPasswordToken) error {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	username := token.GetUser()
 	cap, err := s.GetAuthPreference(ctx)
 	if err != nil {

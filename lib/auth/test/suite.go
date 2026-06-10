@@ -22,7 +22,7 @@ import (
 
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
@@ -181,11 +181,11 @@ func (s *AuthSuite) GenerateUserCert(c *check.C) {
 	c.Assert(err, check.IsNil)
 	parsedCert, err := sshutils.ParseCertificate(cert)
 	c.Assert(err, check.IsNil)
-	outRoles, err := services.UnmarshalCertRoles(parsedCert.Extensions[teleport.CertExtensionTeleportRoles])
+	outRoles, err := services.UnmarshalCertRoles(parsedCert.Extensions[siriusec.CertExtensionTeleportRoles])
 	c.Assert(err, check.IsNil)
 	c.Assert(outRoles, check.DeepEquals, inRoles)
 
-	outImpersonator := parsedCert.Extensions[teleport.CertExtensionImpersonator]
+	outImpersonator := parsedCert.Extensions[siriusec.CertExtensionImpersonator]
 	c.Assert(outImpersonator, check.DeepEquals, impersonator)
 }
 

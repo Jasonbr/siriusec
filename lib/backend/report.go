@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apiutils "github.com/siriusec/siriusec/api/utils"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -53,7 +53,7 @@ func (r *ReporterConfig) CheckAndSetDefaults() error {
 		return trace.BadParameter("missing parameter Backend")
 	}
 	if r.Component == "" {
-		r.Component = teleport.ComponentBackend
+		r.Component = siriusec.ComponentBackend
 	}
 	if r.TopRequestsCount == 0 {
 		r.TopRequestsCount = reporterDefaultCacheSize
@@ -268,10 +268,10 @@ func (s *Reporter) trackRequest(opType types.OpType, key []byte, endKey []byte) 
 		return
 	}
 	keyLabel := buildKeyLabel(string(key), sensitiveBackendPrefixes)
-	rangeSuffix := teleport.TagFalse
+	rangeSuffix := siriusec.TagFalse
 	if len(endKey) != 0 {
 		// Range denotes range queries in stat entry
-		rangeSuffix = teleport.TagTrue
+		rangeSuffix = siriusec.TagTrue
 	}
 
 	s.topRequestsCache.Add(topRequestsCacheKey{
@@ -345,120 +345,120 @@ func (r *ReporterWatcher) watch(ctx context.Context) {
 var (
 	requests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendRequests,
+			Name: siriusec.MetricBackendRequests,
 			Help: "Number of write requests to the backend",
 		},
-		[]string{teleport.ComponentLabel, teleport.TagReq, teleport.TagRange},
+		[]string{siriusec.ComponentLabel, siriusec.TagReq, siriusec.TagRange},
 	)
 	watchers = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: teleport.MetricBackendWatchers,
+			Name: siriusec.MetricBackendWatchers,
 			Help: "Number of active backend watchers",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	watcherQueues = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: teleport.MetricBackendWatcherQueues,
+			Name: siriusec.MetricBackendWatcherQueues,
 			Help: "Watcher queue sizes",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	writeRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendWriteRequests,
+			Name: siriusec.MetricBackendWriteRequests,
 			Help: "Number of write requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	writeRequestsFailed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendWriteFailedRequests,
+			Name: siriusec.MetricBackendWriteFailedRequests,
 			Help: "Number of failed write requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	batchWriteRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendBatchWriteRequests,
+			Name: siriusec.MetricBackendBatchWriteRequests,
 			Help: "Number of batch write requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	batchWriteRequestsFailed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendBatchFailedWriteRequests,
+			Name: siriusec.MetricBackendBatchFailedWriteRequests,
 			Help: "Number of failed write requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	readRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendReadRequests,
+			Name: siriusec.MetricBackendReadRequests,
 			Help: "Number of read requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	readRequestsFailed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendFailedReadRequests,
+			Name: siriusec.MetricBackendFailedReadRequests,
 			Help: "Number of failed read requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	batchReadRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendBatchReadRequests,
+			Name: siriusec.MetricBackendBatchReadRequests,
 			Help: "Number of read requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	batchReadRequestsFailed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: teleport.MetricBackendBatchFailedReadRequests,
+			Name: siriusec.MetricBackendBatchFailedReadRequests,
 			Help: "Number of failed read requests to the backend",
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	writeLatencies = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: teleport.MetricBackendWriteHistogram,
+			Name: siriusec.MetricBackendWriteHistogram,
 			Help: "Latency for backend write operations",
 			// lowest bucket start of upper bound 0.001 sec (1 ms) with factor 2
 			// highest bucket start of 0.001 sec * 2^15 == 32.768 sec
 			Buckets: prometheus.ExponentialBuckets(0.001, 2, 16),
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	batchWriteLatencies = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: teleport.MetricBackendBatchWriteHistogram,
+			Name: siriusec.MetricBackendBatchWriteHistogram,
 			Help: "Latency for backend batch write operations",
 			// lowest bucket start of upper bound 0.001 sec (1 ms) with factor 2
 			// highest bucket start of 0.001 sec * 2^15 == 32.768 sec
 			Buckets: prometheus.ExponentialBuckets(0.001, 2, 16),
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	batchReadLatencies = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: teleport.MetricBackendBatchReadHistogram,
+			Name: siriusec.MetricBackendBatchReadHistogram,
 			Help: "Latency for batch read operations",
 			// lowest bucket start of upper bound 0.001 sec (1 ms) with factor 2
 			// highest bucket start of 0.001 sec * 2^15 == 32.768 sec
 			Buckets: prometheus.ExponentialBuckets(0.001, 2, 16),
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 	readLatencies = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: teleport.MetricBackendReadHistogram,
+			Name: siriusec.MetricBackendReadHistogram,
 			Help: "Latency for read operations",
 			// lowest bucket start of upper bound 0.001 sec (1 ms) with factor 2
 			// highest bucket start of 0.001 sec * 2^15 == 32.768 sec
 			Buckets: prometheus.ExponentialBuckets(0.001, 2, 16),
 		},
-		[]string{teleport.ComponentLabel},
+		[]string{siriusec.ComponentLabel},
 	)
 
 	prometheusCollectors = []prometheus.Collector{

@@ -71,7 +71,7 @@ type Rate struct {
 // Some settings are global (like DataDir) while others are grouped into
 // sections, like AuthConfig
 type Config struct {
-	// DataDir provides directory where teleport stores it's permanent state
+	// DataDir provides directory where siriusec stores it's permanent state
 	// (in case of auth server backed by BoltDB) or local state, e.g. keys
 	DataDir string
 
@@ -90,7 +90,7 @@ type Config struct {
 	AuthServers []utils.NetAddr
 
 	// Identities is an optional list of pre-generated key pairs
-	// for teleport roles, this is helpful when server is preconfigured
+	// for siriusec roles, this is helpful when server is preconfigured
 	Identities []*auth.Identity
 
 	// AdvertiseIP is used to "publish" an alternative IP address or hostname this node
@@ -124,7 +124,7 @@ type Config struct {
 	KeyStore keystore.Config
 
 	// HostUUID is a unique UUID of this host (it will be known via this UUID within
-	// a teleport cluster). It's automatically generated on 1st start
+	// a siriusec cluster). It's automatically generated on 1st start
 	HostUUID string
 
 	// Console writer to speak to a user
@@ -137,7 +137,7 @@ type Config struct {
 	// OIDCConnectors is a list of trusted OpenID Connect identity providers
 	OIDCConnectors []types.OIDCConnector
 
-	// PidFile is a full path of the PID file for teleport daemon
+	// PidFile is a full path of the PID file for siriusec daemon
 	PIDFile string
 
 	// Trust is a service that manages users and credentials
@@ -734,7 +734,7 @@ func (a App) Check() error {
 	// are invalid subdomains because for trusted clusters the name is used to
 	// construct the domain that the application will be available at.
 	if errs := validation.IsDNS1035Label(a.Name); len(errs) > 0 {
-		return trace.BadParameter("application name %q must be a valid DNS subdomain: https://siriusec.com/teleport/docs/application-access/#application-name", a.Name)
+		return trace.BadParameter("application name %q must be a valid DNS subdomain: https://siriusec.com/siriusec/docs/application-access/#application-name", a.Name)
 	}
 	// Parse and validate URL.
 	if _, err := url.Parse(a.URI); err != nil {

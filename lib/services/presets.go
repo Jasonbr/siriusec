@@ -17,7 +17,7 @@ limitations under the License.
 package services
 
 import (
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -33,7 +33,7 @@ func NewPresetEditorRole() types.Role {
 		Kind:    types.KindRole,
 		Version: types.V3,
 		Metadata: types.Metadata{
-			Name:        teleport.PresetEditorRoleName,
+			Name:        siriusec.PresetEditorRoleName,
 			Namespace:   apidefaults.Namespace,
 			Description: "Edit cluster configuration",
 		},
@@ -73,7 +73,7 @@ func NewPresetAccessRole() types.Role {
 		Kind:    types.KindRole,
 		Version: types.V3,
 		Metadata: types.Metadata{
-			Name:        teleport.PresetAccessRoleName,
+			Name:        siriusec.PresetAccessRoleName,
 			Namespace:   apidefaults.Namespace,
 			Description: "Access cluster resources",
 		},
@@ -91,17 +91,17 @@ func NewPresetAccessRole() types.Role {
 				AppLabels:        types.Labels{types.Wildcard: []string{types.Wildcard}},
 				KubernetesLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
 				DatabaseLabels:   types.Labels{types.Wildcard: []string{types.Wildcard}},
-				DatabaseNames:    []string{teleport.TraitInternalDBNamesVariable},
-				DatabaseUsers:    []string{teleport.TraitInternalDBUsersVariable},
+				DatabaseNames:    []string{siriusec.TraitInternalDBNamesVariable},
+				DatabaseUsers:    []string{siriusec.TraitInternalDBUsersVariable},
 				Rules: []types.Rule{
 					types.NewRule(types.KindEvent, RO()),
 				},
 			},
 		},
 	}
-	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable})
-	role.SetKubeUsers(Allow, []string{teleport.TraitInternalKubeUsersVariable})
-	role.SetKubeGroups(Allow, []string{teleport.TraitInternalKubeGroupsVariable})
+	role.SetLogins(Allow, []string{siriusec.TraitInternalLoginsVariable})
+	role.SetKubeUsers(Allow, []string{siriusec.TraitInternalKubeUsersVariable})
+	role.SetKubeGroups(Allow, []string{siriusec.TraitInternalKubeGroupsVariable})
 	return role
 }
 
@@ -113,7 +113,7 @@ func NewPresetAuditorRole() types.Role {
 		Kind:    types.KindRole,
 		Version: types.V3,
 		Metadata: types.Metadata{
-			Name:        teleport.PresetAuditorRoleName,
+			Name:        siriusec.PresetAuditorRoleName,
 			Namespace:   apidefaults.Namespace,
 			Description: "Review cluster events and replay sessions",
 		},

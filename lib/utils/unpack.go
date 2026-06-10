@@ -24,7 +24,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	"github.com/gravitational/trace"
 	log "github.com/sirupsen/logrus"
@@ -135,7 +135,7 @@ func writeHardLink(path string, target string) error {
 }
 
 func withDir(path string, fn func() error) error {
-	err := os.MkdirAll(filepath.Dir(path), teleport.DirMaskSharedGroup)
+	err := os.MkdirAll(filepath.Dir(path), siriusec.DirMaskSharedGroup)
 	if err != nil {
 		return trace.ConvertSystemError(err)
 	}

@@ -1,0 +1,8 @@
+[Unit]
+Description=Service getting siriusec certificates
+ConditionPathExists=/etc/siriusec.d/use-letsencrypt
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/local/bin/siriusec-lock
+ExecStart=/usr/local/bin/siriusec-get-cert

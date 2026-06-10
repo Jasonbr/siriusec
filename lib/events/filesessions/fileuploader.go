@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/events"
 	"github.com/siriusec/siriusec/lib/session"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -68,7 +68,7 @@ func NewHandler(cfg Config) (*Handler, error) {
 
 	h := &Handler{
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.Component(teleport.SchemeFile),
+			trace.Component: siriusec.Component(siriusec.SchemeFile),
 		}),
 		Config: cfg,
 	}
@@ -117,7 +117,7 @@ func (l *Handler) Upload(ctx context.Context, sessionID session.ID, reader io.Re
 	if err = trace.NewAggregate(err, f.Close()); err != nil {
 		return "", trace.Wrap(err)
 	}
-	return fmt.Sprintf("%v://%v", teleport.SchemeFile, path), nil
+	return fmt.Sprintf("%v://%v", siriusec.SchemeFile, path), nil
 }
 
 func (l *Handler) path(sessionID session.ID) string {

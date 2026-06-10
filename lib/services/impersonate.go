@@ -19,14 +19,14 @@ package services
 import (
 	"strings"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 
 	"github.com/gravitational/trace"
 	"github.com/vulcand/predicate"
 )
 
-// impersonateContext is a default rule context used in teleport
+// impersonateContext is a default rule context used in siriusec
 type impersonateContext struct {
 	// user is currently authenticated user
 	user types.User
@@ -40,11 +40,11 @@ type impersonateContext struct {
 func (ctx *impersonateContext) getIdentifier(fields []string) (interface{}, error) {
 	switch fields[0] {
 	case UserIdentifier:
-		return predicate.GetFieldByTag(ctx.user, teleport.JSON, fields[1:])
+		return predicate.GetFieldByTag(ctx.user, siriusec.JSON, fields[1:])
 	case ImpersonateUserIdentifier:
-		return predicate.GetFieldByTag(ctx.impersonateUser, teleport.JSON, fields[1:])
+		return predicate.GetFieldByTag(ctx.impersonateUser, siriusec.JSON, fields[1:])
 	case ImpersonateRoleIdentifier:
-		return predicate.GetFieldByTag(ctx.impersonateRole, teleport.JSON, fields[1:])
+		return predicate.GetFieldByTag(ctx.impersonateRole, siriusec.JSON, fields[1:])
 	default:
 		return nil, trace.NotFound("%v is not defined", strings.Join(fields, "."))
 	}

@@ -105,7 +105,7 @@ func testPortForwarding(t *testing.T, suite *integrationTestSuite) {
 			cfg.SSH.Enabled = true
 			cfg.SSH.AllowTCPForwarding = tt.portForwardingAllowed
 
-			siriusec := suite.newTeleportWithConfig(t, nil, nil, cfg)
+			siriusec := suite.newSiriusecWithConfig(t, nil, nil, cfg)
 			defer siriusec.StopAll()
 
 			site := siriusec.GetSiteAPI(Site)

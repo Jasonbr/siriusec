@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/utils"
 	"github.com/gravitational/trace"
@@ -47,8 +47,8 @@ const (
 )
 
 var stateGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-	Name: teleport.MetricState,
-	Help: fmt.Sprintf("State of the teleport process: %d - ok, %d - recovering, %d - degraded, %d - starting", stateOK, stateRecovering, stateDegraded, stateStarting),
+	Name: siriusec.MetricState,
+	Help: fmt.Sprintf("State of the siriusec process: %d - ok, %d - recovering, %d - degraded, %d - starting", stateOK, stateRecovering, stateDegraded, stateStarting),
 })
 
 func init() {

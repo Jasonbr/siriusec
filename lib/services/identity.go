@@ -23,6 +23,7 @@ package services
 import (
 	"context"
 	"time"
+	"unicode"
 
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -238,6 +239,20 @@ func VerifyPassword(password []byte) error {
 	if len(password) > defaults.MaxPasswordLength {
 		return trace.BadParameter(
 			"password is too long, max length is %v", defaults.MaxPasswordLength)
+	}
+	var hasUpper, hasLower, hasDigit bool
+	for _, c := range password {
+		switch {
+		case unicode.IsUpper(rune(c)):
+			hasUpper = true
+		case unicode.IsLower(rune(c)):
+			hasLower = true
+		case unicode.IsDigit(rune(c)):
+			hasDigit = true
+		}
+	}
+	if !hasUpper || !hasLower || !hasDigit {
+		return trace.BadParameter("password must contain at least one uppercase letter, one lowercase letter, and one digit")
 	}
 	return nil
 }

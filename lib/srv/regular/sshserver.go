@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/user"
@@ -33,7 +32,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -62,12 +61,12 @@ import (
 
 var (
 	log = logrus.WithFields(logrus.Fields{
-		trace.Component: teleport.ComponentNode,
+		trace.Component: siriusec.ComponentNode,
 	})
 
 	userSessionLimitHitCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricUserMaxConcurrentSessionsHit,
+			Name: siriusec.MetricUserMaxConcurrentSessionsHit,
 			Help: "Number of times a user exceeded their max concurrent ssh connections",
 		},
 	)
@@ -251,9 +250,9 @@ func (s *Server) isAuditedAtProxy() bool {
 	}
 
 	isRecordAtProxy := services.IsRecordAtProxy(recConfig.GetMode())
-	isTeleportNode := s.Component() == teleport.ComponentNode
+	isSiriusecNode := s.Component() == siriusec.ComponentNode
 
-	if isRecordAtProxy && isTeleportNode {
+	if isRecordAtProxy && isSiriusecNode {
 		return true
 	}
 	return false
@@ -615,9 +614,9 @@ func New(addr utils.NetAddr,
 
 	var component string
 	if s.proxyMode {
-		component = teleport.ComponentProxy
+		component = siriusec.ComponentProxy
 	} else {
-		component = teleport.ComponentNode
+		component = siriusec.ComponentNode
 	}
 
 	s.Entry = logrus.WithFields(logrus.Fields{
@@ -709,9 +708,9 @@ func (s *Server) Context() context.Context {
 
 func (s *Server) Component() string {
 	if s.proxyMode {
-		return teleport.ComponentProxy
+		return siriusec.ComponentProxy
 	}
-	return teleport.ComponentNode
+	return siriusec.ComponentNode
 }
 
 // Addr returns server address
@@ -806,7 +805,7 @@ func (s *Server) GetInfo() types.Server {
 			Addr:      addr,
 			Hostname:  s.hostname,
 			UseTunnel: s.useTunnel,
-			Version:   teleport.Version,
+			Version:   siriusec.Version,
 		},
 	}
 }
@@ -852,12 +851,12 @@ func (s *Server) serveAgent(ctx *srv.ServerContext) error {
 	pid := os.Getpid()
 
 	// build the socket path and set permissions
-	socketDir, err := ioutil.TempDir(os.TempDir(), "teleport-")
+	socketDir, err := os.MkdirTemp(os.TempDir(), "siriusec-")
 	if err != nil {
 		return trace.Wrap(err)
 	}
 	dirCloser := &utils.RemoveDirCloser{Path: socketDir}
-	socketPath := filepath.Join(socketDir, fmt.Sprintf("teleport-%v.socket", pid))
+	socketPath := filepath.Join(socketDir, fmt.Sprintf("siriusec-%v.socket", pid))
 	if err := os.Chown(socketDir, uid, gid); err != nil {
 		if err := dirCloser.Close(); err != nil {
 			log.Warnf("failed to remove directory: %v", err)
@@ -872,11 +871,11 @@ func (s *Server) serveAgent(ctx *srv.ServerContext) error {
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	ctx.Parent().SetEnv(teleport.SSHAuthSock, socketPath)
-	ctx.Parent().SetEnv(teleport.SSHAgentPID, fmt.Sprintf("%v", pid))
+	ctx.Parent().SetEnv(siriusec.SSHAuthSock, socketPath)
+	ctx.Parent().SetEnv(siriusec.SSHAgentPID, fmt.Sprintf("%v", pid))
 	ctx.Parent().AddCloser(agentServer)
 	ctx.Parent().AddCloser(dirCloser)
-	ctx.Debugf("Starting agent server for Teleport user %v and socket %v.", ctx.Identity.SiriusecUser, socketPath)
+	ctx.Debugf("Starting agent server for Siriusec user %v and socket %v.", ctx.Identity.SiriusecUser, socketPath)
 	go func() {
 		if err := agentServer.Serve(); err != nil {
 			ctx.Errorf("agent server for user %q stopped: %v", ctx.Identity.SiriusecUser, err)
@@ -895,11 +894,11 @@ func (s *Server) serveAgent(ctx *srv.ServerContext) error {
 // For more details: https://tools.ietf.org/html/rfc4254.html#page-4
 func (s *Server) HandleRequest(r *ssh.Request) {
 	switch r.Type {
-	case teleport.KeepAliveReqType:
+	case siriusec.KeepAliveReqType:
 		s.handleKeepAlive(r)
-	case teleport.RecordingProxyReqType:
+	case siriusec.RecordingProxyReqType:
 		s.handleRecordingProxy(r)
-	case teleport.VersionRequest:
+	case siriusec.VersionRequest:
 		s.handleVersionRequest(r)
 	default:
 		if r.WantReply {
@@ -959,7 +958,7 @@ func (s *Server) HandleNewConn(ctx context.Context, ccx *sshutils.ConnectionCont
 	}
 
 	// Don't apply the following checks in non-node contexts.
-	if s.Component() != teleport.ComponentNode {
+	if s.Component() != siriusec.ComponentNode {
 		return ctx, nil
 	}
 
@@ -986,7 +985,7 @@ func (s *Server) HandleNewConn(ctx context.Context, ccx *sshutils.ConnectionCont
 		},
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), teleport.MaxLeases) {
+		if strings.Contains(err.Error(), siriusec.MaxLeases) {
 			// user has exceeded their max concurrent ssh connections.
 			userSessionLimitHitCount.Inc()
 			event.Reason = events.SessionRejectedEvent
@@ -1027,8 +1026,8 @@ func (s *Server) HandleNewChan(ctx context.Context, ccx *sshutils.ConnectionCont
 	if s.proxyMode {
 		switch channelType {
 		// Channels of type "direct-tcpip", for proxies, it's equivalent
-		// of teleport proxy: subsystem
-		case teleport.ChanDirectTCPIP:
+		// of siriusec proxy: subsystem
+		case siriusec.ChanDirectTCPIP:
 			req, err := sshutils.ParseDirectTCPIPReq(nch.ExtraData())
 			if err != nil {
 				log.Errorf("Failed to parse request data: %v, err: %v.", string(nch.ExtraData()), err)
@@ -1046,7 +1045,7 @@ func (s *Server) HandleNewChan(ctx context.Context, ccx *sshutils.ConnectionCont
 		// Channels of type "session" handle requests that are involved in running
 		// commands on a server. In the case of proxy mode subsystem and agent
 		// forwarding requests occur over the "session" channel.
-		case teleport.ChanSession:
+		case siriusec.ChanSession:
 			ch, requests, err := nch.Accept()
 			if err != nil {
 				log.Warnf("Unable to accept channel: %v.", err)
@@ -1064,7 +1063,7 @@ func (s *Server) HandleNewChan(ctx context.Context, ccx *sshutils.ConnectionCont
 	switch channelType {
 	// Channels of type "session" handle requests that are involved in running
 	// commands on a server, subsystem requests, and agent forwarding.
-	case teleport.ChanSession:
+	case siriusec.ChanSession:
 		var decr func()
 		if max := identityContext.RoleSet.MaxSessions(); max != 0 {
 			d, ok := ccx.IncrSessions(max)
@@ -1115,7 +1114,7 @@ func (s *Server) HandleNewChan(ctx context.Context, ccx *sshutils.ConnectionCont
 			}
 		}()
 	// Channels of type "direct-tcpip" handles request for port forwarding.
-	case teleport.ChanDirectTCPIP:
+	case siriusec.ChanDirectTCPIP:
 		req, err := sshutils.ParseDirectTCPIPReq(nch.ExtraData())
 		if err != nil {
 			log.Errorf("Failed to parse request data: %v, err: %v.", string(nch.ExtraData()), err)
@@ -1178,7 +1177,7 @@ func (s *Server) handleDirectTCPIPRequest(ctx context.Context, ccx *sshutils.Con
 	}
 	scx.IsTestStub = s.isTestStub
 	scx.AddCloser(channel)
-	scx.ChannelType = teleport.ChanDirectTCPIP
+	scx.ChannelType = siriusec.ChanDirectTCPIP
 	scx.SrcAddr = net.JoinHostPort(req.Orig, strconv.Itoa(int(req.OrigPort)))
 	scx.DstAddr = net.JoinHostPort(req.Host, strconv.Itoa(int(req.Port)))
 	defer scx.Close()
@@ -1320,7 +1319,7 @@ func (s *Server) handleSessionRequests(ctx context.Context, ccx *sshutils.Connec
 	}
 	scx.IsTestStub = s.isTestStub
 	scx.AddCloser(ch)
-	scx.ChannelType = teleport.ChanSession
+	scx.ChannelType = siriusec.ChanSession
 	defer scx.Close()
 
 	ch = scx.TrackActivity(ch)
@@ -1348,7 +1347,7 @@ func (s *Server) handleSessionRequests(ctx context.Context, ccx *sshutils.Connec
 
 				// write the error to channel and close it
 				writeStderr(ch, errorMessage)
-				_, err := ch.SendRequest("exit-status", false, ssh.Marshal(struct{ C uint32 }{C: teleport.RemoteCommandFailure}))
+				_, err := ch.SendRequest("exit-status", false, ssh.Marshal(struct{ C uint32 }{C: siriusec.RemoteCommandFailure}))
 				if err != nil {
 					scx.Errorf("Failed to send exit status %v.", errorMessage)
 				}
@@ -1589,7 +1588,7 @@ func (s *Server) handleRecordingProxy(req *ssh.Request) {
 
 // handleVersionRequest replies with the Siriusec version of the server.
 func (s *Server) handleVersionRequest(req *ssh.Request) {
-	err := req.Reply(true, []byte(teleport.Version))
+	err := req.Reply(true, []byte(siriusec.Version))
 	if err != nil {
 		log.Debugf("Failed to reply to version request: %v.", err)
 	}
@@ -1626,16 +1625,16 @@ func (s *Server) handleProxyJump(ctx context.Context, ccx *sshutils.ConnectionCo
 	//
 	// When proxy is in "Recording mode" the following will happen with SSH:
 	//
-	// $ ssh -J user@teleport.proxy:3023 -p 3022 user@target -F ./forward.config
+	// $ ssh -J user@siriusec.proxy:3023 -p 3022 user@target -F ./forward.config
 	//
 	// Where forward.config enables agent forwarding:
 	//
-	// Host teleport.proxy
+	// Host siriusec.proxy
 	//     ForwardAgent yes
 	//
 	// This will translate to ProxyCommand:
 	//
-	// exec ssh -l user -p 3023 -F ./forward.config -vvv -W 'target:3022' teleport.proxy
+	// exec ssh -l user -p 3023 -F ./forward.config -vvv -W 'target:3022' siriusec.proxy
 	//
 	// -W means establish direct tcp-ip, and in SSH 2.0 session implementation,
 	// this gets called before agent forwarding is requested:

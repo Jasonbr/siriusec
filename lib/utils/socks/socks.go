@@ -23,14 +23,14 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	"github.com/gravitational/trace"
 	"github.com/sirupsen/logrus"
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentSOCKS,
+	trace.Component: siriusec.ComponentSOCKS,
 })
 
 const (

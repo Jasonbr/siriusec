@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -1366,7 +1365,7 @@ type validateOIDCAuthCallbackReq struct {
 // oidcAuthRawResponse is returned when auth server validated callback parameters
 // returned from OIDC provider
 type oidcAuthRawResponse struct {
-	// Username is authenticated teleport username
+	// Username is authenticated siriusec username
 	Username string `json:"username"`
 	// Identity contains validated OIDC identity
 	Identity types.ExternalIdentity `json:"identity"`
@@ -1526,7 +1525,7 @@ type validateSAMLResponseReq struct {
 // samlAuthRawResponse is returned when auth server validated callback parameters
 // returned from SAML provider
 type samlAuthRawResponse struct {
-	// Username is authenticated teleport username
+	// Username is authenticated siriusec username
 	Username string `json:"username"`
 	// Identity contains validated OIDC identity
 	Identity types.ExternalIdentity `json:"identity"`
@@ -1721,7 +1720,7 @@ type validateGithubAuthCallbackReq struct {
 // githubAuthRawResponse is returned when auth server validated callback
 // parameters returned from Github during OAuth2 flow
 type githubAuthRawResponse struct {
-	// Username is authenticated teleport username
+	// Username is authenticated siriusec username
 	Username string `json:"username"`
 	// Identity contains validated OIDC identity
 	Identity types.ExternalIdentity `json:"identity"`
@@ -1914,7 +1913,7 @@ func (s *APIServer) emitAuditEvent(auth ClientI, w http.ResponseWriter, r *http.
 
 // HTTP POST /:version/sessions/:id/slice
 func (s *APIServer) postSessionSlice(auth ClientI, w http.ResponseWriter, r *http.Request, p httprouter.Params, version string) (interface{}, error) {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(io.LimitReader(r.Body, defaults.MaxHTTPRequestSize))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -2516,7 +2515,7 @@ func (s *APIServer) getServerID(r *http.Request) (string, error) {
 	// is expected to consist of "<server-id>.<cluster-name>" so strip the
 	// cluster name suffix to get the server id.
 	//
-	// Note that as of right now Teleport expects server id to be a uuid4
+	// Note that as of right now Siriusec expects server id to be a uuid4
 	// but older Gravity clusters used to override it with strings like
 	// "192_168_1_1.<cluster-name>" so this code can't rely on it being
 	// uuid4 to account for clusters upgraded from older versions.

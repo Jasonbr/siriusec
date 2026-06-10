@@ -40,62 +40,62 @@ export PATH=/usr/local/bin:$PATH
 pip3 install -I awscli requests
 pip3 install certbot certbot-dns-route53
 
-# Create teleport user. It is helpful to share the same UID
+# Create siriusec user. It is helpful to share the same UID
 # to have the same permissions on shared NFS volumes across auth servers and for consistency.
-useradd -r teleport -u ${TELEPORT_UID} -d /var/lib/teleport
-# Add teleport to adm group to read and write logs
-usermod -a -G adm teleport
+useradd -r siriusec -u ${SIRIUSEC_UID} -d /var/lib/siriusec
+# Add siriusec to adm group to read and write logs
+usermod -a -G adm siriusec
 
-# Setup teleport run dir for pid files
-mkdir -p /run/teleport/ /var/lib/teleport /etc/teleport.d
-chmod 0700 /var/lib/teleport
-chown -R teleport:adm /run/teleport /var/lib/teleport /etc/teleport.d/
+# Setup siriusec run dir for pid files
+mkdir -p /run/siriusec/ /var/lib/siriusec /etc/siriusec.d
+chmod 0700 /var/lib/siriusec
+chown -R siriusec:adm /run/siriusec /var/lib/siriusec /etc/siriusec.d/
 
-# Download and install teleport binaries
+# Download and install siriusec binaries
 pushd /tmp || exit
-# Install the FIPS version of Teleport if /tmp/teleport-fips is present
-if [ -f /tmp/teleport-fips ]; then
-    TARBALL_FILENAME="/tmp/files/teleport-ent-v${TELEPORT_VERSION}-linux-amd64-fips-bin.tar.gz"
-    # Use a Teleport artifact uploaded from the build machine, if present
+# Install the FIPS version of Siriusec if /tmp/siriusec-fips is present
+if [ -f /tmp/siriusec-fips ]; then
+    TARBALL_FILENAME="/tmp/files/siriusec-ent-v${SIRIUSEC_VERSION}-linux-amd64-fips-bin.tar.gz"
+    # Use a Siriusec artifact uploaded from the build machine, if present
     if [ -f ${TARBALL_FILENAME} ]; then
-        echo "Found locally uploaded Enterprise FIPS tarball ${TARBALL_FILENAME}, moving to /tmp/teleport.tar.gz"
-        mv ${TARBALL_FILENAME} /tmp/teleport.tar.gz
+        echo "Found locally uploaded Enterprise FIPS tarball ${TARBALL_FILENAME}, moving to /tmp/siriusec.tar.gz"
+        mv ${TARBALL_FILENAME} /tmp/siriusec.tar.gz
     else
-        echo "Installing Enterprise Teleport version ${TELEPORT_VERSION} with FIPS support"
-        curl ${CURL_OPTS} -o teleport.tar.gz https://get.gravitational.com/teleport/${TELEPORT_VERSION}/teleport-ent-v${TELEPORT_VERSION}-linux-amd64-fips-bin.tar.gz
+        echo "Installing Enterprise Siriusec version ${SIRIUSEC_VERSION} with FIPS support"
+        curl ${CURL_OPTS} -o siriusec.tar.gz https://get.siriusec.com/docs/${SIRIUSEC_VERSION}/siriusec-ent-v${SIRIUSEC_VERSION}-linux-amd64-fips-bin.tar.gz
     fi
-    tar -xzf teleport.tar.gz
-    cp teleport-ent/tctl teleport-ent/tsh teleport-ent/teleport /usr/local/bin
-    rm -rf /tmp/teleport.tar.gz /tmp/teleport-ent
-    # add --fips to 'teleport start' commands in FIPS mode
-    sed -i -E "s_ExecStart=/usr/local/bin/teleport start(.*)_ExecStart=/usr/local/bin/teleport start --fips\1_g" /etc/systemd/system/teleport*.service
+    tar -xzf siriusec.tar.gz
+    cp siriusec-ent/tctl siriusec-ent/tsh siriusec-ent/siriusec /usr/local/bin
+    rm -rf /tmp/siriusec.tar.gz /tmp/siriusec-ent
+    # add --fips to 'siriusec start' commands in FIPS mode
+    sed -i -E "s_ExecStart=/usr/local/bin/siriusec start(.*)_ExecStart=/usr/local/bin/siriusec start --fips\1_g" /etc/systemd/system/siriusec*.service
 else
-    if [[ "${TELEPORT_TYPE}" == "oss" ]]; then
-        TARBALL_FILENAME="/tmp/files/teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz"
-        # Use a Teleport artifact uploaded from the build machine, if present
+    if [[ "${SIRIUSEC_TYPE}" == "oss" ]]; then
+        TARBALL_FILENAME="/tmp/files/siriusec-v${SIRIUSEC_VERSION}-linux-amd64-bin.tar.gz"
+        # Use a Siriusec artifact uploaded from the build machine, if present
         if [ -f ${TARBALL_FILENAME} ]; then
-            echo "Found locally uploaded OSS tarball ${TARBALL_FILENAME}, moving to /tmp/teleport.tar.gz"
-            mv ${TARBALL_FILENAME} /tmp/teleport.tar.gz
+            echo "Found locally uploaded OSS tarball ${TARBALL_FILENAME}, moving to /tmp/siriusec.tar.gz"
+            mv ${TARBALL_FILENAME} /tmp/siriusec.tar.gz
         else
-            echo "Installing OSS Teleport version ${TELEPORT_VERSION}"
-            curl ${CURL_OPTS} -o teleport.tar.gz https://get.gravitational.com/teleport/${TELEPORT_VERSION}/teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz
+            echo "Installing OSS Siriusec version ${SIRIUSEC_VERSION}"
+            curl ${CURL_OPTS} -o siriusec.tar.gz https://get.siriusec.com/docs/${SIRIUSEC_VERSION}/siriusec-v${SIRIUSEC_VERSION}-linux-amd64-bin.tar.gz
         fi
-        tar -xzf teleport.tar.gz
-        cp teleport/tctl teleport/tsh teleport/teleport /usr/local/bin
-        rm -rf /tmp/teleport.tar.gz /tmp/teleport
+        tar -xzf siriusec.tar.gz
+        cp siriusec/tctl siriusec/tsh siriusec/siriusec /usr/local/bin
+        rm -rf /tmp/siriusec.tar.gz /tmp/siriusec
     else
-        TARBALL_FILENAME="/tmp/files/teleport-ent-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz"
-        # Use a Teleport artifact uploaded from the build machine, if present
+        TARBALL_FILENAME="/tmp/files/siriusec-ent-v${SIRIUSEC_VERSION}-linux-amd64-bin.tar.gz"
+        # Use a Siriusec artifact uploaded from the build machine, if present
         if [ -f ${TARBALL_FILENAME} ]; then
-             echo "Found locally uploaded Enterprise tarball ${TARBALL_FILENAME}, moving to /tmp/teleport.tar.gz"
-            mv ${TARBALL_FILENAME} /tmp/teleport.tar.gz
+             echo "Found locally uploaded Enterprise tarball ${TARBALL_FILENAME}, moving to /tmp/siriusec.tar.gz"
+            mv ${TARBALL_FILENAME} /tmp/siriusec.tar.gz
         else
-            echo "Installing Enterprise Teleport version ${TELEPORT_VERSION}"
-            curl ${CURL_OPTS} -o teleport.tar.gz https://get.gravitational.com/teleport/${TELEPORT_VERSION}/teleport-ent-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz
+            echo "Installing Enterprise Siriusec version ${SIRIUSEC_VERSION}"
+            curl ${CURL_OPTS} -o siriusec.tar.gz https://get.siriusec.com/docs/${SIRIUSEC_VERSION}/siriusec-ent-v${SIRIUSEC_VERSION}-linux-amd64-bin.tar.gz
         fi
-        tar -xzf teleport.tar.gz
-        cp teleport-ent/tctl teleport-ent/tsh teleport-ent/teleport /usr/local/bin
-        rm -rf /tmp/teleport.tar.gz /tmp/teleport-ent
+        tar -xzf siriusec.tar.gz
+        cp siriusec-ent/tctl siriusec-ent/tsh siriusec-ent/siriusec /usr/local/bin
+        rm -rf /tmp/siriusec.tar.gz /tmp/siriusec-ent
     fi
 fi
 popd || exit
@@ -113,6 +113,6 @@ rm -rf /tmp/files
 # Clean up all packages
 yum -y clean all
 
-# Enable Teleport services to start on boot
-systemctl enable teleport-generate-config.service
-systemctl enable teleport.service
+# Enable Siriusec services to start on boot
+systemctl enable siriusec-generate-config.service
+systemctl enable siriusec.service

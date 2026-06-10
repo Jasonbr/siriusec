@@ -63,7 +63,7 @@ func ConnectProxyTransport(sconn ssh.Conn, req *DialReq, exclusive bool) (*ChCon
 		return nil, false, trace.Wrap(err)
 	}
 
-	// Send a special SSH out-of-band request called "teleport-transport"
+	// Send a special SSH out-of-band request called "siriusec-transport"
 	// the agent on the other side will create a new TCP/IP connection to
 	// 'addr' on its network and will start proxying that connection over
 	// this SSH channel.

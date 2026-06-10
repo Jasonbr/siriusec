@@ -40,7 +40,7 @@ spec:
   # if "audience" is not set, comes from "acs"
   audience: "https://<cluster-url>.example.com:3080/v1/webapi/saml/acs"
 
-  # if "signing_key_pair" is not set, teleport will generate a self signed
+  # if "signing_key_pair" is not set, siriusec will generate a self signed
   # signing key pair
   signing_key_pair:
     private_key: |

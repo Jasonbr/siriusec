@@ -31,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -47,14 +47,14 @@ import (
 const (
 	// SessionLogsDir is a subdirectory inside the eventlog data dir
 	// where all session-specific logs and streams are stored, like
-	// in /var/lib/teleport/logs/sessions
+	// in /var/lib/siriusec/logs/sessions
 	SessionLogsDir = "sessions"
 
-	// StreamingLogsDir is a subdirectory of sessions /var/lib/teleport/logs/streaming
+	// StreamingLogsDir is a subdirectory of sessions /var/lib/siriusec/logs/streaming
 	// is used in new versions of the uploader
 	StreamingLogsDir = "streaming"
 
-	// RecordsDir is a subdirectory with default records /var/lib/teleport/logs/records
+	// RecordsDir is a subdirectory with default records /var/lib/siriusec/logs/records
 	// is used in new versions of the uploader
 	RecordsDir = "records"
 
@@ -214,7 +214,7 @@ func (a *AuditLogConfig) CheckAndSetDefaults() error {
 		a.SessionIdlePeriod = defaults.SessionIdlePeriod
 	}
 	if a.DirMask == nil {
-		mask := os.FileMode(teleport.DirMaskSharedGroup)
+		mask := os.FileMode(siriusec.DirMaskSharedGroup)
 		a.DirMask = &mask
 	}
 	if (a.GID != nil && a.UID == nil) || (a.UID != nil && a.GID == nil) {
@@ -246,7 +246,7 @@ func NewAuditLog(cfg AuditLogConfig) (*AuditLog, error) {
 		playbackDir:    filepath.Join(cfg.DataDir, PlaybackDir, SessionLogsDir, apidefaults.Namespace),
 		AuditLogConfig: cfg,
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentAuditLog,
+			trace.Component: siriusec.ComponentAuditLog,
 		}),
 		activeDownloads: make(map[string]context.Context),
 		ctx:             ctx,
@@ -341,7 +341,7 @@ func (l *AuditLog) UploadSessionRecording(r SessionRecording) error {
 
 	// Upload session recording to endpoint defined in file configuration. Like S3.
 	start := time.Now()
-	url, err := l.UploadHandler.Upload(context.TODO(), r.SessionID, r.Recording)
+	url, err := l.UploadHandler.Upload(context.Background(), r.SessionID, r.Recording)
 	if err != nil {
 		l.log.WithFields(log.Fields{"duration": time.Since(start), "session-id": r.SessionID}).Warningf("Session upload failed: %v", trace.DebugReport(err))
 		return trace.Wrap(err)
@@ -410,7 +410,7 @@ func getAuthServers(dataDir string) ([]string, error) {
 			// can be colliding with customer-picked names, so consider
 			// moving the folders to a folder level up and keep the servers
 			// one small
-			if fileName != PlaybackDir && fileName != teleport.ComponentUpload && fileName != RecordsDir {
+			if fileName != PlaybackDir && fileName != siriusec.ComponentUpload && fileName != RecordsDir {
 				authServers = append(authServers, fileName)
 			}
 		}
@@ -610,7 +610,7 @@ func (l *AuditLog) createOrGetDownload(path string) (context.Context, context.Ca
 	if ok {
 		return ctx, nil
 	}
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(context.Background())
 	l.activeDownloads[path] = ctx
 	return ctx, func() {
 		cancel()

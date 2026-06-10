@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package services implements statefule services provided by teleport,
+// Package services implements statefule services provided by siriusec,
 // like certificate authority management, user and web sessions, events and logs.
 //
 // * Local services are implemented in local package

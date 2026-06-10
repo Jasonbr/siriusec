@@ -251,7 +251,7 @@ Loop2:
 }
 
 // TestUUIDHandling verifies that host UUIDs are correctly extracted
-// from the expected teleport principal format, and that gossip messages
+// from the expected siriusec principal format, and that gossip messages
 // consisting only of uuid don't create duplicate entries.
 func (s *StateSuite) TestUUIDHandling(c *check.C) {
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*6)

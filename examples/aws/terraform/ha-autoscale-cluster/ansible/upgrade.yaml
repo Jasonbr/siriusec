@@ -12,7 +12,7 @@
 # * Rollbacks and restores from backups
 #
 - hosts: "auth, proxy, node"
-  name: Download new version of teleport to auth and proxies
+  name: Download new version of siriusec to auth and proxies
   become: yes
   remote_user: admin
   become_method: sudo
@@ -29,24 +29,24 @@
           mode: 0755
 
     - name: Copy binaries from local directory
-      when: teleport_path is defined
+      when: siriusec_path is defined
       block:
       - copy:
-          src: "{{teleport_path}}/teleport"
+          src: "{{siriusec_path}}/siriusec"
           dest: /usr/local/bin
 
       - copy:
-          src: "{{teleport_path}}/tctl"
+          src: "{{siriusec_path}}/tctl"
           dest: /usr/local/bin
 
     - name: Copy binaries from official repository
-      when: teleport_version is defined
+      when: siriusec_version is defined
       block:
-      - name: Download and unpack new version of teleport
+      - name: Download and unpack new version of siriusec
         get_url:
-          url: https://get.gravitational.com/teleport/{{teleport_version}}/teleport-ent-v{{teleport_version}}-linux-amd64-bin.tar.gz
-          dest: /tmp/teleport-ent-v{{teleport_version}}-linux-amd64-bin.tar.gz
-      - name: Unpack teleport binaries
+          url: https://get.siriusec.com/docs/{{siriusec_version}}/siriusec-ent-v{{siriusec_version}}-linux-amd64-bin.tar.gz
+          dest: /tmp/siriusec-ent-v{{siriusec_version}}-linux-amd64-bin.tar.gz
+      - name: Unpack siriusec binaries
         unarchive:
           extra_opts: ['--strip-components=1', '--show-stored-names']
           exclude:
@@ -55,11 +55,11 @@
             - "VERSION"
             - "INSTALL"
             - "CHANGELOG"
-          src: /tmp/teleport-ent-v{{teleport_version}}-linux-amd64-bin.tar.gz
+          src: /tmp/siriusec-ent-v{{siriusec_version}}-linux-amd64-bin.tar.gz
           dest: /usr/local/bin
           remote_src: yes
-          owner: "{{ 'root' if 'node' in group_names else 'teleport' }}"
-          group: "{{ 'root' if 'node' in group_names else 'teleport' }}"
+          owner: "{{ 'root' if 'node' in group_names else 'siriusec' }}"
+          group: "{{ 'root' if 'node' in group_names else 'siriusec' }}"
 
 
 # Scale down all auth servers but the first one
@@ -74,9 +74,9 @@
 
     - include: vars.yaml
 
-    - name: Stop teleport
+    - name: Stop siriusec
       service:
-        name: teleport
+        name: siriusec
         state: stopped
 
 - hosts: "auth[0]"
@@ -88,9 +88,9 @@
 
     - include: vars.yaml
 
-    - name: Restart teleport
+    - name: Restart siriusec
       service:
-        name: teleport
+        name: siriusec
         state: restarted
 
 - hosts: "auth[1:]"
@@ -102,9 +102,9 @@
 
     - include: vars.yaml
 
-    - name: Restart teleport
+    - name: Restart siriusec
       service:
-        name: teleport
+        name: siriusec
         state: restarted
 
 
@@ -117,9 +117,9 @@
 
     - include: vars.yaml
 
-    - name: Restart teleport
+    - name: Restart siriusec
       service:
-        name: teleport
+        name: siriusec
         state: restarted
 
 - hosts: "node"
@@ -131,7 +131,7 @@
 
     - include: vars.yaml
 
-    - name: Restart teleport
+    - name: Restart siriusec
       service:
-        name: teleport
+        name: siriusec
         state: restarted

@@ -1,3 +1,3 @@
 #!/bin/bash
-export TELEPORT_CONFIG_PATH=$(mktemp -t teleport-generate-configXXXXXXXX)
-export TELEPORT_CONFD_DIR=$(mktemp -d -t teleport.conf.dXXXXXXXX)
+export SIRIUSEC_CONFIG_PATH=$(mktemp -t siriusec-generate-configXXXXXXXX)
+export SIRIUSEC_CONFD_DIR=$(mktemp -d -t siriusec.conf.dXXXXXXXX)

@@ -50,7 +50,7 @@ echo "=========================================="
 echo "2. 旧平台数据库检查"
 echo "=========================================="
 # 根据实际旧平台数据库名称修改
-OLD_DB_NAMES=("teleport" "old_platform" "legacy" "platform_v1")
+OLD_DB_NAMES=("siriusec" "old_platform" "legacy" "platform_v1")
 
 for db in "${OLD_DB_NAMES[@]}"; do
     if ${MYSQL_CMD} -e "USE ${db}" 2>/dev/null; then

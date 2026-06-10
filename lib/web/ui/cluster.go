@@ -114,7 +114,7 @@ func GetClusterDetails(ctx context.Context, site reversetunnel.RemoteSite, opts 
 	authVersion := ""
 	if len(authServers) > 0 {
 		// use the first auth server
-		authVersion = authServers[0].GetTeleportVersion()
+		authVersion = authServers[0].GetSiriusecVersion()
 	}
 
 	return &Cluster{

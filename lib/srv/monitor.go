@@ -80,7 +80,7 @@ type MonitorConfig struct {
 	Context context.Context
 	// Login is linux box login
 	Login string
-	// SiriusecUser is a teleport user name
+	// SiriusecUser is a siriusec user name
 	SiriusecUser string
 	// ServerID is a session server ID
 	ServerID string

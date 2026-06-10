@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/asciitable"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -108,7 +108,7 @@ func (c *TokenCommand) Initialize(app *kingpin.Application, config *service.Conf
 
 	// "tctl tokens ls"
 	c.tokenList = tokens.Command("ls", "List node and user invitation tokens")
-	c.tokenList.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&c.format)
+	c.tokenList.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(siriusec.Text).StringVar(&c.format)
 }
 
 // TryRun takes the CLI command as an argument (like "nodes ls") and executes it.
@@ -129,7 +129,7 @@ func (c *TokenCommand) TryRun(cmd string, client auth.ClientI) (match bool, err 
 // Add is called to execute "tokens add ..." command.
 func (c *TokenCommand) Add(client auth.ClientI) error {
 	// Parse string to see if it's a type of role that Siriusec supports.
-	roles, err := types.ParseTeleportRoles(c.tokenType)
+	roles, err := types.ParseSiriusecRoles(c.tokenType)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -143,7 +143,7 @@ func (c *TokenCommand) Add(client auth.ClientI) error {
 	}
 
 	// Generate token.
-	token, err := client.GenerateToken(context.TODO(), auth.GenerateTokenRequest{
+	token, err := client.GenerateToken(context.Background(), auth.GenerateTokenRequest{
 		Roles:  roles,
 		TTL:    c.ttl,
 		Token:  c.value,
@@ -232,7 +232,7 @@ func (c *TokenCommand) Add(client auth.ClientI) error {
 
 // Del is called to execute "tokens del ..." command.
 func (c *TokenCommand) Del(client auth.ClientI) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	if c.value == "" {
 		return trace.Errorf("Need an argument: token")
 	}
@@ -245,7 +245,7 @@ func (c *TokenCommand) Del(client auth.ClientI) error {
 
 // List is called to execute "tokens ls" command.
 func (c *TokenCommand) List(client auth.ClientI) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	tokens, err := client.GetTokens(ctx)
 	if err != nil {
 		return trace.Wrap(err)
@@ -258,7 +258,7 @@ func (c *TokenCommand) List(client auth.ClientI) error {
 	// Sort by expire time.
 	sort.Slice(tokens, func(i, j int) bool { return tokens[i].Expiry().Unix() < tokens[j].Expiry().Unix() })
 
-	if c.format == teleport.Text {
+	if c.format == siriusec.Text {
 		tokensView := func() string {
 			table := asciitable.MakeTable([]string{"Token", "Type", "Labels", "Expiry Time (UTC)"})
 			now := time.Now()

@@ -10,14 +10,14 @@ PUBLIC_AMI_NAME ?=
 # Default build region
 AWS_REGION ?= us-west-2
 
-# Teleport version
-# This must be a _released_ version of Teleport, i.e. one which has binaries
-# available for download on https://gravitational.com/teleport/download
+# Siriusec version
+# This must be a _released_ version of Siriusec, i.e. one which has binaries
+# available for download on https://gravitational.com/siriusec/download
 # Unreleased versions will fail to build.
-TELEPORT_VERSION ?= 6.2.0
+SIRIUSEC_VERSION ?= 6.2.0
 
-# Teleport UID is the UID of a non-privileged 'teleport' user
-TELEPORT_UID ?= 1007
+# Siriusec UID is the UID of a non-privileged 'siriusec' user
+SIRIUSEC_UID ?= 1007
 
 # Instance type to build the AMI on
 INSTANCE_TYPE ?= t2.medium
@@ -40,32 +40,32 @@ INFLUXDB_VERSION ?= 1.8.5
 # Grafana version
 GRAFANA_VERSION ?= 5.4.3
 
-# AWS account ID which hosts the public Teleport AMIs
+# AWS account ID which hosts the public Siriusec AMIs
 AWS_ACCOUNT_ID ?= 126027368216
 export
 
 
 # Build local 'debug' AMI
 .PHONY: oss
-oss: TELEPORT_TYPE=oss
+oss: SIRIUSEC_TYPE=oss
 oss: check-vars
 oss:
-	@echo "Building image $(TELEPORT_VERSION) $(TELEPORT_TYPE)"
+	@echo "Building image $(SIRIUSEC_VERSION) $(SIRIUSEC_TYPE)"
 	@echo "BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)"
 	mkdir -p files/build
-	packer build -force -var build_timestamp=$(BUILD_TIMESTAMP) -only teleport-aws-linux -var destination_regions=$(AWS_REGION) single-ami.json
+	packer build -force -var build_timestamp=$(BUILD_TIMESTAMP) -only siriusec-aws-linux -var destination_regions=$(AWS_REGION) single-ami.json
 	@echo "$(BUILD_TIMESTAMP)" > files/build/oss_build_timestamp.txt
 
 # Build named 'production' AMI and marketplace version
 .PHONY: oss-ci-build
-oss-ci-build: TELEPORT_TYPE=oss
+oss-ci-build: SIRIUSEC_TYPE=oss
 oss-ci-build: check-vars
 oss-ci-build:
-	@echo "Building image $(TELEPORT_VERSION) $(TELEPORT_TYPE) via CI"
+	@echo "Building image $(SIRIUSEC_VERSION) $(SIRIUSEC_TYPE) via CI"
 	@echo "Public AMI name: $(PUBLIC_AMI_NAME)"
 	@echo "BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)"
 	mkdir -p files/build
-	packer build -force -var ami_name=$(PUBLIC_AMI_NAME) -var build_timestamp=$(BUILD_TIMESTAMP) -except teleport-aws-linux-fips single-ami.json
+	packer build -force -var ami_name=$(PUBLIC_AMI_NAME) -var build_timestamp=$(BUILD_TIMESTAMP) -except siriusec-aws-linux-fips single-ami.json
 	@echo "$(BUILD_TIMESTAMP)" > files/build/oss_build_timestamp.txt
 
 .PHONY: change-amis-to-public-oss
@@ -75,20 +75,20 @@ change-amis-to-public-oss:
 
 # Build local 'debug' AMI
 .PHONY: ent
-ent: TELEPORT_TYPE=ent
+ent: SIRIUSEC_TYPE=ent
 ent: check-vars
-	@echo "Building image $(TELEPORT_VERSION) $(TELEPORT_TYPE)"
+	@echo "Building image $(SIRIUSEC_VERSION) $(SIRIUSEC_TYPE)"
 	@echo "BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)"
 	mkdir -p files/build
-	packer build -force -var build_timestamp=$(BUILD_TIMESTAMP) -only teleport-aws-linux -var destination_regions=$(AWS_REGION) single-ami.json
+	packer build -force -var build_timestamp=$(BUILD_TIMESTAMP) -only siriusec-aws-linux -var destination_regions=$(AWS_REGION) single-ami.json
 	@echo "$(BUILD_TIMESTAMP)" > files/build/ent_build_timestamp.txt
 
 # Build named 'production' AMI and marketplace version
 .PHONY: ent-ci-build
-ent-ci-build: TELEPORT_TYPE=ent
+ent-ci-build: SIRIUSEC_TYPE=ent
 ent-ci-build: check-vars
 ent-ci-build:
-	@echo "Building image $(TELEPORT_VERSION) $(TELEPORT_TYPE) via CI"
+	@echo "Building image $(SIRIUSEC_VERSION) $(SIRIUSEC_TYPE) via CI"
 	@echo "Public AMI name: $(PUBLIC_AMI_NAME)"
 	@echo "FIPS AMI name: $(FIPS_AMI_NAME)"
 	@echo "BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)"
@@ -110,25 +110,25 @@ change-amis-to-public-ent-fips:
 # Other helpers
 .PHONY: check-vars
 check-vars:
-	@if [ -z "$(TELEPORT_VERSION)" ]; then \
-	  echo "TELEPORT_VERSION is not set"; exit 1; \
+	@if [ -z "$(SIRIUSEC_VERSION)" ]; then \
+	  echo "SIRIUSEC_VERSION is not set"; exit 1; \
 	fi;
 
 .PHONY: update-ami-ids-cloudformation
 update-ami-ids-cloudformation:
 	@echo -e "\nUpdating OSS Cloudformation image IDs"
-	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m cloudformation -t oss -r $(DESTINATION_REGIONS) -v $(TELEPORT_VERSION)
+	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m cloudformation -t oss -r $(DESTINATION_REGIONS) -v $(SIRIUSEC_VERSION)
 	@echo -e "\nUpdating Enterprise Cloudformation image IDs"
-	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m cloudformation -t ent -r $(DESTINATION_REGIONS) -v $(TELEPORT_VERSION)
+	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m cloudformation -t ent -r $(DESTINATION_REGIONS) -v $(SIRIUSEC_VERSION)
 
 .PHONY: update-ami-ids-terraform
 update-ami-ids-terraform:
 	@echo -e "\nUpdating OSS Terraform image IDs"
-	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m terraform -t oss -r $(DESTINATION_REGIONS) -v $(TELEPORT_VERSION)
+	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m terraform -t oss -r $(DESTINATION_REGIONS) -v $(SIRIUSEC_VERSION)
 	@echo -e "\nUpdating Enterprise Terraform image IDs"
-	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m terraform -t ent -r $(DESTINATION_REGIONS) -v $(TELEPORT_VERSION)
+	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m terraform -t ent -r $(DESTINATION_REGIONS) -v $(SIRIUSEC_VERSION)
 	@echo -e "\nUpdating Enterprise FIPS Terraform image IDs"
-	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m terraform -t ent-fips -r $(DESTINATION_REGIONS) -v $(TELEPORT_VERSION)
+	./update-ami-ids.sh -a $(AWS_ACCOUNT_ID) -m terraform -t ent-fips -r $(DESTINATION_REGIONS) -v $(SIRIUSEC_VERSION)
 
 # you will need the Github 'gh' CLI installed and working to be able to use this target
 # https://github.com/cli/cli/releases/latest
@@ -137,9 +137,9 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 .PHONY: create-update-pr
 create-update-pr: update-ami-ids-cloudformation update-ami-ids-terraform
 	@echo "Creating PR for updates"
-	sed -i -E "s/^TELEPORT_VERSION \?= [0-9.]+$$/TELEPORT_VERSION ?= $(TELEPORT_VERSION)/g" $(MAKEFILE_PATH)
+	sed -i -E "s/^SIRIUSEC_VERSION \?= [0-9.]+$$/SIRIUSEC_VERSION ?= $(SIRIUSEC_VERSION)/g" $(MAKEFILE_PATH)
 	git add -A ../../examples/aws $(shell pwd)
 	git checkout -b $(AUTO_BRANCH_NAME)
-	git commit -am "[auto] Update AMI IDs for $(TELEPORT_VERSION)"
+	git commit -am "[auto] Update AMI IDs for $(SIRIUSEC_VERSION)"
 	git push --set-upstream origin $(AUTO_BRANCH_NAME)
 	gh pr create --fill --label automated --label terraform

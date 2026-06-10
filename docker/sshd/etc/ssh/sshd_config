@@ -90,6 +90,6 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 # and ChallengeResponseAuthentication to 'no'.
 UsePAM yes
 
-TrustedUserCAKeys /mnt/shared/certs/teleport.pub
-HostKey /mnt/shared/certs/mars.openssh.teleport
-HostCertificate /mnt/shared/certs/mars.openssh.teleport-cert.pub
+TrustedUserCAKeys /mnt/shared/certs/siriusec.pub
+HostKey /mnt/shared/certs/mars.openssh.siriusec
+HostCertificate /mnt/shared/certs/mars.openssh.siriusec-cert.pub

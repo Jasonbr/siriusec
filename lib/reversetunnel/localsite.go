@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
@@ -62,7 +62,7 @@ func newlocalSite(srv *server, domainName string, client auth.ClientI) (*localSi
 		remoteConns:      make(map[connKey]*remoteConn),
 		clock:            srv.Clock,
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentReverseTunnelServer,
+			trace.Component: siriusec.ComponentReverseTunnelServer,
 			trace.ComponentFields: map[string]string{
 				"cluster": domainName,
 			},
@@ -127,7 +127,7 @@ func (s *localSite) String() string {
 
 // GetStatus always returns online because the localsite is never offline.
 func (s *localSite) GetStatus() string {
-	return teleport.RemoteClusterStatusOnline
+	return siriusec.RemoteClusterStatusOnline
 }
 
 // GetName returns the name of the cluster.
@@ -298,7 +298,7 @@ func (s *localSite) getConn(params DialParams) (conn net.Conn, useTunnel bool, e
 
 	s.log.WithError(tunnelErr).WithField("address", dreq.Address).Debug("Error occurred while dialing through a tunnel.")
 
-	tunnelMsg := fmt.Sprintf(`Teleport proxy failed to connect to %q agent %q over reverse tunnel:
+	tunnelMsg := fmt.Sprintf(`Siriusec proxy failed to connect to %q agent %q over reverse tunnel:
 
   %v
 

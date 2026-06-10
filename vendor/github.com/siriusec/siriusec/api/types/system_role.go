@@ -24,15 +24,15 @@ import (
 )
 
 // SystemRole identifies the role of an SSH connection. Unlike "user roles"
-// introduced as part of RBAC in Teleport 1.4+ these are built-in roles used
-// for different Teleport components when connecting to each other.
+// introduced as part of RBAC in Siriusec 1.4+ these are built-in roles used
+// for different Siriusec components when connecting to each other.
 type SystemRole string
 
-// SystemRoles is a TeleportRole list
+// SystemRoles is a SiriusecRole list
 type SystemRoles []SystemRole
 
 const (
-	// RoleAuth is for teleport auth server (authority, authentication and authorization)
+	// RoleAuth is for siriusec auth server (authority, authentication and authorization)
 	RoleAuth SystemRole = "Auth"
 	// RoleNode is a role for SSH node in the cluster
 	RoleNode SystemRole = "Node"
@@ -62,8 +62,8 @@ const (
 // LegacyClusterTokenType exists for backwards compatibility reasons, needed to upgrade to 2.3
 const LegacyClusterTokenType SystemRole = "Trustedcluster"
 
-// NewTeleportRoles return a list of teleport roles from slice of strings
-func NewTeleportRoles(in []string) (SystemRoles, error) {
+// NewSiriusecRoles return a list of siriusec roles from slice of strings
+func NewSiriusecRoles(in []string) (SystemRoles, error) {
 	var roles SystemRoles
 	for _, val := range in {
 		roles = append(roles, SystemRole(val))
@@ -71,9 +71,9 @@ func NewTeleportRoles(in []string) (SystemRoles, error) {
 	return roles, roles.Check()
 }
 
-// ParseTeleportRoles takes a comma-separated list of roles and returns a slice
-// of teleport roles, or an error if parsing failed
-func ParseTeleportRoles(str string) (SystemRoles, error) {
+// ParseSiriusecRoles takes a comma-separated list of roles and returns a slice
+// of siriusec roles, or an error if parsing failed
+func ParseSiriusecRoles(str string) (SystemRoles, error) {
 	var roles SystemRoles
 	for _, s := range strings.Split(str, ",") {
 		r := SystemRole(strings.Title(strings.ToLower(strings.TrimSpace(s))))
@@ -82,7 +82,7 @@ func ParseTeleportRoles(str string) (SystemRoles, error) {
 	return roles, roles.Check()
 }
 
-// Include returns 'true' if a given list of teleport roles includes a given role
+// Include returns 'true' if a given list of siriusec roles includes a given role
 func (roles SystemRoles) Include(role SystemRole) bool {
 	for _, r := range roles {
 		if r == role {
@@ -92,7 +92,7 @@ func (roles SystemRoles) Include(role SystemRole) bool {
 	return false
 }
 
-// StringSlice returns teleport roles as string slice
+// StringSlice returns siriusec roles as string slice
 func (roles SystemRoles) StringSlice() []string {
 	s := make([]string, 0)
 	for _, r := range roles {
@@ -101,7 +101,7 @@ func (roles SystemRoles) StringSlice() []string {
 	return s
 }
 
-// asSet returns teleport roles as set (map).
+// asSet returns siriusec roles as set (map).
 func (roles SystemRoles) asSet() map[SystemRole]struct{} {
 	s := make(map[SystemRole]struct{}, len(roles))
 	for _, r := range roles {
@@ -110,7 +110,7 @@ func (roles SystemRoles) asSet() map[SystemRole]struct{} {
 	return s
 }
 
-// Equals compares two sets of teleport roles
+// Equals compares two sets of siriusec roles
 func (roles SystemRoles) Equals(other SystemRoles) bool {
 	rs, os := roles.asSet(), other.asSet()
 	if len(rs) != len(os) {
@@ -124,7 +124,7 @@ func (roles SystemRoles) Equals(other SystemRoles) bool {
 	return true
 }
 
-// Check returns an error if the teleport role set is incorrect (contains unknown roles)
+// Check returns an error if the siriusec role set is incorrect (contains unknown roles)
 func (roles SystemRoles) Check() error {
 	seen := make(map[SystemRole]struct{})
 	for _, role := range roles {
@@ -139,12 +139,12 @@ func (roles SystemRoles) Check() error {
 	return nil
 }
 
-// String returns comma separated string with teleport roles
+// String returns comma separated string with siriusec roles
 func (roles SystemRoles) String() string {
 	return strings.Join(roles.StringSlice(), ",")
 }
 
-// Set sets the value of the teleport role from string, used to integrate with CLI tools
+// Set sets the value of the siriusec role from string, used to integrate with CLI tools
 func (r *SystemRole) Set(v string) error {
 	val := SystemRole(strings.Title(v))
 	if err := val.Check(); err != nil {
@@ -154,7 +154,7 @@ func (r *SystemRole) Set(v string) error {
 	return nil
 }
 
-// String returns debug-friendly representation of this teleport role.
+// String returns debug-friendly representation of this siriusec role.
 func (r *SystemRole) String() string {
 	switch *r {
 	case RoleSignup:
@@ -166,7 +166,7 @@ func (r *SystemRole) String() string {
 	}
 }
 
-// Check checks if this a a valid teleport role value, returns nil
+// Check checks if this a a valid siriusec role value, returns nil
 // if it's ok, false otherwise
 func (r *SystemRole) Check() error {
 	switch *r {

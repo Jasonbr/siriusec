@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	apisshutils "github.com/siriusec/siriusec/api/utils/sshutils"
@@ -45,14 +45,14 @@ import (
 var (
 	failedLoginCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricFailedLoginAttempts,
+			Name: siriusec.MetricFailedLoginAttempts,
 			Help: "Number of times there was a failed login",
 		},
 	)
 
 	certificateMismatchCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricCertificateMismatch,
+			Name: siriusec.MetricCertificateMismatch,
 			Help: "Number of times there was a certificate mismatch",
 		},
 	)
@@ -124,7 +124,7 @@ func (h *AuthHandlers) CreateIdentityContext(sconn *ssh.ServerConn) (IdentityCon
 		return IdentityContext{}, trace.Wrap(err)
 	}
 	identity.Certificate = certificate
-	identity.RouteToCluster = certificate.Extensions[teleport.CertExtensionTeleportRouteToCluster]
+	identity.RouteToCluster = certificate.Extensions[siriusec.CertExtensionTeleportRouteToCluster]
 	if certificate.ValidBefore != 0 {
 		identity.CertValidBefore = time.Unix(int64(certificate.ValidBefore), 0)
 	}
@@ -139,8 +139,8 @@ func (h *AuthHandlers) CreateIdentityContext(sconn *ssh.ServerConn) (IdentityCon
 		return IdentityContext{}, trace.Wrap(err)
 	}
 	identity.RoleSet, identity.UnmappedRoles = roleSet, origRoles
-	identity.Impersonator = certificate.Extensions[teleport.CertExtensionImpersonator]
-	accessRequestIDs, err := parseAccessRequestIDs(certificate.Extensions[teleport.CertExtensionTeleportActiveRequests])
+	identity.Impersonator = certificate.Extensions[siriusec.CertExtensionImpersonator]
+	accessRequestIDs, err := parseAccessRequestIDs(certificate.Extensions[siriusec.CertExtensionTeleportActiveRequests])
 	if err != nil {
 		return IdentityContext{}, trace.Wrap(err)
 	}
@@ -225,7 +225,7 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 		log.Debugf("need a valid key ID for key")
 		return nil, trace.BadParameter("need a valid key for key %v", fingerprint)
 	}
-	teleportUser := cert.KeyId
+	siriusecUser := cert.KeyId
 
 	// only failed attempts are logged right now
 	recordFailedLogin := func(err error) {
@@ -237,7 +237,7 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 			},
 			UserMetadata: apievents.UserMetadata{
 				Login: conn.User(),
-				User:  teleportUser,
+				User:  siriusecUser,
 			},
 			ConnectionMetadata: apievents.ConnectionMetadata{
 				LocalAddr:  conn.LocalAddr().String(),
@@ -281,7 +281,7 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 
 	// this is the only way we know of to pass valid additional data about the
 	// connection to the handlers
-	permissions.Extensions[utils.CertSiriusecUser] = teleportUser
+	permissions.Extensions[utils.CertSiriusecUser] = siriusecUser
 	permissions.Extensions[utils.CertSiriusecClusterName] = clusterName.GetClusterName()
 	permissions.Extensions[utils.CertSiriusecUserCertificate] = string(ssh.MarshalAuthorizedKey(cert))
 
@@ -300,10 +300,10 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
 
 	// check if the user has permission to log into the node.
 	switch {
-	case h.c.Component == teleport.ComponentForwardingNode:
-		err = h.canLoginWithoutRBAC(cert, clusterName.GetClusterName(), teleportUser, conn.User())
+	case h.c.Component == siriusec.ComponentForwardingNode:
+		err = h.canLoginWithoutRBAC(cert, clusterName.GetClusterName(), siriusecUser, conn.User())
 	default:
-		err = h.canLoginWithRBAC(cert, clusterName.GetClusterName(), teleportUser, conn.User())
+		err = h.canLoginWithRBAC(cert, clusterName.GetClusterName(), siriusecUser, conn.User())
 	}
 	if err != nil {
 		log.Errorf("Permission denied: %v", err)
@@ -382,8 +382,8 @@ func (h *AuthHandlers) IsHostAuthority(cert ssh.PublicKey, address string) bool 
 // canLoginWithoutRBAC checks the given certificate (supplied by a connected
 // client) to see if this certificate can be allowed to login as user:login
 // pair to requested server.
-func (h *AuthHandlers) canLoginWithoutRBAC(cert *ssh.Certificate, clusterName string, teleportUser, osUser string) error {
-	h.log.Debugf("Checking permissions for (%v,%v) to login to node without RBAC checks.", teleportUser, osUser)
+func (h *AuthHandlers) canLoginWithoutRBAC(cert *ssh.Certificate, clusterName string, siriusecUser, osUser string) error {
+	h.log.Debugf("Checking permissions for (%v,%v) to login to node without RBAC checks.", siriusecUser, osUser)
 
 	// check if the ca that signed the certificate is known to the cluster
 	_, err := h.authorityForCert(types.UserCA, cert.SignatureKey)
@@ -397,11 +397,11 @@ func (h *AuthHandlers) canLoginWithoutRBAC(cert *ssh.Certificate, clusterName st
 // canLoginWithRBAC checks the given certificate (supplied by a connected
 // client) to see if this certificate can be allowed to login as user:login
 // pair to requested server and if RBAC rules allow login.
-func (h *AuthHandlers) canLoginWithRBAC(cert *ssh.Certificate, clusterName string, teleportUser, osUser string) error {
+func (h *AuthHandlers) canLoginWithRBAC(cert *ssh.Certificate, clusterName string, siriusecUser, osUser string) error {
 	// Use the server's shutdown context.
 	ctx := h.c.Server.Context()
 
-	h.log.Debugf("Checking permissions for (%v,%v) to login to node with RBAC checks.", teleportUser, osUser)
+	h.log.Debugf("Checking permissions for (%v,%v) to login to node with RBAC checks.", siriusecUser, osUser)
 
 	// get the ca that signd the users certificate
 	ca, err := h.authorityForCert(types.UserCA, cert.SignatureKey)
@@ -410,7 +410,7 @@ func (h *AuthHandlers) canLoginWithRBAC(cert *ssh.Certificate, clusterName strin
 	}
 
 	// get roles assigned to this user
-	roles, _, err := h.fetchRoleSet(cert, ca, teleportUser, clusterName)
+	roles, _, err := h.fetchRoleSet(cert, ca, siriusecUser, clusterName)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -419,7 +419,7 @@ func (h *AuthHandlers) canLoginWithRBAC(cert *ssh.Certificate, clusterName strin
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	_, mfaVerified := cert.Extensions[teleport.CertExtensionMFAVerified]
+	_, mfaVerified := cert.Extensions[siriusec.CertExtensionMFAVerified]
 	mfaParams := services.AccessMFAParams{
 		Verified:       mfaVerified,
 		AlwaysRequired: ap.GetRequireSessionMFA(),
@@ -428,7 +428,7 @@ func (h *AuthHandlers) canLoginWithRBAC(cert *ssh.Certificate, clusterName strin
 	// check if roles allow access to server
 	if err := roles.CheckAccessToServer(osUser, h.c.Server.GetInfo(), mfaParams); err != nil {
 		return trace.AccessDenied("user %s@%s is not authorized to login as %v@%s: %v",
-			teleportUser, ca.GetClusterName(), osUser, clusterName, err)
+			siriusecUser, ca.GetClusterName(), osUser, clusterName, err)
 	}
 
 	return nil
@@ -436,7 +436,7 @@ func (h *AuthHandlers) canLoginWithRBAC(cert *ssh.Certificate, clusterName strin
 
 // fetchRoleSet fetches the services.RoleSet (after role mapping) together with
 // the original roles (prior to role mapping) assigned to a Siriusec user.
-func (h *AuthHandlers) fetchRoleSet(cert *ssh.Certificate, ca types.CertAuthority, teleportUser string, clusterName string) (mapped services.RoleSet, unmapped []string, err error) {
+func (h *AuthHandlers) fetchRoleSet(cert *ssh.Certificate, ca types.CertAuthority, siriusecUser string, clusterName string) (mapped services.RoleSet, unmapped []string, err error) {
 	// For local users, go and check their individual permissions.
 	if clusterName == ca.GetClusterName() {
 		// Extract roles and traits either from the certificate or from
@@ -474,7 +474,7 @@ func (h *AuthHandlers) fetchRoleSet(cert *ssh.Certificate, ca types.CertAuthorit
 	//
 	// Keep backwards-compatible behavior and set it in addition to the
 	// traits extracted from the certificate.
-	traits[teleport.TraitLogins] = cert.ValidPrincipals
+	traits[siriusec.TraitLogins] = cert.ValidPrincipals
 	mappedRoleSet, err := services.FetchRoles(mappedRoles, h.c.AccessPoint, traits)
 	if err != nil {
 		return nil, nil, trace.Wrap(err)
@@ -530,7 +530,7 @@ func (h *AuthHandlers) authorityForCert(caType types.CertAuthType, key ssh.Publi
 
 // isProxy returns true if it's a regular SSH proxy.
 func (h *AuthHandlers) isProxy() bool {
-	return h.c.Component == teleport.ComponentProxy
+	return h.c.Component == siriusec.ComponentProxy
 }
 
 // AccessRequests are the access requests associated with a session

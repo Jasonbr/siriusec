@@ -70,7 +70,7 @@ func BenchmarkGetNodes(b *testing.B) {
 				bk, err = memory.New(memory.Config{})
 				assert.NoError(b, err)
 			} else {
-				dir, err := ioutil.TempDir("", "teleport")
+				dir, err := ioutil.TempDir("", "siriusec")
 				assert.NoError(b, err)
 				defer os.RemoveAll(dir)
 

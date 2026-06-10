@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"github.com/siriusec/siriusec/lib/utils"
 	"github.com/siriusec/siriusec/tool/sctl/common"
 )
 
 func main() {
+	utils.EnsureEnvFallback()
 	commands := []common.CLICommand{
 		&common.UserCommand{},
 		&common.NodeCommand{},

@@ -6,7 +6,7 @@ PRO_LICENSE ?= ../e/fixtures/license-pro.pem
 MODE ?= enterprise
 
 #
-# Default target starts two Teleport clusters
+# Default target starts two Siriusec clusters
 #
 .PHONY: up
 up: check-license
@@ -17,7 +17,7 @@ reup: check-license
 	cd .. && make
 	docker-compose up
 
-# 'make down' stops all Teleport containers, deletes them
+# 'make down' stops all Siriusec containers, deletes them
 # and their network
 #
 .PHONY:down
@@ -59,15 +59,15 @@ enter-two-node:
 
 .PHONY: export-certs
 export-certs:
-	docker exec -i one /bin/bash -c "tctl auth export --type=user | sed s/cert-authority\ // > /mnt/shared/certs/teleport.pub"
+	docker exec -i one /bin/bash -c "tctl auth export --type=user | sed s/cert-authority\ // > /mnt/shared/certs/siriusec.pub"
 
 .PHONY: setup-tc
 setup-tc:
-	docker exec -i two-auth /bin/bash -c "tctl -c /root/go/src/github.com/gravitational/teleport/docker/two-auth.yaml create -f /root/go/src/github.com/gravitational/teleport/docker/two-tc.yaml"
+	docker exec -i two-auth /bin/bash -c "tctl -c /root/go/src/github.com/gravitational/siriusec/docker/two-auth.yaml create -f /root/go/src/github.com/gravitational/siriusec/docker/two-tc.yaml"
 
 .PHONY: delete-tc
 delete-tc:
-	docker exec -i two-auth /bin/bash -c "tctl -c /root/go/src/github.com/gravitational/teleport/docker/two-auth.yaml rm tc/one"
+	docker exec -i two-auth /bin/bash -c "tctl -c /root/go/src/github.com/gravitational/siriusec/docker/two-auth.yaml rm tc/one"
 
 .PHONY: check-license
 check-license:
@@ -82,7 +82,7 @@ check-license:
 
 .PHONY: build
 build:
-	docker build -t teleport:latest .
+	docker build -t siriusec:latest .
 
 .PHONY: clean
 clean:

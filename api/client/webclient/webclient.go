@@ -152,6 +152,9 @@ func GetTunnelAddr(ctx context.Context, proxyAddr string, insecure bool, pool *x
 	if tunnelAddr := os.Getenv(defaults.TunnelPublicAddrEnvar); tunnelAddr != "" {
 		return extractHostPort(tunnelAddr)
 	}
+	if tunnelAddr := os.Getenv("TELEPORT_TUNNEL_PUBLIC_ADDR"); tunnelAddr != "" {
+		return extractHostPort(tunnelAddr)
+	}
 
 	// Ping web proxy to retrieve tunnel proxy address.
 	pr, err := Find(ctx, proxyAddr, insecure, nil)

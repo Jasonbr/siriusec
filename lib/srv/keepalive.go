@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/defaults"
 
 	"github.com/gravitational/trace"
@@ -60,7 +60,7 @@ func StartKeepAliveLoop(p KeepAliveParams) {
 	var missedCount int64
 
 	log := logrus.WithFields(logrus.Fields{
-		trace.Component: teleport.ComponentKeepAlive,
+		trace.Component: siriusec.ComponentKeepAlive,
 	})
 	log.Debugf("Starting keep-alive loop with with interval %v and max count %v.", p.Interval, p.MaxCount)
 
@@ -109,7 +109,7 @@ func sendKeepAliveWithTimeout(closeContext context.Context, conn RequestSender, 
 
 	go func() {
 		// SendRequest will unblock when connection or channel is closed.
-		_, _, err := conn.SendRequest(teleport.KeepAliveReqType, true, nil)
+		_, _, err := conn.SendRequest(siriusec.KeepAliveReqType, true, nil)
 		errorCh <- err
 	}()
 

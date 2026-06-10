@@ -1,0 +1,8 @@
+[Unit]
+Description=Service rotating siriusec tokens
+ConditionPathExists=/etc/siriusec.d/role.auth
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/local/bin/siriusec-lock
+ExecStart=/usr/local/bin/siriusec-ssm-publish-tokens

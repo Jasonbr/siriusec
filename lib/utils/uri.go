@@ -19,7 +19,7 @@ package utils
 import (
 	"net/url"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	"github.com/gravitational/trace"
 )
@@ -35,7 +35,7 @@ func ParseSessionsURI(in string) (*url.URL, error) {
 		return nil, trace.BadParameter("failed to parse URI %q: %v", in, err)
 	}
 	if u.Scheme == "" {
-		u.Scheme = teleport.SchemeFile
+		u.Scheme = siriusec.SchemeFile
 	}
 	return u, nil
 }

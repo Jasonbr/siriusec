@@ -31,7 +31,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -98,7 +98,7 @@ func newTestPack(ctx context.Context, dataDir string) (testPack, error) {
 	// set lock watcher
 	lockWatcher, err := services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentAuth,
+			Component: siriusec.ComponentAuth,
 			Client:    p.a,
 		},
 	})
@@ -189,7 +189,7 @@ func (s *AuthSuite) TestSessions(c *C) {
 	ctx := context.Background()
 
 	user := "user1"
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 
 	_, err := s.a.AuthenticateWebUser(AuthenticateUserRequest{
 		Username: user,
@@ -237,7 +237,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 	c.Assert(s.a.CreateRemoteCluster(leaf), IsNil)
 
 	user := "user1"
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 
 	// Try to login as an unknown user.
 	_, err = s.a.AuthenticateSSHUser(AuthenticateSSHRequest{
@@ -323,7 +323,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 		Principals:       []string{user},
 		KubernetesUsers:  []string{user},
 		KubernetesGroups: []string{"system:masters"},
-		// It's OK to use a non-existent kube cluster for leaf teleport
+		// It's OK to use a non-existent kube cluster for leaf siriusec
 		// clusters. The leaf is responsible for validating those.
 		KubernetesCluster: "leaf-kube-cluster",
 		Expires:           gotTLSCert.NotAfter,
@@ -500,7 +500,7 @@ func (s *AuthSuite) TestAuthenticateSSHUser(c *C) {
 
 func (s *AuthSuite) TestUserLock(c *C) {
 	username := "user1"
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 
 	_, err := s.a.AuthenticateWebUser(AuthenticateUserRequest{
 		Username: username,
@@ -528,7 +528,7 @@ func (s *AuthSuite) TestUserLock(c *C) {
 	for i := 0; i <= defaults.MaxLoginAttempts; i++ {
 		_, err = s.a.AuthenticateWebUser(AuthenticateUserRequest{
 			Username: username,
-			Pass:     &PassCreds{Password: []byte("wrong pass")},
+			Pass:     &PassCreds{Password: []byte("Wrong pass12345")},
 		})
 		c.Assert(err, NotNil)
 	}
@@ -897,7 +897,7 @@ func (s *AuthSuite) TestCreateAndUpdateUserEventsEmitted(c *C) {
 	c.Assert(err, IsNil)
 	err = s.a.CreateUser(ctx, user2)
 	c.Assert(err, IsNil)
-	c.Assert(s.mockEmitter.LastEvent().(*apievents.UserCreate).User, Equals, teleport.UserSystem)
+	c.Assert(s.mockEmitter.LastEvent().(*apievents.UserCreate).User, Equals, siriusec.UserSystem)
 	s.mockEmitter.Reset()
 
 	// test update on non-existent user
@@ -911,7 +911,7 @@ func (s *AuthSuite) TestCreateAndUpdateUserEventsEmitted(c *C) {
 	err = s.a.UpdateUser(ctx, user)
 	c.Assert(err, IsNil)
 	c.Assert(s.mockEmitter.LastEvent().GetType(), DeepEquals, events.UserUpdatedEvent)
-	c.Assert(s.mockEmitter.LastEvent().(*apievents.UserCreate).User, Equals, teleport.UserSystem)
+	c.Assert(s.mockEmitter.LastEvent().(*apievents.UserCreate).User, Equals, siriusec.UserSystem)
 }
 
 func (s *AuthSuite) TestTrustedClusterCRUDEventEmitted(c *C) {

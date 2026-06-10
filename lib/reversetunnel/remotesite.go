@@ -25,7 +25,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
@@ -265,7 +265,7 @@ func (s *remoteSite) addConn(conn net.Conn, sconn ssh.Conn) (*remoteConn, error)
 func (s *remoteSite) GetStatus() string {
 	connInfo, err := s.getLastConnInfo()
 	if err != nil {
-		return teleport.RemoteClusterStatusOffline
+		return siriusec.RemoteClusterStatusOffline
 	}
 	return services.TunnelConnectionStatus(s.clock, connInfo, s.offlineThreshold)
 }

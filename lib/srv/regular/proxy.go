@@ -28,7 +28,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apiutils "github.com/siriusec/siriusec/api/utils"
@@ -47,14 +47,14 @@ import (
 var ( // failedConnectingToNode counts failed attempts to connect to a node
 	proxiedSessions = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: teleport.MetricProxySSHSessions,
+			Name: siriusec.MetricProxySSHSessions,
 			Help: "Number of active sessions through this proxy",
 		},
 	)
 
 	failedConnectingToNode = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricFailedConnectToNodeAttempts,
+			Name: siriusec.MetricFailedConnectToNodeAttempts,
 			Help: "Number of failed attempts to connect to a node",
 		},
 	)
@@ -201,7 +201,7 @@ func newProxySubsys(ctx *srv.ServerContext, srv *Server, req proxySubsysRequest)
 		ctx:                ctx,
 		srv:                srv,
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component:       teleport.ComponentSubsystemProxy,
+			trace.Component:       siriusec.ComponentSubsystemProxy,
 			trace.ComponentFields: map[string]string{},
 		}),
 		closeC: make(chan struct{}),
@@ -218,7 +218,7 @@ func (t *proxySubsys) String() string {
 func (t *proxySubsys) Start(sconn *ssh.ServerConn, ch ssh.Channel, req *ssh.Request, ctx *srv.ServerContext) error {
 	// once we start the connection, update logger to include component fields
 	t.log = logrus.WithFields(logrus.Fields{
-		trace.Component: teleport.ComponentSubsystemProxy,
+		trace.Component: siriusec.ComponentSubsystemProxy,
 		trace.ComponentFields: map[string]string{
 			"src": sconn.RemoteAddr().String(),
 			"dst": sconn.LocalAddr().String(),
@@ -235,6 +235,9 @@ func (t *proxySubsys) Start(sconn *ssh.ServerConn, ch ssh.Channel, req *ssh.Requ
 	// did the client pass us a true client IP ahead of time via an environment variable?
 	// (usually the web client would do that)
 	trueClientIP, ok := ctx.GetEnv(sshutils.TrueClientAddrVar)
+	if !ok {
+		trueClientIP, ok = ctx.GetEnv("TELEPORT_CLIENT_ADDR")
+	}
 	if ok {
 		a, err := utils.ParseAddr(trueClientIP)
 		if err == nil {
@@ -497,7 +500,7 @@ func (t *proxySubsys) getMatchingServer(servers []types.Server, strategy types.R
 		}
 	case len(matches) > 1:
 		// if we matched more than one server, then the target was ambiguous.
-		return nil, trace.NotFound(teleport.NodeIsAmbiguous)
+		return nil, trace.NotFound(siriusec.NodeIsAmbiguous)
 	case len(matches) == 1:
 		server = matches[0]
 	}
@@ -554,7 +557,7 @@ func (t *proxySubsys) doHandshake(clientAddr net.Addr, clientConn io.ReadWriter,
 		if err != nil {
 			t.log.Error(err)
 		} else {
-			// send a JSON payload sandwitched between 'teleport proxy signature' and 0x00:
+			// send a JSON payload sandwitched between 'siriusec proxy signature' and 0x00:
 			payload := fmt.Sprintf("%s%s\x00", sshutils.ProxyHelloSignature, payloadJSON)
 			_, err = serverConn.Write([]byte(payload))
 			if err != nil {

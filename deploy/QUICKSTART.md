@@ -93,7 +93,7 @@ openssl req -x509 -nodes -days 3650 \
 cat > /etc/siriusec/siriusec.yaml << 'EOF'
 # Siriusec 完整配置 (节点 + 数据库)
 
-teleport:
+siriusec:
   nodename: siriusec-node-01
   data_dir: /var/lib/siriusec
   log:

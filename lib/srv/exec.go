@@ -30,7 +30,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	apiutils "github.com/siriusec/siriusec/api/utils"
 	"github.com/siriusec/siriusec/lib/events"
@@ -85,7 +85,7 @@ type Exec interface {
 func NewExecRequest(ctx *ServerContext, command string) (Exec, error) {
 	// It doesn't matter what mode the cluster is in, if this is a Siriusec node
 	// return a local *localExec.
-	if ctx.srv.Component() == teleport.ComponentNode {
+	if ctx.srv.Component() == siriusec.ComponentNode {
 		return &localExec{
 			Ctx:     ctx,
 			Command: command,
@@ -237,18 +237,18 @@ func (e *localExec) transformSecureCopy() error {
 
 	// see the user is not requesting scp, return
 	_, f := filepath.Split(args[0])
-	if f != teleport.SCP {
+	if f != siriusec.SCP {
 		return nil
 	}
 
-	// for scp requests update the command to execute to launch teleport with
+	// for scp requests update the command to execute to launch siriusec with
 	// scp parameters just like openssh does.
-	teleportBin, err := os.Executable()
+	siriusecBin, err := os.Executable()
 	if err != nil {
 		return trace.Wrap(err)
 	}
 	e.Command = fmt.Sprintf("%s scp --remote-addr=%q --local-addr=%q %v",
-		teleportBin,
+		siriusecBin,
 		e.Ctx.ServerConn.RemoteAddr().String(),
 		e.Ctx.ServerConn.LocalAddr().String(),
 		strings.Join(args[1:], " "))
@@ -368,7 +368,7 @@ func emitExecAuditEvent(ctx *ServerContext, cmd string, execErr error) {
 
 	sessionMeta := apievents.SessionMetadata{
 		SessionID: string(ctx.SessionID()),
-		WithMFA:   ctx.Identity.Certificate.Extensions[teleport.CertExtensionMFAVerified],
+		WithMFA:   ctx.Identity.Certificate.Extensions[siriusec.CertExtensionMFAVerified],
 	}
 
 	userMeta := apievents.UserMetadata{
@@ -534,17 +534,17 @@ func parseSecureCopy(path string) (string, string, bool, error) {
 	}
 
 	// Exract the name of the Siriusec executable on disk.
-	teleportPath, err := os.Executable()
+	siriusecPath, err := os.Executable()
 	if err != nil {
 		return "", "", false, trace.Wrap(err)
 	}
-	_, teleportBinary := filepath.Split(teleportPath)
+	_, siriusecBinary := filepath.Split(siriusecPath)
 
 	// Extract the name of the executable that was run. The command was secure
-	// copy if the executable was "scp" or "teleport".
+	// copy if the executable was "scp" or "siriusec".
 	_, executable := filepath.Split(parts[0])
 	switch executable {
-	case teleport.SCP, teleportBinary:
+	case siriusec.SCP, siriusecBinary:
 		return parts[len(parts)-1], action, true, nil
 	default:
 		return "", "", false, nil
@@ -555,7 +555,7 @@ func parseSecureCopy(path string) (string, string, bool, error) {
 func exitCode(err error) int {
 	// If no error occurred, return 0 (success).
 	if err == nil {
-		return teleport.RemoteCommandSuccess
+		return siriusec.RemoteCommandSuccess
 	}
 
 	switch v := err.(type) {
@@ -563,7 +563,7 @@ func exitCode(err error) int {
 	case *exec.ExitError:
 		waitStatus, ok := v.Sys().(syscall.WaitStatus)
 		if !ok {
-			return teleport.RemoteCommandFailure
+			return siriusec.RemoteCommandFailure
 		}
 		return waitStatus.ExitStatus()
 	// Remote execution.
@@ -572,6 +572,6 @@ func exitCode(err error) int {
 	// An error occurred, but the type is unknown, return a generic 255 code.
 	default:
 		log.Debugf("Unknown error returned when executing command: %T: %v.", err, err)
-		return teleport.RemoteCommandFailure
+		return siriusec.RemoteCommandFailure
 	}
 }

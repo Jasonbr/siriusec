@@ -1,4 +1,4 @@
-module github.com/gravitational/teleport/.cloudbuild/scripts
+module github.com/siriusec/siriusec/.cloudbuild/scripts
 
 go 1.16
 

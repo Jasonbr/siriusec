@@ -23,7 +23,7 @@ const (
 	DefaultImplicitRole = "default-implicit-role"
 
 	// APIDomain is a default domain name for Auth server API
-	APIDomain = "teleport.cluster.local"
+	APIDomain = "siriusec.cluster.local"
 
 	// EnhancedRecordingMinKernel is the minimum kernel version for the enhanced
 	// recording feature.

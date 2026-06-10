@@ -27,7 +27,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// minimalConfigFile is a minimal subset of a teleport config file that can be
+// minimalConfigFile is a minimal subset of a siriusec config file that can be
 // mutated programatically by test cases and then re-serialised to test the
 // config file loader
 const minimalConfigFile string = `

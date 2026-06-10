@@ -9,22 +9,22 @@ TF_VAR_cluster_name ?=
 # AWS SSH key name to provision in installed instances, should be available in the region
 TF_VAR_key_name ?=
 
-# Full absolute path to the license file for Teleport Enterprise or Pro.
+# Full absolute path to the license file for Siriusec Enterprise or Pro.
 # This license will be copied into SSM and then pulled down on the auth nodes to enable Enterprise/Pro functionality
 TF_VAR_license_path ?=
 
-# AMI name contains the version of Teleport to install, and whether to use OSS or Enterprise version
-# These AMIs are published by Gravitational and shared as public whenever a new version of Teleport is released
+# AMI name contains the version of Siriusec to install, and whether to use OSS or Enterprise version
+# These AMIs are published by Gravitational and shared as public whenever a new version of Siriusec is released
 # To list available AMIs:
-# OSS: aws ec2 describe-images --filters 'Name=name,Values=gravitational-teleport-ami-oss*'
-# Enterprise: aws ec2 describe-images --filters 'Name=name,Values=gravitational-teleport-ami-ent*'
+# OSS: aws ec2 describe-images --filters 'Name=name,Values=gravitational-siriusec-ami-oss*'
+# Enterprise: aws ec2 describe-images --filters 'Name=name,Values=gravitational-siriusec-ami-ent*'
 TF_VAR_ami_name ?=
 
 # Route 53 zone to use, should be the zone registered in AWS, e.g. example.com
 TF_VAR_route53_zone ?=
 
 # Subdomain to set up in the zone above, e.g. cluster.example.com
-# This will be used for internet access for users connecting to teleport proxy
+# This will be used for internet access for users connecting to siriusec proxy
 TF_VAR_route53_domain ?=
 
 # Bucket name to store encrypted letsencrypt certificates.

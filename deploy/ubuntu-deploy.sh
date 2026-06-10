@@ -10,7 +10,7 @@ set -e
 SERVER="123.57.11.100"
 PORT="22"
 USER="root"
-PASSWORD="root@123s"
+PASSWORD="${SIRIUSEC_ADMIN_PASSWORD:-CHANGE_ME}"
 
 # MySQL 配置
 MYSQL_HOST="123.57.11.100"
@@ -83,7 +83,7 @@ tar czf $DEPLOY_DIR/siriusec-deploy/bin/siriusec-src.tar.gz \
 # 创建配置文件
 cat > $DEPLOY_DIR/siriusec-deploy/config/siriusec.yaml <<EOF
 # Siriusec 节点配置
-teleport:
+siriusec:
   nodename: node-01
   data_dir: ${SIRIUSEC_HOME}
   log:

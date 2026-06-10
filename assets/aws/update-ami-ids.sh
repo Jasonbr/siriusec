@@ -45,9 +45,9 @@ AWS_ACCOUNT_ID=${a}
 MODE=${m}
 # comma-separated list of regions to get and update AMI IDs for
 REGIONS=${r}
-# Teleport AMI type (one of 'oss', 'ent' or 'ent-fips')
+# Siriusec AMI type (one of 'oss', 'ent' or 'ent-fips')
 TYPE=${t}
-# Teleport version (without 'v')
+# Siriusec version (without 'v')
 VERSION=${v}
 
 # check that awscli is installed
@@ -66,13 +66,13 @@ fi
 declare -A IMAGE_IDS
 for REGION in ${REGIONS//,/ }; do
     if [[ "${TYPE}" == "ent-fips" ]]; then
-        AMI_ID_STUB="gravitational-teleport-ami-ent-${VERSION}-fips"
+        AMI_ID_STUB="siriusec-ami-ent-${VERSION}-fips"
     else
-        AMI_ID_STUB="gravitational-teleport-ami-${TYPE}-${VERSION}"
+        AMI_ID_STUB="siriusec-ami-${TYPE}-${VERSION}"
     fi
     IMAGE_ID=$(aws ec2 describe-images --owners "${AWS_ACCOUNT_ID}" --filters "Name=name,Values=${AMI_ID_STUB}" "Name=is-public,Values=true" --region "${REGION}" | jq -r ".Images[].ImageId")
     if [[ "${IMAGE_ID}" == "" ]]; then
-        echo "Error getting ${TYPE} image ID for Teleport ${VERSION} in region ${REGION}. This can happen if the image has not been made public."
+        echo "Error getting ${TYPE} image ID for Siriusec ${VERSION} in region ${REGION}. This can happen if the image has not been made public."
         exit 3
     fi
     IMAGE_IDS[${REGION}]=${IMAGE_ID}
@@ -97,7 +97,7 @@ if [[ "${MODE}" == "cloudformation" ]]; then
         echo "[${TYPE}: ${REGION}] ${OLD_AMI_ID} -> ${NEW_AMI_ID}"
     done
     # update version number
-    sed -i -E "s/# All AMIs from AWS - gravitational-teleport-ami-(.*)/# All AMIs from AWS - gravitational-teleport-ami-${TYPE}-${VERSION}/g" ${CLOUDFORMATION_PATH}
+    sed -i -E "s/# All AMIs from AWS - siriusec-ami-(.*)/# All AMIs from AWS - siriusec-ami-${TYPE}-${VERSION}/g" ${CLOUDFORMATION_PATH}
 elif [[ "${MODE}" == "terraform" ]]; then
     TERRAFORM_SUBDIR="../../examples/aws/terraform"
     TERRAFORM_PATH="${TERRAFORM_SUBDIR}/AMIS.md"
@@ -116,7 +116,7 @@ elif [[ "${MODE}" == "terraform" ]]; then
     # shellcheck disable=SC2086
     for MODE in ${TERRAFORM_MODES}; do
         echo "Updating version in README for ${MODE}"
-        sed -i -E "s/gravitational-teleport-ami-${TYPE}-([0-9.]+)/gravitational-teleport-ami-${TYPE}-${VERSION}/g" "${TERRAFORM_SUBDIR}/${MODE}/README.md"
+        sed -i -E "s/siriusec-ami-${TYPE}-([0-9.]+)/siriusec-ami-${TYPE}-${VERSION}/g" "${TERRAFORM_SUBDIR}/${MODE}/README.md"
     done
     # replace AMI ID in place
     for REGION in ${REGIONS//,/ }; do

@@ -16,7 +16,7 @@ func tagCheckoutCommands(fips bool) []string {
 	commands := []string{
 		`mkdir -p /go/src/github.com/siriusec/siriusec`,
 		`cd /go/src/github.com/siriusec/siriusec`,
-		`git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .`,
+		`git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .`,
 		`git checkout ${DRONE_TAG:-$DRONE_COMMIT}`,
 		// fetch enterprise submodules
 		`mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa`,
@@ -83,7 +83,7 @@ func tagCopyArtifactCommands(b buildType) []string {
 	// don't copy OSS artifacts for any FIPS build
 	if !b.fips {
 		commands = append(commands,
-			fmt.Sprintf(`find . -maxdepth 1 -iname "teleport*%s" -print -exec cp {} /go/artifacts \;`, extension),
+			fmt.Sprintf(`find . -maxdepth 1 -iname "siriusec*%s" -print -exec cp {} /go/artifacts \;`, extension),
 		)
 	}
 
@@ -91,11 +91,11 @@ func tagCopyArtifactCommands(b buildType) []string {
 	if b.os == "windows" {
 		commands = append(commands,
 			`export VERSION=$(cat /go/.version.txt)`,
-			`cp /go/artifacts/teleport-v$${VERSION}-windows-amd64-bin.zip /go/artifacts/teleport-ent-v$${VERSION}-windows-amd64-bin.zip`,
+			`cp /go/artifacts/siriusec-v$${VERSION}-windows-amd64-bin.zip /go/artifacts/siriusec-ent-v$${VERSION}-windows-amd64-bin.zip`,
 		)
 	} else {
 		commands = append(commands,
-			`find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts \;`,
+			`find e/ -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts \;`,
 		)
 	}
 
@@ -105,18 +105,18 @@ func tagCopyArtifactCommands(b buildType) []string {
 		commands = append(commands, `export VERSION=$(cat /go/.version.txt)`)
 		if !b.fips {
 			commands = append(commands,
-				`mv /go/artifacts/teleport-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/teleport-v$${VERSION}-linux-amd64-centos6-bin.tar.gz`,
-				`mv /go/artifacts/teleport-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/teleport-ent-v$${VERSION}-linux-amd64-centos6-bin.tar.gz`,
+				`mv /go/artifacts/siriusec-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/siriusec-v$${VERSION}-linux-amd64-centos6-bin.tar.gz`,
+				`mv /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-centos6-bin.tar.gz`,
 			)
 		} else {
 			commands = append(commands,
-				`mv /go/artifacts/teleport-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz /go/artifacts/teleport-ent-v$${VERSION}-linux-amd64-centos6-fips-bin.tar.gz`,
+				`mv /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-centos6-fips-bin.tar.gz`,
 			)
 		}
 	}
 
 	// generate checksums
-	commands = append(commands, fmt.Sprintf(`cd /go/artifacts && for FILE in teleport*%s; do sha256sum $FILE > $FILE.sha256; done && ls -l`, extension))
+	commands = append(commands, fmt.Sprintf(`cd /go/artifacts && for FILE in siriusec*%s; do sha256sum $FILE > $FILE.sha256; done && ls -l`, extension))
 	return commands
 }
 
@@ -170,7 +170,7 @@ func tagPipelines() []pipeline {
 	// CentOS 6 FIPS builds have been removed in Siriusec 7.0. See https://github.com/siriusec/siriusec/issues/7207
 	ps = append(ps, tagPipeline(buildType{os: "linux", arch: "amd64", centos6: true}))
 
-	ps = append(ps, darwinTagPipeline(), darwinTeleportPkgPipeline(), darwinTshPkgPipeline())
+	ps = append(ps, darwinTagPipeline(), darwinSiriusecPkgPipeline(), darwinTshPkgPipeline())
 	return ps
 }
 
@@ -239,7 +239,7 @@ func tagPipeline(b buildType) pipeline {
 		uploadToS3Step(s3Settings{
 			region:      "us-west-2",
 			source:      "/go/artifacts/*",
-			target:      "teleport/tag/${DRONE_TAG##v}",
+			target:      "siriusec/tag/${DRONE_TAG##v}",
 			stripPrefix: "/go/artifacts/",
 		}),
 	}
@@ -261,11 +261,11 @@ func tagDownloadArtifactCommands(b buildType) []string {
 
 	if artifactOSS {
 		commands = append(commands,
-			fmt.Sprintf(`aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-%s-bin.tar.gz /go/artifacts/`, artifactType),
+			fmt.Sprintf(`aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-%s-bin.tar.gz /go/artifacts/`, artifactType),
 		)
 	}
 	commands = append(commands,
-		fmt.Sprintf(`aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-%s-bin.tar.gz /go/artifacts/`, artifactType),
+		fmt.Sprintf(`aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-%s-bin.tar.gz /go/artifacts/`, artifactType),
 	)
 	return commands
 }
@@ -276,9 +276,9 @@ func tagCopyPackageArtifactCommands(b buildType, packageType string) []string {
 		`cd /go/src/github.com/siriusec/siriusec`,
 	}
 	if !b.fips {
-		commands = append(commands, fmt.Sprintf(`find build -maxdepth 1 -iname "teleport*.%s*" -print -exec cp {} /go/artifacts \;`, packageType))
+		commands = append(commands, fmt.Sprintf(`find build -maxdepth 1 -iname "siriusec*.%s*" -print -exec cp {} /go/artifacts \;`, packageType))
 	}
-	commands = append(commands, fmt.Sprintf(`find e/build -maxdepth 1 -iname "teleport*.%s*" -print -exec cp {} /go/artifacts \;`, packageType))
+	commands = append(commands, fmt.Sprintf(`find e/build -maxdepth 1 -iname "siriusec*.%s*" -print -exec cp {} /go/artifacts \;`, packageType))
 	return commands
 }
 
@@ -390,7 +390,7 @@ func tagPackagePipeline(packageType string, b buildType) pipeline {
 		uploadToS3Step(s3Settings{
 			region:      "us-west-2",
 			source:      "/go/artifacts/*",
-			target:      "teleport/tag/${DRONE_TAG##v}",
+			target:      "siriusec/tag/${DRONE_TAG##v}",
 			stripPrefix: "/go/artifacts/",
 		}),
 	}

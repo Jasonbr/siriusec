@@ -60,7 +60,7 @@ func newKubeCommand(app *kingpin.Application) kubeCommands {
 type kubeCredentialsCommand struct {
 	*kingpin.CmdClause
 	kubeCluster     string
-	teleportCluster string
+	siriusecCluster string
 }
 
 func newKubeCredentialsCommand(parent *kingpin.CmdClause) *kubeCredentialsCommand {
@@ -69,7 +69,7 @@ func newKubeCredentialsCommand(parent *kingpin.CmdClause) *kubeCredentialsComman
 		// tsh generates and never by users directly.
 		CmdClause: parent.Command("credentials", "Get credentials for kubectl access").Hidden(),
 	}
-	c.Flag("teleport-cluster", "Name of the teleport cluster to get credentials for.").Required().StringVar(&c.teleportCluster)
+	c.Flag("siriusec-cluster", "Name of the siriusec cluster to get credentials for.").Required().StringVar(&c.siriusecCluster)
 	c.Flag("kube-cluster", "Name of the kubernetes cluster to get credentials for.").Required().StringVar(&c.kubeCluster)
 	return c
 }
@@ -81,7 +81,7 @@ func (c *kubeCredentialsCommand) run(cf *CLIConf) error {
 	}
 
 	// Try loading existing keys.
-	k, err := tc.LocalAgent().GetKey(c.teleportCluster, client.WithKubeCerts{})
+	k, err := tc.LocalAgent().GetKey(c.siriusecCluster, client.WithKubeCerts{})
 	if err != nil && !trace.IsNotFound(err) {
 		return trace.Wrap(err)
 	}
@@ -104,7 +104,7 @@ func (c *kubeCredentialsCommand) run(cf *CLIConf) error {
 	err = client.RetryWithRelogin(cf.Context, tc, func() error {
 		var err error
 		k, err = tc.IssueUserCertsWithMFA(cf.Context, client.ReissueParams{
-			RouteToCluster:    c.teleportCluster,
+			RouteToCluster:    c.siriusecCluster,
 			KubernetesCluster: c.kubeCluster,
 		})
 		return err
@@ -256,7 +256,7 @@ func (c *kubeLoginCommand) run(cf *CLIConf) error {
 	return nil
 }
 
-func fetchKubeClusters(ctx context.Context, tc *client.SiriusecClient) (teleportCluster string, kubeClusters []string, err error) {
+func fetchKubeClusters(ctx context.Context, tc *client.SiriusecClient) (siriusecCluster string, kubeClusters []string, err error) {
 	err = client.RetryWithRelogin(ctx, tc, func() error {
 		pc, err := tc.ConnectToProxy(ctx)
 		if err != nil {
@@ -273,7 +273,7 @@ func fetchKubeClusters(ctx context.Context, tc *client.SiriusecClient) (teleport
 		if err != nil {
 			return trace.Wrap(err)
 		}
-		teleportCluster = cn.GetClusterName()
+		siriusecCluster = cn.GetClusterName()
 
 		kubeClusters, err = kubeutils.KubeClusterNames(ctx, ac)
 		if err != nil {
@@ -284,13 +284,13 @@ func fetchKubeClusters(ctx context.Context, tc *client.SiriusecClient) (teleport
 	if err != nil {
 		return "", nil, trace.Wrap(err)
 	}
-	return teleportCluster, kubeClusters, nil
+	return siriusecCluster, kubeClusters, nil
 }
 
-// kubernetesStatus holds teleport client information necessary to populate the user's kubeconfig.
+// kubernetesStatus holds siriusec client information necessary to populate the user's kubeconfig.
 type kubernetesStatus struct {
 	clusterAddr         string
-	teleportClusterName string
+	siriusecClusterName string
 	kubeClusters        []string
 	credentials         *client.Key
 }
@@ -305,7 +305,7 @@ func fetchKubeStatus(ctx context.Context, tc *client.SiriusecClient) (*kubernete
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	kubeStatus.teleportClusterName, kubeStatus.kubeClusters, err = fetchKubeClusters(ctx, tc)
+	kubeStatus.siriusecClusterName, kubeStatus.kubeClusters, err = fetchKubeClusters(ctx, tc)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -317,7 +317,7 @@ func fetchKubeStatus(ctx context.Context, tc *client.SiriusecClient) (*kubernete
 func buildKubeConfigUpdate(cf *CLIConf, kubeStatus *kubernetesStatus) (*kubeconfig.Values, error) {
 	v := &kubeconfig.Values{
 		ClusterAddr:         kubeStatus.clusterAddr,
-		SiriusecClusterName: kubeStatus.teleportClusterName,
+		SiriusecClusterName: kubeStatus.siriusecClusterName,
 		Credentials:         kubeStatus.credentials,
 	}
 
@@ -328,7 +328,7 @@ func buildKubeConfigUpdate(cf *CLIConf, kubeStatus *kubernetesStatus) (*kubeconf
 	}
 
 	if len(kubeStatus.kubeClusters) == 0 {
-		// If there are no registered k8s clusters, we may have an older teleport cluster.
+		// If there are no registered k8s clusters, we may have an older siriusec cluster.
 		// Fall back to the old kubeconfig, with static credentials from v.Credentials.
 		log.Debug("Disabling exec plugin mode for kubeconfig because this Sirius cluster has no Kubernetes clusters.")
 		return v, nil

@@ -40,7 +40,7 @@ func TestStreams(t *testing.T) {
 	handler, err := NewHandler(Config{
 		Region: "us-west-1",
 		Path:   "/test/",
-		Bucket: fmt.Sprintf("teleport-unit-tests"),
+		Bucket: fmt.Sprintf("siriusec-unit-tests"),
 	})
 	require.Nil(t, err)
 

@@ -41,7 +41,7 @@ func NewAccessService(backend backend.Backend) *AccessService {
 
 // DeleteAllRoles deletes all roles
 func (s *AccessService) DeleteAllRoles() error {
-	return s.DeleteRange(context.TODO(), backend.Key(rolesPrefix), backend.RangeEnd(backend.Key(rolesPrefix)))
+	return s.DeleteRange(context.Background(), backend.Key(rolesPrefix), backend.RangeEnd(backend.Key(rolesPrefix)))
 }
 
 // GetRoles returns a list of roles registered with the local auth server
@@ -76,7 +76,7 @@ func (s *AccessService) CreateRole(role types.Role) error {
 		Expires: role.Expiry(),
 	}
 
-	_, err = s.Create(context.TODO(), item)
+	_, err = s.Create(context.Background(), item)
 	if err != nil {
 		return trace.Wrap(err)
 	}

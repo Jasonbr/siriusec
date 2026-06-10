@@ -19,7 +19,7 @@ package auth
 import (
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/modules"
@@ -99,7 +99,7 @@ func (s *Server) ProcessKubeCSR(req KubeCSR) (*KubeCSRResponse, error) {
 		return nil, trace.Wrap(err)
 	}
 	// Enforce only k8s usage on generated cert, keep all other fields.
-	id.Usage = []string{teleport.UsageKubeOnly}
+	id.Usage = []string{siriusec.UsageKubeOnly}
 	// Re-encode the identity to subject, with updated Usage.
 	subject, err := id.Subject()
 	if err != nil {

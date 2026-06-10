@@ -38,7 +38,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -61,8 +61,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// teleportTestUser is additional user used for tests
-const teleportTestUser = "teleport-test"
+// siriusecTestUser is additional user used for tests
+const siriusecTestUser = "siriusec-test"
 
 // wildcardAllow is used in tests to allow access to all labels.
 var wildcardAllow = types.Labels{
@@ -74,7 +74,7 @@ var wildcardAllow = types.Labels{
 func TestMain(m *testing.M) {
 	utils.InitLoggerForTests()
 	if len(os.Args) == 2 &&
-		(os.Args[1] == teleport.ExecSubCommand || os.Args[1] == teleport.ForwardSubCommand) {
+		(os.Args[1] == siriusec.ExecSubCommand || os.Args[1] == siriusec.ForwardSubCommand) {
 		srv.RunAndExit(os.Args[1])
 		return
 	}
@@ -540,7 +540,7 @@ func TestMaxSessions(t *testing.T) {
 
 // TestExecLongCommand makes sure that commands that are longer than the
 // maximum pipe size on the OS can still be started. This tests the reexec
-// functionality of Teleport as Siriusec will reexec itself when launching a
+// functionality of Siriusec as Siriusec will reexec itself when launching a
 // command and send the command to then launch through a pipe.
 func TestExecLongCommand(t *testing.T) {
 	t.Parallel()
@@ -573,7 +573,7 @@ func TestOpenExecSessionSetsSession(t *testing.T) {
 	// which then triggers setting env for SSH_SESSION_ID.
 	output, err := se.Output("env")
 	require.NoError(t, err)
-	require.Contains(t, string(output), teleport.SSHSessionID)
+	require.Contains(t, string(output), siriusec.SSHSessionID)
 }
 
 // TestAgentForward tests agent forwarding via unix sockets
@@ -607,13 +607,13 @@ func TestAgentForward(t *testing.T) {
 	require.NoError(t, err)
 
 	// create a temp file to collect the shell output into:
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "teleport-agent-forward-test")
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "siriusec-agent-forward-test")
 	require.NoError(t, err)
 	tmpFile.Close()
 	defer os.Remove(tmpFile.Name())
 
 	// type 'printenv SSH_AUTH_SOCK > /path/to/tmp/file' into the session (dumping the value of SSH_AUTH_STOCK into the temp file)
-	_, err = keyboard.Write([]byte(fmt.Sprintf("printenv %v > %s\n\r", teleport.SSHAuthSock, tmpFile.Name())))
+	_, err = keyboard.Write([]byte(fmt.Sprintf("printenv %v > %s\n\r", siriusec.SSHAuthSock, tmpFile.Name())))
 	require.NoError(t, err)
 
 	// wait for the output
@@ -796,9 +796,9 @@ func TestInvalidSessionID(t *testing.T) {
 
 func TestSessionHijack(t *testing.T) {
 	t.Parallel()
-	_, err := user.Lookup(teleportTestUser)
+	_, err := user.Lookup(siriusecTestUser)
 	if err != nil {
-		t.Skip(fmt.Sprintf("user %v is not found, skipping test", teleportTestUser))
+		t.Skip(fmt.Sprintf("user %v is not found, skipping test", siriusecTestUser))
 	}
 
 	f := newFixture(t)
@@ -833,11 +833,11 @@ func TestSessionHijack(t *testing.T) {
 	require.NoError(t, err)
 
 	// user 2 does not have s.user as a listed principal
-	up2, err := newUpack(f.testSrv, teleportTestUser, []string{teleportTestUser}, wildcardAllow)
+	up2, err := newUpack(f.testSrv, siriusecTestUser, []string{siriusecTestUser}, wildcardAllow)
 	require.NoError(t, err)
 
 	sshConfig2 := &ssh.ClientConfig{
-		User:            teleportTestUser,
+		User:            siriusecTestUser,
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(up2.certSigner)},
 		HostKeyCallback: ssh.FixedHostKey(f.signer.PublicKey()),
 	}
@@ -960,7 +960,7 @@ func TestProxyReverseTunnel(t *testing.T) {
 		NewCachingAccessPointOldProxy: auth.NoCache,
 		DirectClusters:                []reversetunnel.DirectCluster{{Name: f.testSrv.ClusterName(), Client: proxyClient}},
 		DataDir:                       t.TempDir(),
-		Component:                     teleport.ComponentProxy,
+		Component:                     siriusec.ComponentProxy,
 		Emitter:                       proxyClient,
 		Log:                           logger,
 		LockWatcher:                   lockWatcher,
@@ -1503,13 +1503,13 @@ func TestLimiter(t *testing.T) {
 func TestServerAliveInterval(t *testing.T) {
 	t.Parallel()
 	f := newFixture(t)
-	ok, _, err := f.ssh.clt.SendRequest(teleport.KeepAliveReqType, true, nil)
+	ok, _, err := f.ssh.clt.SendRequest(siriusec.KeepAliveReqType, true, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
 
 // TestGlobalRequestRecordingProxy simulates sending a global out-of-band
-// recording-proxy@teleport.com request.
+// recording-proxy@siriusec.com request.
 func TestGlobalRequestRecordingProxy(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -1525,7 +1525,7 @@ func TestGlobalRequestRecordingProxy(t *testing.T) {
 
 	// send the request again, we have cluster config and when we parse the
 	// response, it should be false because recording is occurring at the node.
-	ok, responseBytes, err := f.ssh.clt.SendRequest(teleport.RecordingProxyReqType, true, nil)
+	ok, responseBytes, err := f.ssh.clt.SendRequest(siriusec.RecordingProxyReqType, true, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	response, err := strconv.ParseBool(string(responseBytes))
@@ -1543,7 +1543,7 @@ func TestGlobalRequestRecordingProxy(t *testing.T) {
 	// send request again, now that we have cluster config and it's set to record
 	// at the proxy, we should return true and when we parse the payload it should
 	// also be true
-	ok, responseBytes, err = f.ssh.clt.SendRequest(teleport.RecordingProxyReqType, true, nil)
+	ok, responseBytes, err = f.ssh.clt.SendRequest(siriusec.RecordingProxyReqType, true, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	response, err = strconv.ParseBool(string(responseBytes))
@@ -1551,8 +1551,8 @@ func TestGlobalRequestRecordingProxy(t *testing.T) {
 	require.True(t, response)
 }
 
-// rawNode is a basic non-teleport node which holds a
-// valid teleport cert and allows any client to connect.
+// rawNode is a basic non-siriusec node which holds a
+// valid siriusec cert and allows any client to connect.
 // useful for simulating basic behaviors of openssh nodes.
 type rawNode struct {
 	listener net.Listener
@@ -1644,7 +1644,7 @@ func startX11EchoServer(ctx context.Context, t *testing.T, authSrv *auth.Server)
 		case <-ctx.Done():
 			return nil
 		}
-		if nch.ChannelType() != teleport.ChanSession {
+		if nch.ChannelType() != siriusec.ChanSession {
 			return trace.BadParameter("Unexpected channel type: %q", nch.ChannelType())
 		}
 
@@ -1766,7 +1766,7 @@ func TestX11ProxySupport(t *testing.T) {
 	require.NoError(t, err)
 
 	// verify that the proxy is in recording mode
-	ok, responseBytes, err := f.ssh.clt.SendRequest(teleport.RecordingProxyReqType, true, nil)
+	ok, responseBytes, err := f.ssh.clt.SendRequest(siriusec.RecordingProxyReqType, true, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	response, err := strconv.ParseBool(string(responseBytes))

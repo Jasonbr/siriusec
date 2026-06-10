@@ -37,7 +37,7 @@ func (g *GithubSuite) TestUnmarshal(c *check.C) {
   "display": "Github",
   "redirect_url": "https://localhost:3080/v1/webapi/github/callback",
   "teams_to_logins": [{
-    "organization": "gravitational",
+    "organization": "siriusec",
     "team": "admins",
     "logins": ["admin"]
   }]
@@ -51,7 +51,7 @@ func (g *GithubSuite) TestUnmarshal(c *check.C) {
 		Display:      "Github",
 		TeamsToLogins: []types.TeamMapping{
 			{
-				Organization: "gravitational",
+				Organization: "siriusec",
 				Team:         "admins",
 				Logins:       []string{"admin"},
 			},
@@ -69,14 +69,14 @@ func (g *GithubSuite) TestMapClaims(c *check.C) {
 		Display:      "Github",
 		TeamsToLogins: []types.TeamMapping{
 			{
-				Organization: "gravitational",
+				Organization: "siriusec",
 				Team:         "admins",
 				Logins:       []string{"admin", "dev"},
 				KubeGroups:   []string{"system:masters", "kube-devs"},
 				KubeUsers:    []string{"alice@example.com"},
 			},
 			{
-				Organization: "gravitational",
+				Organization: "siriusec",
 				Team:         "devs",
 				Logins:       []string{"dev", "test"},
 				KubeGroups:   []string{"kube-devs"},
@@ -87,7 +87,7 @@ func (g *GithubSuite) TestMapClaims(c *check.C) {
 
 	logins, kubeGroups, kubeUsers := connector.MapClaims(types.GithubClaims{
 		OrganizationToTeams: map[string][]string{
-			"gravitational": {"admins"},
+			"siriusec": {"admins"},
 		},
 	})
 	c.Assert(logins, check.DeepEquals, []string{"admin", "dev"})
@@ -96,7 +96,7 @@ func (g *GithubSuite) TestMapClaims(c *check.C) {
 
 	logins, kubeGroups, kubeUsers = connector.MapClaims(types.GithubClaims{
 		OrganizationToTeams: map[string][]string{
-			"gravitational": {"devs"},
+			"siriusec": {"devs"},
 		},
 	})
 	c.Assert(logins, check.DeepEquals, []string{"dev", "test"})
@@ -105,7 +105,7 @@ func (g *GithubSuite) TestMapClaims(c *check.C) {
 
 	logins, kubeGroups, kubeUsers = connector.MapClaims(types.GithubClaims{
 		OrganizationToTeams: map[string][]string{
-			"gravitational": {"admins", "devs"},
+			"siriusec": {"admins", "devs"},
 		},
 	})
 	c.Assert(logins, check.DeepEquals, []string{"admin", "dev", "test"})

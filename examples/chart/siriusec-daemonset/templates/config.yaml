@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "siriusec.fullname" . }}
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+data:
+  siriusec.yaml: |
+{{ toYaml .Values.config | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "siriusec.fullname" . }}-daemonset-config
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+data:
+  siriusec.yaml: |
+{{ toYaml .Values.daemonset.config | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "siriusec.fullname" . }}-bootstrap-scripts
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+data:
+  bootstrap.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    SLEEP_TIME=5
+    OUTPUT_FILE="/tmp/siriusec-trustedcluster.yaml"
+    cat << EOF > ${OUTPUT_FILE}
+    ---
+    kind: trusted_cluster
+    metadata:
+      name: root-cluster
+    spec:
+      enabled: true
+      role_map:
+      - local: ['admin']
+        remote: ${ROOT_CLUSTER_ADMIN_ROLE}
+      token: ${ROOT_CLUSTER_JOIN_TOKEN}
+      tunnel_addr: ${ROOT_CLUSTER_TUNNEL_ADDRESS}
+      web_proxy_addr: ${ROOT_CLUSTER_WEB_ADDRESS}
+    version: v2
+    EOF
+    echo "[sidecar] Trusted cluster definition:"
+    cat ${OUTPUT_FILE}
+    echo "[sidecar] Adding trusted cluster definition to Siriusec"
+    until tctl create -f ${OUTPUT_FILE}; do
+      echo "[sidecar] Adding trusted cluster failed. Waiting ${SLEEP_TIME} seconds and trying again."
+      sleep ${SLEEP_TIME}
+    done
+    echo "[sidecar] Trusted cluster added. Tailing a never-ending file to keep the sidecar pod running..."
+    tail -F /dev/null
+  get-kubelet-labels.sh:
+    #!/bin/bash
+    ps -ef | grep bin/kubelet | tr ' ' '\n' | grep node-labels | cut -d= -f2- | tr ',' '|'
+  install-siriusec-systemd.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    echo "[install-siriusec-systemd] Installing systemd binaries inside container"
+    apt-get -y update && apt-get -y install systemd
+
+    HOST_SYSTEMD_UNIT_PATH=/etc/systemd/system/siriusec.service
+    echo "[install-siriusec-systemd] Writing ${HOST_SYSTEMD_UNIT_PATH} to host filesystem"
+    cat << EOF > ${HOST_SYSTEMD_UNIT_PATH}
+    [Unit]
+    Description=Siriusec SSH Service
+    After=network.target
+
+    [Service]
+    Type=simple
+    Restart=on-failure
+    ExecStart=/usr/local/bin/siriusec start -c /etc/siriusec/siriusec.yaml --pid-file=/run/siriusec.pid
+    ExecReload=/bin/kill -HUP \$MAINPID
+    PIDFile=/run/siriusec.pid
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+
+    echo "[install-siriusec-systemd] ${HOST_SYSTEMD_UNIT_PATH}:"
+    cat ${HOST_SYSTEMD_UNIT_PATH}
+
+    echo "[install-siriusec-systemd] systemctl daemon-reload"
+    systemctl daemon-reload
+
+    CONTAINER_SIRIUSEC_BINARY_PATH=/usr/local/bin/siriusec
+    HOST_SIRIUSEC_BINARY_PATH=/host/usr/local/bin/siriusec
+    if [ -f /host/usr/local/bin/siriusec ]; then
+      echo "[install-siriusec-systemd] systemctl stop siriusec.service"
+      systemctl stop siriusec.service
+      echo "[install-siriusec-systemd] rm -f ${HOST_SIRIUSEC_BINARY_PATH}"
+      rm -f ${HOST_SIRIUSEC_BINARY_PATH}
+    fi
+    echo "[install-siriusec-systemd] cp ${CONTAINER_SIRIUSEC_BINARY_PATH} ${HOST_SIRIUSEC_BINARY_PATH}"
+    cp ${CONTAINER_SIRIUSEC_BINARY_PATH} ${HOST_SIRIUSEC_BINARY_PATH}
+    echo "[install-siriusec-systemd] ${HOST_SIRIUSEC_BINARY_PATH}:"
+    ls -l ${HOST_SIRIUSEC_BINARY_PATH}
+    echo "[install-siriusec-systemd] ${HOST_SIRIUSEC_BINARY_PATH} version:"
+    ${HOST_SIRIUSEC_BINARY_PATH} version
+
+    CONTAINER_SIRIUSEC_CONFIG_PATH=/etc/siriusec/siriusec.yaml
+    HOST_SIRIUSEC_CONFIG_PATH=/host/etc/siriusec/siriusec.yaml
+    echo "[install-siriusec-systemd] Writing Siriusec config (${HOST_SIRIUSEC_CONFIG_PATH}) to host filesystem"
+    cp ${CONTAINER_SIRIUSEC_CONFIG_PATH} ${HOST_SIRIUSEC_CONFIG_PATH}
+    echo "[install-siriusec-systemd] Siriusec config:"
+    cat ${HOST_SIRIUSEC_CONFIG_PATH}
+
+    HOST_SIRIUSEC_STORAGE_PATH=/host/var/lib/siriusec
+    echo "[install-siriusec-systemd] ${HOST_SIRIUSEC_STORAGE_PATH}:"
+    ls -l ${HOST_SIRIUSEC_STORAGE_PATH}
+    if [ -d ${HOST_SIRIUSEC_STORAGE_PATH}/cache ]; then
+      echo "[install-siriusec-systemd] Found cached credentials on the node, removing"
+      echo "[install-siriusec-systemd] rm -rf ${HOST_SIRIUSEC_STORAGE_PATH}/*"
+      rm -rf ${HOST_SIRIUSEC_STORAGE_PATH}/*
+      echo "[install-siriusec-systemd] mkdir -p ${HOST_SIRIUSEC_STORAGE_PATH}"
+      mkdir -p ${HOST_SIRIUSEC_STORAGE_PATH}
+    fi
+
+    CONTAINER_LABELS_SCRIPT_PATH=/usr/local/bin/siriusec-scripts/get-kubelet-labels.sh
+    HOST_LABELS_SCRIPT_PATH=/host/usr/local/bin/get-kubelet-labels.sh
+    echo "[install-siriusec-systemd] cp ${CONTAINER_LABELS_SCRIPT_PATH} ${HOST_LABELS_SCRIPT_PATH}"
+    cp ${CONTAINER_LABELS_SCRIPT_PATH} ${HOST_LABELS_SCRIPT_PATH}
+
+    echo "[install-siriusec-systemd] systemctl enable siriusec.service"
+    systemctl enable siriusec.service
+
+    echo "[install-siriusec-systemd] systemctl start siriusec.service"
+    systemctl start siriusec.service
+
+    echo "[install-siriusec-systemd] systemctl status siriusec.service:"
+    systemctl status siriusec.service
+
+    echo "[install-siriusec-systemd] Siriusec started. Tailing log..."
+    tail -F /var/log/siriusec.log

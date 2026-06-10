@@ -30,11 +30,11 @@ type ProvisionToken interface {
 	Resource
 	// SetMetadata sets resource metatada
 	SetMetadata(meta Metadata)
-	// GetRoles returns a list of teleport roles
+	// GetRoles returns a list of siriusec roles
 	// that will be granted to the user of the token
 	// in the crendentials
 	GetRoles() SystemRoles
-	// SetRoles sets teleport roles
+	// SetRoles sets siriusec roles
 	SetRoles(SystemRoles)
 	// GetAllowRules returns the list of allow rules
 	GetAllowRules() []*TokenRule
@@ -110,14 +110,14 @@ func (p *ProvisionTokenV2) GetVersion() string {
 	return p.Version
 }
 
-// GetRoles returns a list of teleport roles
+// GetRoles returns a list of siriusec roles
 // that will be granted to the user of the token
 // in the crendentials
 func (p *ProvisionTokenV2) GetRoles() SystemRoles {
 	return p.Spec.Roles
 }
 
-// SetRoles sets teleport roles
+// SetRoles sets siriusec roles
 func (p *ProvisionTokenV2) SetRoles(r SystemRoles) {
 	p.Spec.Roles = r
 }

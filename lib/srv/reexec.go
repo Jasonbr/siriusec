@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -32,7 +31,7 @@ import (
 
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/pam"
 	"github.com/siriusec/siriusec/lib/shell"
 	"github.com/siriusec/siriusec/lib/srv/uacc"
@@ -42,7 +41,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ExecCommand contains the payload to "teleport exec" which will be used to
+// ExecCommand contains the payload to "siriusec exec" which will be used to
 // construct and execute a shell.
 type ExecCommand struct {
 	// Command is the command to execute. If an interactive session is being
@@ -58,7 +57,7 @@ type ExecCommand struct {
 	// Login is the local *nix account.
 	Login string `json:"login"`
 
-	// Roles is the list of Teleport roles assigned to the Siriusec identity.
+	// Roles is the list of Siriusec roles assigned to the Siriusec identity.
 	Roles []string `json:"roles"`
 
 	// ClusterName is the name of the Siriusec cluster.
@@ -130,23 +129,23 @@ func RunCommand() (io.Writer, int, error) {
 	// Parent sends the command payload in the third file descriptor.
 	cmdfd := os.NewFile(uintptr(3), "/proc/self/fd/3")
 	if cmdfd == nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.BadParameter("command pipe not found")
+		return errorWriter, siriusec.RemoteCommandFailure, trace.BadParameter("command pipe not found")
 	}
 	contfd := os.NewFile(uintptr(4), "/proc/self/fd/4")
 	if contfd == nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.BadParameter("continue pipe not found")
+		return errorWriter, siriusec.RemoteCommandFailure, trace.BadParameter("continue pipe not found")
 	}
 
 	// Read in the command payload.
 	var b bytes.Buffer
 	_, err := b.ReadFrom(cmdfd)
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 	var c ExecCommand
 	err = json.Unmarshal(b.Bytes(), &c)
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 
 	var tty *os.File
@@ -160,7 +159,7 @@ func RunCommand() (io.Writer, int, error) {
 		pty = os.NewFile(uintptr(5), "/proc/self/fd/5")
 		tty = os.NewFile(uintptr(6), "/proc/self/fd/6")
 		if pty == nil || tty == nil {
-			return errorWriter, teleport.RemoteCommandFailure, trace.BadParameter("pty and tty not found")
+			return errorWriter, siriusec.RemoteCommandFailure, trace.BadParameter("pty and tty not found")
 		}
 		errorWriter = tty
 		err = uacc.Open(c.UaccMetadata.UtmpPath, c.UaccMetadata.WtmpPath, c.Login, c.UaccMetadata.Hostname, c.UaccMetadata.RemoteAddr, tty)
@@ -189,8 +188,8 @@ func RunCommand() (io.Writer, int, error) {
 			stderr = tty
 		} else {
 			stdin = os.Stdin
-			stdout = ioutil.Discard
-			stderr = ioutil.Discard
+			stdout = io.Discard
+			stderr = io.Discard
 		}
 
 		// Open the PAM context.
@@ -207,7 +206,7 @@ func RunCommand() (io.Writer, int, error) {
 			Stderr: stderr,
 		})
 		if err != nil {
-			return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+			return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 		}
 		defer pamContext.Close()
 
@@ -218,20 +217,20 @@ func RunCommand() (io.Writer, int, error) {
 	// Build the actual command that will launch the shell.
 	cmd, err := buildCommand(&c, tty, pty, pamEnvironment)
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 
 	// Wait until the continue signal is received from Siriusec signaling that
 	// the child process has been placed in a cgroup.
 	err = waitForContinue(contfd)
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 
 	// Start the command.
 	err = cmd.Start()
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 
 	// Wait for the command to exit. It doesn't make sense to print an error
@@ -244,11 +243,11 @@ func RunCommand() (io.Writer, int, error) {
 	if uaccEnabled {
 		uaccErr := uacc.Close(c.UaccMetadata.UtmpPath, c.UaccMetadata.WtmpPath, tty)
 		if uaccErr != nil {
-			return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(uaccErr)
+			return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(uaccErr)
 		}
 	}
 
-	return ioutil.Discard, exitCode(err), trace.Wrap(err)
+	return io.Discard, exitCode(err), trace.Wrap(err)
 }
 
 // RunForward reads in the command to run from the parent process (over a
@@ -261,19 +260,19 @@ func RunForward() (io.Writer, int, error) {
 	// Parent sends the command payload in the third file descriptor.
 	cmdfd := os.NewFile(uintptr(3), "/proc/self/fd/3")
 	if cmdfd == nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.BadParameter("command pipe not found")
+		return errorWriter, siriusec.RemoteCommandFailure, trace.BadParameter("command pipe not found")
 	}
 
 	// Read in the command payload.
 	var b bytes.Buffer
 	_, err := b.ReadFrom(cmdfd)
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 	var c ExecCommand
 	err = json.Unmarshal(b.Bytes(), &c)
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 
 	// If PAM is enabled, open a PAM context. This has to be done before anything
@@ -285,15 +284,15 @@ func RunForward() (io.Writer, int, error) {
 			ServiceName: c.PAMConfig.ServiceName,
 			Login:       c.Login,
 			Stdin:       os.Stdin,
-			Stdout:      ioutil.Discard,
-			Stderr:      ioutil.Discard,
+			Stdout:      io.Discard,
+			Stderr:      io.Discard,
 			// Set Siriusec specific environment variables that PAM modules
 			// like pam_script.so can pick up to potentially customize the
 			// account/session.
 			Env: c.PAMConfig.Environment,
 		})
 		if err != nil {
-			return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+			return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 		}
 		defer pamContext.Close()
 	}
@@ -301,7 +300,7 @@ func RunForward() (io.Writer, int, error) {
 	// Connect to the target host.
 	conn, err := net.Dial("tcp", c.DestinationAddress)
 	if err != nil {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 	defer conn.Close()
 
@@ -328,10 +327,10 @@ func RunForward() (io.Writer, int, error) {
 	// Block until copy is complete in either direction. The other direction
 	// will get cleaned up automatically.
 	if err = <-errorCh; err != nil && err != io.EOF {
-		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+		return errorWriter, siriusec.RemoteCommandFailure, trace.Wrap(err)
 	}
 
-	return ioutil.Discard, teleport.RemoteCommandSuccess, nil
+	return io.Discard, siriusec.RemoteCommandSuccess, nil
 }
 
 // RunAndExit will run the requested command and then exit. This wrapper
@@ -343,12 +342,12 @@ func RunAndExit(commandType string) {
 	var err error
 
 	switch commandType {
-	case teleport.ExecSubCommand:
+	case siriusec.ExecSubCommand:
 		w, code, err = RunCommand()
-	case teleport.ForwardSubCommand:
+	case siriusec.ForwardSubCommand:
 		w, code, err = RunForward()
 	default:
-		w, code, err = os.Stderr, teleport.RemoteCommandFailure, fmt.Errorf("unknown command type: %v", commandType)
+		w, code, err = os.Stderr, siriusec.RemoteCommandFailure, fmt.Errorf("unknown command type: %v", commandType)
 	}
 	if err != nil {
 		s := fmt.Sprintf("Failed to launch: %v.\r\n", err)
@@ -543,16 +542,16 @@ func ConfigureCommand(ctx *ServerContext) (*exec.Cmd, error) {
 
 	// The channel type determines the subcommand to execute (execution or
 	// port forwarding).
-	subCommand := teleport.ExecSubCommand
-	if ctx.ChannelType == teleport.ChanDirectTCPIP {
-		subCommand = teleport.ForwardSubCommand
+	subCommand := siriusec.ExecSubCommand
+	if ctx.ChannelType == siriusec.ChanDirectTCPIP {
+		subCommand = siriusec.ForwardSubCommand
 	}
 
 	// Build the list of arguments to have Siriusec re-exec itself. The "-d" flag
 	// is appended if Siriusec is running in debug mode.
 	args := []string{executable, subCommand}
 
-	// Build the "teleport exec" command.
+	// Build the "siriusec exec" command.
 	cmd := &exec.Cmd{
 		Path: executable,
 		Args: args,

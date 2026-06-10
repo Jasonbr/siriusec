@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/services"
@@ -102,7 +102,7 @@ func (p *clusterPeers) String() string {
 func (p *clusterPeers) GetStatus() string {
 	peer, err := p.pickPeer()
 	if err != nil {
-		return teleport.RemoteClusterStatusOffline
+		return siriusec.RemoteClusterStatusOffline
 	}
 	return peer.GetStatus()
 }
@@ -143,7 +143,7 @@ func newClusterPeer(srv *server, connInfo types.TunnelConnection, offlineThresho
 		srv:      srv,
 		connInfo: connInfo,
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentReverseTunnelServer,
+			trace.Component: siriusec.ComponentReverseTunnelServer,
 			trace.ComponentFields: map[string]string{
 				"cluster": connInfo.GetClusterName(),
 			},

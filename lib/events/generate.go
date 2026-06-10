@@ -73,7 +73,7 @@ func GenerateTestSession(params SessionParams) []apievents.AuditEvent {
 			ServerLabels: map[string]string{
 				"kernel": "5.3.0-42-generic",
 				"date":   "Mon Mar 30 08:58:54 PDT 2020",
-				"group":  "gravitational/devc",
+				"group":  "siriusec/devc",
 			},
 			ServerHostname:  "planet",
 			ServerNamespace: "default",

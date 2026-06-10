@@ -30,7 +30,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -978,7 +978,7 @@ func (s *ServicesTestSuite) GithubConnectorCRUD(c *check.C) {
 			Display:      "Github",
 			TeamsToLogins: []types.TeamMapping{
 				{
-					Organization: "gravitational",
+					Organization: "siriusec",
 					Team:         "admins",
 					Logins:       []string{"admin"},
 					KubeGroups:   []string{"system:masters"},
@@ -1027,7 +1027,7 @@ func (s *ServicesTestSuite) RemoteClustersCRUD(c *check.C) {
 	rc, err := types.NewRemoteCluster(clusterName)
 	c.Assert(err, check.IsNil)
 
-	rc.SetConnectionStatus(teleport.RemoteClusterStatusOffline)
+	rc.SetConnectionStatus(siriusec.RemoteClusterStatusOffline)
 
 	err = s.PresenceS.CreateRemoteCluster(rc)
 	c.Assert(err, check.IsNil)
@@ -1706,7 +1706,7 @@ func (s *ServicesTestSuite) Events(c *check.C) {
 			},
 			crud: func(context.Context) types.Resource {
 				rc, err := types.NewRemoteCluster("example.com")
-				rc.SetConnectionStatus(teleport.RemoteClusterStatusOffline)
+				rc.SetConnectionStatus(siriusec.RemoteClusterStatusOffline)
 				c.Assert(err, check.IsNil)
 				c.Assert(s.PresenceS.CreateRemoteCluster(rc), check.IsNil)
 

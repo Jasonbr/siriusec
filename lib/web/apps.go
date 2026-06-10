@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package web implements web proxy handler that provides
-// web interface to view and connect to teleport nodes
+// web interface to view and connect to siriusec nodes
 package web
 
 import (

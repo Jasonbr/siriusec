@@ -31,7 +31,7 @@ import (
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/unicode"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	authproto "github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -119,7 +119,7 @@ func NewTerminal(ctx context.Context, req TerminalRequest, authProvider AuthProv
 
 	return &TerminalHandler{
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.ComponentWebsocket,
+			trace.Component: siriusec.ComponentWebsocket,
 		}),
 		params:       req,
 		ctx:          sessCtx,
@@ -408,7 +408,7 @@ func (t *TerminalHandler) promptMFAChallenge(ws *websocket.Conn) client.PromptMF
 }
 
 // startPingLoop starts a loop that will continuously send a ping frame through the websocket
-// to prevent the connection between web client and teleport proxy from becoming idle.
+// to prevent the connection between web client and siriusec proxy from becoming idle.
 // Interval is determined by the keep_alive_interval config set by user (or default).
 // Loop will terminate when there is an error sending ping frame or when terminal session is closed.
 func (t *TerminalHandler) startPingLoop(ws *websocket.Conn) {
@@ -449,7 +449,7 @@ func (t *TerminalHandler) streamTerminal(ws *websocket.Conn, tc *client.Siriusec
 
 	// 版本 5.0 计划: 将 UUID 连接作为默认方式而非后备方案
 	//
-	if err != nil && strings.Contains(err.Error(), teleport.NodeIsAmbiguous) {
+	if err != nil && strings.Contains(err.Error(), siriusec.NodeIsAmbiguous) {
 		t.log.Debugf("Ambiguous hostname %q, attempting to connect by UUID (%q).", t.hostName, t.hostUUID)
 		tc.Host = t.hostUUID
 		// We don't technically need to zero the HostPort, but future version won't look up

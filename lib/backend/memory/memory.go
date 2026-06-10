@@ -23,7 +23,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/backend"
 
@@ -81,7 +81,7 @@ func (cfg *Config) CheckAndSetDefaults() error {
 		cfg.Clock = clockwork.NewRealClock()
 	}
 	if cfg.Component == "" {
-		cfg.Component = teleport.ComponentMemory
+		cfg.Component = siriusec.ComponentMemory
 	}
 	return nil
 }
@@ -99,7 +99,7 @@ func New(cfg Config) (*Memory, error) {
 	m := &Memory{
 		Mutex: &sync.Mutex{},
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentMemory,
+			trace.Component: siriusec.ComponentMemory,
 		}),
 		Config: cfg,
 		tree:   btree.New(cfg.BTreeDegree),

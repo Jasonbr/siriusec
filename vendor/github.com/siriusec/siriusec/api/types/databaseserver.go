@@ -32,8 +32,8 @@ type DatabaseServer interface {
 	Resource
 	// GetNamespace returns server namespace.
 	GetNamespace() string
-	// GetTeleportVersion returns the teleport version the server is running on.
-	GetTeleportVersion() string
+	// GetSiriusecVersion returns the siriusec version the server is running on.
+	GetSiriusecVersion() string
 	// GetHostname returns the server hostname.
 	GetHostname() string
 	// GetHostID returns ID of the host the server is running on.
@@ -102,8 +102,8 @@ func (s *DatabaseServerV3) GetVersion() string {
 	return s.Version
 }
 
-// GetTeleportVersion returns the Teleport version the server is running.
-func (s *DatabaseServerV3) GetTeleportVersion() string {
+// GetSiriusecVersion returns the Siriusec version the server is running.
+func (s *DatabaseServerV3) GetSiriusecVersion() string {
 	return s.Spec.Version
 }
 
@@ -282,7 +282,7 @@ func (s *DatabaseServerV3) GetType() string {
 // String returns the server string representation.
 func (s *DatabaseServerV3) String() string {
 	return fmt.Sprintf("DatabaseServer(Name=%v, Type=%v, Version=%v, Labels=%v, HostID=%v)",
-		s.GetName(), s.GetType(), s.GetTeleportVersion(), s.GetStaticLabels(), s.Spec.HostID)
+		s.GetName(), s.GetType(), s.GetSiriusecVersion(), s.GetStaticLabels(), s.Spec.HostID)
 }
 
 // setStaticFields sets static resource header and metadata fields.

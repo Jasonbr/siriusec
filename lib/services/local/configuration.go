@@ -21,7 +21,7 @@ import (
 
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/backend"
 	"github.com/siriusec/siriusec/lib/modules"
@@ -33,7 +33,7 @@ import (
 
 var clusterNameNotFound = prometheus.NewCounter(
 	prometheus.CounterOpts{
-		Name: teleport.MetricClusterNameNotFound,
+		Name: siriusec.MetricClusterNameNotFound,
 		Help: "Number of times a cluster name was not found",
 	},
 )
@@ -57,7 +57,7 @@ func NewClusterConfigurationService(backend backend.Backend) (*ClusterConfigurat
 
 // GetClusterName gets the name of the cluster from the backend.
 func (s *ClusterConfigurationService) GetClusterName(opts ...services.MarshalOption) (types.ClusterName, error) {
-	item, err := s.Get(context.TODO(), backend.Key(clusterConfigPrefix, namePrefix))
+	item, err := s.Get(context.Background(), backend.Key(clusterConfigPrefix, namePrefix))
 	if err != nil {
 		if trace.IsNotFound(err) {
 			clusterNameNotFound.Inc()
@@ -71,7 +71,7 @@ func (s *ClusterConfigurationService) GetClusterName(opts ...services.MarshalOpt
 
 // DeleteClusterName deletes types.ClusterName from the backend.
 func (s *ClusterConfigurationService) DeleteClusterName() error {
-	err := s.Delete(context.TODO(), backend.Key(clusterConfigPrefix, namePrefix))
+	err := s.Delete(context.Background(), backend.Key(clusterConfigPrefix, namePrefix))
 	if err != nil {
 		if trace.IsNotFound(err) {
 			return trace.NotFound("cluster configuration not found")
@@ -100,7 +100,7 @@ func (s *ClusterConfigurationService) ForceSetClusterName(c types.ClusterName) e
 		return trace.Wrap(err)
 	}
 
-	_, err = s.Create(context.TODO(), backend.Item{
+	_, err = s.Create(context.Background(), backend.Item{
 		Key:     backend.Key(clusterConfigPrefix, namePrefix),
 		Value:   value,
 		Expires: c.Expiry(),
@@ -124,7 +124,7 @@ func (s *ClusterConfigurationService) UpsertClusterName(c types.ClusterName) err
 		return trace.Wrap(err)
 	}
 
-	_, err = s.Put(context.TODO(), backend.Item{
+	_, err = s.Put(context.Background(), backend.Item{
 		Key:     backend.Key(clusterConfigPrefix, namePrefix),
 		Value:   value,
 		Expires: c.Expiry(),
@@ -139,7 +139,7 @@ func (s *ClusterConfigurationService) UpsertClusterName(c types.ClusterName) err
 
 // GetStaticTokens gets the list of static tokens used to provision nodes.
 func (s *ClusterConfigurationService) GetStaticTokens() (types.StaticTokens, error) {
-	item, err := s.Get(context.TODO(), backend.Key(clusterConfigPrefix, staticTokensPrefix))
+	item, err := s.Get(context.Background(), backend.Key(clusterConfigPrefix, staticTokensPrefix))
 	if err != nil {
 		if trace.IsNotFound(err) {
 			return nil, trace.NotFound("static tokens not found")
@@ -156,7 +156,7 @@ func (s *ClusterConfigurationService) SetStaticTokens(c types.StaticTokens) erro
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	_, err = s.Put(context.TODO(), backend.Item{
+	_, err = s.Put(context.Background(), backend.Item{
 		Key:     backend.Key(clusterConfigPrefix, staticTokensPrefix),
 		Value:   value,
 		Expires: c.Expiry(),
@@ -171,7 +171,7 @@ func (s *ClusterConfigurationService) SetStaticTokens(c types.StaticTokens) erro
 
 // DeleteStaticTokens deletes static tokens
 func (s *ClusterConfigurationService) DeleteStaticTokens() error {
-	err := s.Delete(context.TODO(), backend.Key(clusterConfigPrefix, staticTokensPrefix))
+	err := s.Delete(context.Background(), backend.Key(clusterConfigPrefix, staticTokensPrefix))
 	if err != nil {
 		if trace.IsNotFound(err) {
 			return trace.NotFound("static tokens are not found")
@@ -236,10 +236,9 @@ func (s *ClusterConfigurationService) DeleteAuthPreference(ctx context.Context) 
 
 // GetClusterConfig gets types.ClusterConfig from the backend.
 func (s *ClusterConfigurationService) GetClusterConfig(opts ...services.MarshalOption) (types.ClusterConfig, error) {
-	ctx := context.TODO()
 
 	var clusterConfig types.ClusterConfig
-	item, err := s.Get(ctx, backend.Key(clusterConfigPrefix, generalPrefix))
+	item, err := s.Get(context.Background(), backend.Key(clusterConfigPrefix, generalPrefix))
 	if err != nil {
 		if !trace.IsNotFound(err) {
 			return nil, trace.Wrap(err)
@@ -272,7 +271,7 @@ func (s *ClusterConfigurationService) GetClusterConfig(opts ...services.MarshalO
 	// To ensure backward compatibility, extend the fetched ClusterConfig
 	// resource with the values that are now stored in ClusterAuditConfig.
 	// DELETE IN 8.0.0
-	auditConfig, err := s.GetClusterAuditConfig(context.TODO())
+	auditConfig, err := s.GetClusterAuditConfig(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -283,7 +282,7 @@ func (s *ClusterConfigurationService) GetClusterConfig(opts ...services.MarshalO
 	// To ensure backward compatibility, extend the fetched ClusterConfig
 	// resource with the values that are now stored in ClusterNetworkingConfig.
 	// DELETE IN 8.0.0
-	netConfig, err := s.GetClusterNetworkingConfig(ctx)
+	netConfig, err := s.GetClusterNetworkingConfig(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -294,7 +293,7 @@ func (s *ClusterConfigurationService) GetClusterConfig(opts ...services.MarshalO
 	// To ensure backward compatibility, extend the fetched ClusterConfig
 	// resource with the values that are now stored in SessionRecordingConfig.
 	// DELETE IN 8.0.0
-	recConfig, err := s.GetSessionRecordingConfig(ctx)
+	recConfig, err := s.GetSessionRecordingConfig(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -305,7 +304,7 @@ func (s *ClusterConfigurationService) GetClusterConfig(opts ...services.MarshalO
 	// To ensure backward compatibility, extend the fetched ClusterConfig
 	// resource with the values that are now stored in AuthPreference.
 	// DELETE IN 8.0.0
-	authPref, err := s.GetAuthPreference(ctx)
+	authPref, err := s.GetAuthPreference(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -318,7 +317,7 @@ func (s *ClusterConfigurationService) GetClusterConfig(opts ...services.MarshalO
 
 // DeleteClusterConfig deletes types.ClusterConfig from the backend.
 func (s *ClusterConfigurationService) DeleteClusterConfig() error {
-	err := s.Delete(context.TODO(), backend.Key(clusterConfigPrefix, generalPrefix))
+	err := s.Delete(context.Background(), backend.Key(clusterConfigPrefix, generalPrefix))
 	if err != nil {
 		if trace.IsNotFound(err) {
 			return trace.NotFound("cluster configuration not found")
@@ -363,7 +362,7 @@ func (s *ClusterConfigurationService) ForceSetClusterConfig(c types.ClusterConfi
 		ID:    c.GetResourceID(),
 	}
 
-	_, err = s.Put(context.TODO(), item)
+	_, err = s.Put(context.Background(), item)
 	if err != nil {
 		return trace.Wrap(err)
 	}

@@ -1,0 +1,17 @@
+[Unit]
+Description=Siriusec SSH server
+After=network.target 
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+ExecStartPre=/bin/mkdir -p -m0700 /var/lib/siriusec
+ExecStart=/usr/local/bin/siriusec start -c /opt/siriusec/siriusec.yaml
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target

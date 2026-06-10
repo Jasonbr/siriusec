@@ -35,7 +35,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -66,7 +66,7 @@ import (
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentTSH,
+	trace.Component: siriusec.ComponentTSH,
 })
 
 // CLIConf stores command line arguments and flags:
@@ -239,7 +239,7 @@ type CLIConf struct {
 	// unsetEnvironment unsets Siriusec related environment variables.
 	unsetEnvironment bool
 
-	// mockSSOLogin used in tests to override sso login handler in teleport client.
+	// mockSSOLogin used in tests to override sso login handler in siriusec client.
 	mockSSOLogin client.SSOLoginFunc
 
 	// HomePath is where tsh stores profiles
@@ -269,19 +269,19 @@ func main() {
 }
 
 const (
-	authEnvVar        = "TELEPORT_AUTH"
-	clusterEnvVar     = "TELEPORT_CLUSTER"
-	kubeClusterEnvVar = "TELEPORT_KUBE_CLUSTER"
-	loginEnvVar       = "TELEPORT_LOGIN"
-	bindAddrEnvVar    = "TELEPORT_LOGIN_BIND_ADDR"
-	proxyEnvVar       = "TELEPORT_PROXY"
-	homeEnvVar        = "TELEPORT_HOME"
+	authEnvVar        = "SIRIUSEC_AUTH"
+	clusterEnvVar     = "SIRIUSEC_CLUSTER"
+	kubeClusterEnvVar = "SIRIUSEC_KUBE_CLUSTER"
+	loginEnvVar       = "SIRIUSEC_LOGIN"
+	bindAddrEnvVar    = "SIRIUSEC_LOGIN_BIND_ADDR"
+	proxyEnvVar       = "SIRIUSEC_PROXY"
+	homeEnvVar        = "SIRIUSEC_HOME"
 	// TELEPORT_SITE uses the older deprecated "site" terminology to refer to a
 	// cluster. All new code should use TELEPORT_CLUSTER instead.
-	siteEnvVar             = "TELEPORT_SITE"
-	userEnvVar             = "TELEPORT_USER"
-	addKeysToAgentEnvVar   = "TELEPORT_ADD_KEYS_TO_AGENT"
-	useLocalSSHAgentEnvVar = "TELEPORT_USE_LOCAL_SSH_AGENT"
+	siteEnvVar             = "SIRIUSEC_SITE"
+	userEnvVar             = "SIRIUSEC_USER"
+	addKeysToAgentEnvVar   = "SIRIUSEC_ADD_KEYS_TO_AGENT"
+	useLocalSSHAgentEnvVar = "SIRIUSEC_USE_LOCAL_SSH_AGENT"
 
 	clusterHelp = "Specify the Sirius cluster to connect"
 	browserHelp = "Set to 'none' to suppress browser opening on login"
@@ -408,7 +408,7 @@ func Run(args []string, opts ...cliOption) error {
 	// play
 	play := app.Command("play", "Replay the recorded SSH session")
 	play.Flag("cluster", clusterHelp).StringVar(&cf.SiteName)
-	play.Flag("format", "Format output (json, pty)").Short('f').Default(teleport.PTY).StringVar(&cf.Format)
+	play.Flag("format", "Format output (json, pty)").Short('f').Default(siriusec.PTY).StringVar(&cf.Format)
 	play.Arg("session-id", "ID of the session to play").Required().StringVar(&cf.SessionID)
 
 	// scp
@@ -424,7 +424,7 @@ func Run(args []string, opts ...cliOption) error {
 	ls.Flag("cluster", clusterHelp).StringVar(&cf.SiteName)
 	ls.Arg("labels", "List of labels to filter node list").StringVar(&cf.UserHost)
 	ls.Flag("verbose", "One-line output (for text format), including node UUIDs").Short('v').BoolVar(&cf.Verbose)
-	ls.Flag("format", "Format output (text, json, names)").Short('f').Default(teleport.Text).StringVar(&cf.Format)
+	ls.Flag("format", "Format output (text, json, names)").Short('f').Default(siriusec.Text).StringVar(&cf.Format)
 	// clusters
 	clusters := app.Command("clusters", "List available Sirius clusters")
 	clusters.Flag("quiet", "Quiet mode").Short('q').BoolVar(&cf.Quiet)
@@ -483,7 +483,7 @@ func Run(args []string, opts ...cliOption) error {
 	req := app.Command("request", "Manage access requests").Alias("requests")
 
 	reqList := req.Command("ls", "List access requests").Alias("list")
-	reqList.Flag("format", "Format output (text, json)").Short('f').Default(teleport.Text).StringVar(&cf.Format)
+	reqList.Flag("format", "Format output (text, json)").Short('f').Default(siriusec.Text).StringVar(&cf.Format)
 	reqList.Flag("reviewable", "Only show requests reviewable by current user").BoolVar(&cf.ReviewableRequests)
 	reqList.Flag("suggested", "Only show requests that suggest current user as reviewer").BoolVar(&cf.SuggestedRequests)
 	reqList.Flag("my-requests", "Only show requests created by current user").BoolVar(&cf.MyRequests)
@@ -570,7 +570,8 @@ func Run(args []string, opts ...cliOption) error {
 		return trace.Wrap(err)
 	}
 
-	setEnvFlags(&cf, os.Getenv)
+	ensureEnvFallback()
+	setEnvFlags(&cf, siriusecGetenv)
 
 	switch command {
 	case ver.FullCommand():
@@ -661,7 +662,7 @@ func Run(args []string, opts ...cliOption) error {
 // onPlay replays a session with a given ID
 func onPlay(cf *CLIConf) error {
 	switch cf.Format {
-	case teleport.PTY:
+	case siriusec.PTY:
 		switch {
 		case path.Ext(cf.SessionID) == ".tar":
 			sid := sessionIDFromPath(cf.SessionID)
@@ -670,7 +671,7 @@ func onPlay(cf *CLIConf) error {
 			if err != nil {
 				return trace.ConvertSystemError(err)
 			}
-			if err := client.PlayFile(context.TODO(), tarFile, sid); err != nil {
+			if err := client.PlayFile(context.Background(), tarFile, sid); err != nil {
 				return trace.Wrap(err)
 			}
 		default:
@@ -678,7 +679,7 @@ func onPlay(cf *CLIConf) error {
 			if err != nil {
 				return trace.Wrap(err)
 			}
-			if err := tc.Play(context.TODO(), cf.Namespace, cf.SessionID); err != nil {
+			if err := tc.Play(context.Background(), cf.Namespace, cf.SessionID); err != nil {
 				return trace.Wrap(err)
 			}
 		}
@@ -702,7 +703,7 @@ func exportFile(path string, format string) error {
 		return trace.ConvertSystemError(err)
 	}
 	defer f.Close()
-	err = events.Export(context.TODO(), f, os.Stdout, format)
+	err = events.Export(context.Background(), f, os.Stdout, format)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -737,7 +738,7 @@ func onLogin(cf *CLIConf) error {
 		}
 	}
 
-	// make the teleport client and retrieve the certificate from the proxy:
+	// make the siriusec client and retrieve the certificate from the proxy:
 	tc, err := makeClient(cf, true)
 	if err != nil {
 		return trace.Wrap(err)
@@ -1259,15 +1260,15 @@ func executeAccessRequest(cf *CLIConf, tc *client.SiriusecClient) error {
 
 func printNodes(nodes []types.Server, format string, verbose bool) error {
 	switch strings.ToLower(format) {
-	case teleport.Text:
+	case siriusec.Text:
 		printNodesAsText(nodes, verbose)
-	case teleport.JSON:
+	case siriusec.JSON:
 		out, err := json.MarshalIndent(nodes, "", "  ")
 		if err != nil {
 			return trace.Wrap(err)
 		}
 		fmt.Println(string(out))
-	case teleport.Names:
+	case siriusec.Names:
 		for _, n := range nodes {
 			fmt.Println(n.GetHostname())
 		}
@@ -1498,7 +1499,7 @@ func onListClusters(cf *CLIConf) error {
 	}
 
 	t.AddRow([]string{
-		rootClusterName, teleport.RemoteClusterStatusOnline, "root", showSelected(rootClusterName),
+		rootClusterName, siriusec.RemoteClusterStatusOnline, "root", showSelected(rootClusterName),
 	})
 	for _, cluster := range leafClusters {
 		t.AddRow([]string{
@@ -1521,7 +1522,7 @@ func onSSH(cf *CLIConf) error {
 		return tc.SSH(cf.Context, cf.RemoteCommand, cf.LocalExec)
 	})
 	if err != nil {
-		if strings.Contains(utils.UserMessageFromError(err), teleport.NodeIsAmbiguous) {
+		if strings.Contains(utils.UserMessageFromError(err), siriusec.NodeIsAmbiguous) {
 			allNodes, err := tc.ListAllNodes(cf.Context)
 			if err != nil {
 				return trace.Wrap(err)
@@ -1605,7 +1606,7 @@ func onJoin(cf *CLIConf) error {
 		return trace.BadParameter("'%v' is not a valid session ID (must be GUID)", cf.SessionID)
 	}
 	err = client.RetryWithRelogin(cf.Context, tc, func() error {
-		return tc.Join(context.TODO(), cf.Namespace, *sid, nil)
+		return tc.Join(context.Background(), cf.Namespace, *sid, nil)
 	})
 	if err != nil {
 		return trace.Wrap(err)
@@ -1910,7 +1911,7 @@ func makeClient(cf *CLIConf, useProfileLogin bool) (*client.SiriusecClient, erro
 // defaultWebProxyPorts is the order of default proxy ports to try, in order that
 // they will be tried.
 var defaultWebProxyPorts = []int{
-	defaults.HTTPListenPort, teleport.StandardHTTPSPort,
+	defaults.HTTPListenPort, siriusec.StandardHTTPSPort,
 }
 
 // setClientWebProxyAddr configures the client WebProxyAddr and SSHProxyAddr
@@ -1955,7 +1956,7 @@ func parseCertificateCompatibilityFlag(compatibility string, certificateFormat s
 	switch {
 	// if nothing is passed in, the role will decide
 	case compatibility == "" && certificateFormat == "":
-		return teleport.CertificateFormatUnspecified, nil
+		return siriusec.CertificateFormatUnspecified, nil
 	// supporting the old --compat format for backward compatibility
 	case compatibility != "" && certificateFormat == "":
 		return utils.CheckCertificateFormatFlag(compatibility)
@@ -2277,18 +2278,47 @@ func onEnvironment(cf *CLIConf) error {
 		fmt.Printf("unset %v\n", proxyEnvVar)
 		fmt.Printf("unset %v\n", clusterEnvVar)
 		fmt.Printf("unset %v\n", kubeClusterEnvVar)
-		fmt.Printf("unset %v\n", teleport.EnvKubeConfig)
+		fmt.Printf("unset %v\n", siriusec.EnvKubeConfig)
 	case !cf.unsetEnvironment:
 		fmt.Printf("export %v=%v\n", proxyEnvVar, profile.ProxyURL.Host)
 		fmt.Printf("export %v=%v\n", clusterEnvVar, profile.Cluster)
 		if kubeName := selectedKubeCluster(profile.Cluster); kubeName != "" {
 			fmt.Printf("export %v=%v\n", kubeClusterEnvVar, kubeName)
-			fmt.Printf("# set %v to a standalone kubeconfig for the selected kube cluster\n", teleport.EnvKubeConfig)
-			fmt.Printf("export %v=%v\n", teleport.EnvKubeConfig, profile.KubeConfigPath(kubeName))
+			fmt.Printf("# set %v to a standalone kubeconfig for the selected kube cluster\n", siriusec.EnvKubeConfig)
+			fmt.Printf("export %v=%v\n", siriusec.EnvKubeConfig, profile.KubeConfigPath(kubeName))
 		}
 	}
 
 	return nil
+}
+
+// siriusecGetenv provides backward-compatible environment variable lookup.
+// It checks SIRIUSEC_* variables first, falling back to TELEPORT_* equivalents.
+func siriusecGetenv(key string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	if strings.HasPrefix(key, "SIRIUSEC_") {
+		return os.Getenv("TELEPORT_" + key[len("SIRIUSEC_"):])
+	}
+	return ""
+}
+
+// ensureEnvFallback copies TELEPORT_* env vars to SIRIUSEC_* equivalents
+// if SIRIUSEC_* is not already set. Needed for kingpin's .Envar() which
+// only supports a single env var name.
+func ensureEnvFallback() {
+	for _, siriusecKey := range []string{
+		"SIRIUSEC_AUTH", "SIRIUSEC_CLUSTER", "SIRIUSEC_KUBE_CLUSTER",
+		"SIRIUSEC_LOGIN", "SIRIUSEC_LOGIN_BIND_ADDR", "SIRIUSEC_PROXY",
+		"SIRIUSEC_HOME", "SIRIUSEC_SITE", "SIRIUSEC_USER",
+		"SIRIUSEC_ADD_KEYS_TO_AGENT", "SIRIUSEC_USE_LOCAL_SSH_AGENT",
+	} {
+		teleportKey := "TELEPORT_" + siriusecKey[len("SIRIUSEC_"):]
+		if os.Getenv(siriusecKey) == "" && os.Getenv(teleportKey) != "" {
+			os.Setenv(siriusecKey, os.Getenv(teleportKey))
+		}
+	}
 }
 
 // envGetter is used to read in the environment. In production "os.Getenv"
@@ -2305,10 +2335,10 @@ func setEnvFlags(cf *CLIConf, fn envGetter) {
 	if cf.KubernetesCluster == "" {
 		setKubernetesClusterFromEnv(cf, fn)
 	}
-	setTeleportHomeFromEnv(cf, fn)
+	setSiriusecHomeFromEnv(cf, fn)
 }
 
-// setSiteNameFromEnv sets teleport site name from environment if configured.
+// setSiteNameFromEnv sets siriusec site name from environment if configured.
 // First try reading TELEPORT_CLUSTER, then the legacy term TELEPORT_SITE.
 func setSiteNameFromEnv(cf *CLIConf, fn envGetter) {
 	if clusterName := fn(siteEnvVar); clusterName != "" {
@@ -2320,13 +2350,13 @@ func setSiteNameFromEnv(cf *CLIConf, fn envGetter) {
 }
 
 // setSiriusecHomeFromEnv sets home directory from environment if configured.
-func setTeleportHomeFromEnv(cf *CLIConf, fn envGetter) {
+func setSiriusecHomeFromEnv(cf *CLIConf, fn envGetter) {
 	if homeDir := fn(homeEnvVar); homeDir != "" {
 		cf.HomePath = path.Clean(homeDir)
 	}
 }
 
-// setKubernetesClusterFromEnv sets teleport kube cluster from environment if configured.
+// setKubernetesClusterFromEnv sets siriusec kube cluster from environment if configured.
 func setKubernetesClusterFromEnv(cf *CLIConf, fn envGetter) {
 	if kubeName := fn(kubeClusterEnvVar); kubeName != "" {
 		cf.KubernetesCluster = kubeName
@@ -2341,12 +2371,12 @@ func handleUnimplementedError(ctx context.Context, perr error, cf CLIConf) error
 	tc, err := makeClient(&cf, false)
 	if err != nil {
 		log.WithError(err).Warning("Failed to create client.")
-		return trace.WrapWithMessage(perr, errMsgFormat, unknownServerVersion, teleport.Version)
+		return trace.WrapWithMessage(perr, errMsgFormat, unknownServerVersion, siriusec.Version)
 	}
 	pr, err := tc.Ping(ctx)
 	if err != nil {
 		log.WithError(err).Warning("Failed to call ping.")
-		return trace.WrapWithMessage(perr, errMsgFormat, unknownServerVersion, teleport.Version)
+		return trace.WrapWithMessage(perr, errMsgFormat, unknownServerVersion, siriusec.Version)
 	}
-	return trace.WrapWithMessage(perr, errMsgFormat, pr.ServerVersion, teleport.Version)
+	return trace.WrapWithMessage(perr, errMsgFormat, pr.ServerVersion, siriusec.Version)
 }

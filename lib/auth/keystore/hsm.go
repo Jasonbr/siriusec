@@ -55,6 +55,10 @@ type hsmKeyStore struct {
 }
 
 func NewHSMKeyStore(config *HSMConfig) (KeyStore, error) {
+	if config.Pin == "0001password" {
+		logrus.WithField(trace.Component, "HSMKeyStore").Warn(
+			"HSM is using the factory default PIN which is insecure. Change the PIN before deploying to production.")
+	}
 	cryptoConfig := &crypto11.Config{
 		Path:       config.Path,
 		TokenLabel: config.TokenLabel,

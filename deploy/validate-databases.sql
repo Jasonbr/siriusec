@@ -13,7 +13,7 @@ SHOW DATABASES;
 SELECT '=== Siriusec 相关数据库 ===' AS info;
 SELECT SCHEMA_NAME, DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
 FROM information_schema.SCHEMATA
-WHERE SCHEMA_NAME LIKE '%teleport%'
+WHERE SCHEMA_NAME LIKE '%siriusec%'
    OR SCHEMA_NAME LIKE '%siriusec%'
    OR SCHEMA_NAME LIKE '%access%'
    OR SCHEMA_NAME LIKE '%proxy%';
@@ -28,9 +28,9 @@ WHERE TABLE_SCHEMA NOT IN ('information_schema', 'mysql', 'performance_schema', 
 GROUP BY TABLE_SCHEMA
 ORDER BY TABLE_SCHEMA;
 
--- 4. 查看具体的表结构 (如果有 teleport 或 siriusec 数据库)
+-- 4. 查看具体的表结构 (如果有 siriusec 或 siriusec 数据库)
 -- 请根据实际数据库名称修改
--- USE teleport;  -- 或您的实际数据库名
+-- USE siriusec;  -- 或您的实际数据库名
 -- SHOW TABLES;
 -- DESCRIBE your_table_name;
 
@@ -38,7 +38,7 @@ ORDER BY TABLE_SCHEMA;
 SELECT '=== 数据库用户列表 ===' AS info;
 SELECT User, Host, authentication_string
 FROM mysql.user
-WHERE User = 'sample' OR User LIKE '%teleport%' OR User LIKE '%siriusec%';
+WHERE User = 'sample' OR User LIKE '%siriusec%' OR User LIKE '%siriusec%';
 
 -- 6. 检查连接数和状态
 SELECT '=== 连接状态 ===' AS info;

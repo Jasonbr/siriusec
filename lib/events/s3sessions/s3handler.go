@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/session"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -63,23 +63,23 @@ type Config struct {
 // SetFromURL sets values on the Config from the supplied URI
 func (s *Config) SetFromURL(in *url.URL, inRegion string) error {
 	region := inRegion
-	if uriRegion := in.Query().Get(teleport.Region); uriRegion != "" {
+	if uriRegion := in.Query().Get(siriusec.Region); uriRegion != "" {
 		region = uriRegion
 	}
-	if endpoint := in.Query().Get(teleport.Endpoint); endpoint != "" {
+	if endpoint := in.Query().Get(siriusec.Endpoint); endpoint != "" {
 		s.Endpoint = endpoint
 	}
-	if val := in.Query().Get(teleport.Insecure); val != "" {
+	if val := in.Query().Get(siriusec.Insecure); val != "" {
 		insecure, err := strconv.ParseBool(val)
 		if err != nil {
-			return trace.BadParameter("failed to parse URI %q flag %q - %q, supported values are 'true' or 'false'", in.String(), teleport.Insecure, val)
+			return trace.BadParameter("failed to parse URI %q flag %q - %q, supported values are 'true' or 'false'", in.String(), siriusec.Insecure, val)
 		}
 		s.Insecure = insecure
 	}
-	if val := in.Query().Get(teleport.DisableServerSideEncryption); val != "" {
+	if val := in.Query().Get(siriusec.DisableServerSideEncryption); val != "" {
 		disableServerSideEncryption, err := strconv.ParseBool(val)
 		if err != nil {
-			return trace.BadParameter("failed to parse URI %q flag %q - %q, supported values are 'true' or 'false'", in.String(), teleport.DisableServerSideEncryption, val)
+			return trace.BadParameter("failed to parse URI %q flag %q - %q, supported values are 'true' or 'false'", in.String(), siriusec.DisableServerSideEncryption, val)
 		}
 		s.DisableServerSideEncryption = disableServerSideEncryption
 	}
@@ -131,7 +131,7 @@ func NewHandler(ctx context.Context, cfg Config) (*Handler, error) {
 
 	h := &Handler{
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.Component(teleport.SchemeS3),
+			trace.Component: siriusec.Component(siriusec.SchemeS3),
 		}),
 		Config:     cfg,
 		uploader:   s3manager.NewUploader(cfg.Session),
@@ -181,7 +181,7 @@ func (h *Handler) Upload(ctx context.Context, sessionID session.ID, reader io.Re
 	if err != nil {
 		return "", ConvertS3Error(err)
 	}
-	return fmt.Sprintf("%v://%v/%v", teleport.SchemeS3, h.Bucket, path), nil
+	return fmt.Sprintf("%v://%v/%v", siriusec.SchemeS3, h.Bucket, path), nil
 }
 
 // Download downloads recorded session from S3 bucket and writes the results

@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -131,7 +131,7 @@ type Config struct {
 
 // SetFromURL sets values on the Config from the supplied URI
 func (cfg *Config) SetFromURL(in *url.URL) error {
-	if endpoint := in.Query().Get(teleport.Endpoint); endpoint != "" {
+	if endpoint := in.Query().Get(siriusec.Endpoint); endpoint != "" {
 		cfg.Endpoint = endpoint
 	}
 
@@ -237,7 +237,7 @@ const (
 // It's an implementation of backend API's NewFunc
 func New(ctx context.Context, cfg Config, backend backend.Backend) (*Log, error) {
 	l := log.WithFields(log.Fields{
-		trace.Component: teleport.Component(teleport.ComponentDynamoDB),
+		trace.Component: siriusec.Component(siriusec.ComponentDynamoDB),
 	})
 	l.Info("Initializing event backend.")
 

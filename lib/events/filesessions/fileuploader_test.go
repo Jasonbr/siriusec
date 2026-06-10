@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 
 // TestStreams tests various streaming upload scenarios
 func TestStreams(t *testing.T) {
-	dir, err := ioutil.TempDir("", "teleport-streams")
+	dir, err := ioutil.TempDir("", "siriusec-streams")
 	require.Nil(t, err)
 	defer os.RemoveAll(dir)
 

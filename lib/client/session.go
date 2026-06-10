@@ -31,7 +31,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/client/escape"
 	"github.com/siriusec/siriusec/lib/client/terminal"
 	"github.com/siriusec/siriusec/lib/defaults"
@@ -202,7 +202,7 @@ func (ns *NodeSession) createServerSession() (*ssh.Session, error) {
 
 	// if agent forwarding was requested (and we have a agent to forward),
 	// forward the agent to endpoint.
-	tc := ns.nodeClient.Proxy.teleportClient
+	tc := ns.nodeClient.Proxy.siriusecClient
 	targetAgent := selectKeyAgent(tc)
 
 	if targetAgent != nil {
@@ -242,7 +242,7 @@ func (ns *NodeSession) interactiveSession(callback interactiveCallback) error {
 	// determine what kind of a terminal we need
 	termType := os.Getenv("TERM")
 	if termType == "" {
-		termType = teleport.SafeTerminalType
+		termType = siriusec.SafeTerminalType
 	}
 	// create the server-side session:
 	sess, err := ns.createServerSession()
@@ -288,8 +288,8 @@ func (ns *NodeSession) allocateTerminal(termType string, s *ssh.Session) (io.Rea
 	var err error
 
 	// read the size of the terminal window:
-	width := teleport.DefaultTerminalWidth
-	height := teleport.DefaultTerminalHeight
+	width := siriusec.DefaultTerminalWidth
+	height := siriusec.DefaultTerminalHeight
 	if ns.terminal.IsAttached() {
 		realWidth, realHeight, err := ns.terminal.Size()
 		if err != nil {

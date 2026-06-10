@@ -1,8 +1,8 @@
 #!/bin/bash
-export TELEPORT_TEST_MODE=true
-export TELEPORT_TESTVAR_LOCAL_IP=10.1.2.3
-export TELEPORT_TESTVAR_LOCAL_HOSTNAME=ip-10-1-2-3.ec2.internal
-export TELEPORT_TESTVAR_PUBLIC_IP=1.2.3.4
+export SIRIUSEC_TEST_MODE=true
+export SIRIUSEC_TESTVAR_LOCAL_IP=10.1.2.3
+export SIRIUSEC_TESTVAR_LOCAL_HOSTNAME=ip-10-1-2-3.ec2.internal
+export SIRIUSEC_TESTVAR_PUBLIC_IP=1.2.3.4
 
 TEST_SUITE="$(basename ${BATS_TEST_FILENAME%%.bats})"
 
@@ -13,19 +13,19 @@ setup_file() {
     write_confd_file
 
     # generate config
-    run ${BATS_TEST_DIRNAME?}/../bin/teleport-generate-config
+    run ${BATS_TEST_DIRNAME?}/../bin/siriusec-generate-config
     export GENERATE_EXIT_CODE=$?
     # store all the lines in a given block, stops capturing on newlines
     # any use of the block must be quoted to retain newlines
-    export TELEPORT_BLOCK=$(awk '/teleport:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export AUTH_BLOCK=$(awk '/auth_service:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export PROXY_BLOCK=$(awk '/proxy_service:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export NODE_BLOCK=$(awk '/ssh_service:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export KUBE_BLOCK=$(awk '/kubernetes_service:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export DB_BLOCK=$(awk '/db_service:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export APP_BLOCK=$(awk '/app_service:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export DB_DATABASES_BLOCK=$(awk '/databases:/,/^$/' ${TELEPORT_CONFIG_PATH?})
-    export APP_APPS_BLOCK=$(awk '/apps:/,/^$/' ${TELEPORT_CONFIG_PATH?})
+    export SIRIUSEC_BLOCK=$(awk '/siriusec:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export AUTH_BLOCK=$(awk '/auth_service:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export PROXY_BLOCK=$(awk '/proxy_service:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export NODE_BLOCK=$(awk '/ssh_service:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export KUBE_BLOCK=$(awk '/kubernetes_service:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export DB_BLOCK=$(awk '/db_service:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export APP_BLOCK=$(awk '/app_service:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export DB_DATABASES_BLOCK=$(awk '/databases:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
+    export APP_APPS_BLOCK=$(awk '/apps:/,/^$/' ${SIRIUSEC_CONFIG_PATH?})
 }
 
 teardown_file() {

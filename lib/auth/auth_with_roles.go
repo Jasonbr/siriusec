@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -370,7 +370,7 @@ func (a *ServerWithRoles) GenerateServerKeys(req GenerateServerKeysRequest) (*Pa
 	if a.context.User.GetName() != HostFQDN(req.HostID, clusterName) {
 		return nil, trace.AccessDenied("username mismatch %q and %q", a.context.User.GetName(), HostFQDN(req.HostID, clusterName))
 	}
-	existingRoles, err := types.NewTeleportRoles(a.context.User.GetRoles())
+	existingRoles, err := types.NewSiriusecRoles(a.context.User.GetRoles())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1235,7 +1235,7 @@ func (a *ServerWithRoles) Ping(ctx context.Context) (proto.PingResponse, error) 
 
 	return proto.PingResponse{
 		ClusterName:     cn.GetClusterName(),
-		ServerVersion:   teleport.Version,
+		ServerVersion:   siriusec.Version,
 		ServerFeatures:  modules.GetModules().Features().ToProto(),
 		ProxyPublicAddr: a.getProxyPublicAddr(),
 	}, nil
@@ -1561,11 +1561,11 @@ func (a *ServerWithRoles) generateUserCerts(ctx context.Context, req proto.UserC
 	}
 	switch req.Usage {
 	case proto.UserCertsRequest_Database:
-		certReq.usage = []string{teleport.UsageDatabaseOnly}
+		certReq.usage = []string{siriusec.UsageDatabaseOnly}
 	case proto.UserCertsRequest_App:
-		certReq.usage = []string{teleport.UsageAppsOnly}
+		certReq.usage = []string{siriusec.UsageAppsOnly}
 	case proto.UserCertsRequest_Kubernetes:
-		certReq.usage = []string{teleport.UsageKubeOnly}
+		certReq.usage = []string{siriusec.UsageKubeOnly}
 	case proto.UserCertsRequest_SSH:
 		// SSH certs are ssh-only by definition, certReq.usage only applies to
 		// TLS certs.
@@ -1810,13 +1810,13 @@ func (a *ServerWithRoles) checkGithubConnector(connector types.GithubConnector) 
 	mapping := connector.GetTeamsToLogins()
 	for _, team := range mapping {
 		if len(team.KubeUsers) != 0 || len(team.KubeGroups) != 0 {
-			return trace.BadParameter("since 6.0 teleport uses teams_to_logins to reference a role, use it instead of local kubernetes_users and kubernetes_groups ")
+			return trace.BadParameter("since 6.0 siriusec uses teams_to_logins to reference a role, use it instead of local kubernetes_users and kubernetes_groups ")
 		}
 		for _, localRole := range team.Logins {
-			_, err := a.GetRole(context.TODO(), localRole)
+			_, err := a.GetRole(context.Background(), localRole)
 			if err != nil {
 				if trace.IsNotFound(err) {
-					return trace.BadParameter("since 6.0 teleport uses teams_to_logins to reference a role, role %q referenced in mapping for organization %q is not found", localRole, team.Organization)
+					return trace.BadParameter("since 6.0 siriusec uses teams_to_logins to reference a role, role %q referenced in mapping for organization %q is not found", localRole, team.Organization)
 				}
 				return trace.Wrap(err)
 			}
@@ -2169,7 +2169,7 @@ func (a *ServerWithRoles) DeleteRole(ctx context.Context, name string) error {
 	// It's OK to delete this code alongside migrateOSS code in auth.
 	// It prevents 6.0 from migrating resources multiple times
 	// and the role is used for `tctl users add` code too.
-	if modules.GetModules().BuildType() == modules.BuildOSS && name == teleport.AdminRoleName {
+	if modules.GetModules().BuildType() == modules.BuildOSS && name == siriusec.AdminRoleName {
 		return trace.AccessDenied("can not delete system role %q", name)
 	}
 	return a.authServer.DeleteRole(ctx, name)
@@ -2755,7 +2755,7 @@ func (a *ServerWithRoles) SignDatabaseCSR(ctx context.Context, req *proto.Databa
 //    on the auth server to produce a certificate for configuring a self-hosted
 //    database.
 //  - Remote user using "tctl auth sign --format=db" command with a remote
-//    proxy (e.g. Teleport Cloud), as long as they can impersonate system
+//    proxy (e.g. Siriusec Cloud), as long as they can impersonate system
 //    role Db.
 //  - Database service when initiating connection to a database instance to
 //    produce a client certificate.
@@ -2971,7 +2971,7 @@ func (a *ServerWithRoles) WaitForDelivery(context.Context) error {
 	return nil
 }
 
-// UpsertKubeService creates or updates a Server representing a teleport
+// UpsertKubeService creates or updates a Server representing a siriusec
 // kubernetes service.
 func (a *ServerWithRoles) UpsertKubeService(ctx context.Context, s types.Server) error {
 	if err := a.action(apidefaults.Namespace, types.KindKubeService, types.VerbCreate); err != nil {
@@ -3003,7 +3003,7 @@ func (a *ServerWithRoles) UpsertKubeService(ctx context.Context, s types.Server)
 	return a.authServer.UpsertKubeService(ctx, s)
 }
 
-// GetKubeServices returns all Servers representing teleport kubernetes
+// GetKubeServices returns all Servers representing siriusec kubernetes
 // services.
 func (a *ServerWithRoles) GetKubeServices(ctx context.Context) ([]types.Server, error) {
 	if err := a.action(apidefaults.Namespace, types.KindKubeService, types.VerbList); err != nil {

@@ -100,7 +100,7 @@ func (tf *textFormatter) CheckAndSetDefaults() error {
 	return nil
 }
 
-// Format formats each log line as confiured in teleport config file
+// Format formats each log line as confiured in siriusec config file
 func (tf *textFormatter) Format(e *log.Entry) ([]byte, error) {
 	var data []byte
 	caller := tf.FormatCaller()

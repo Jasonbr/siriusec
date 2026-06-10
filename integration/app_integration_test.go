@@ -36,7 +36,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -291,7 +291,7 @@ func TestAppAccessLogout(t *testing.T) {
 	appCookie := pack.createAppSession(t, pack.rootAppPublicAddr, pack.rootAppClusterName)
 
 	// Log user out of session.
-	status, _, err := pack.makeRequest(appCookie, http.MethodGet, "/teleport-logout")
+	status, _, err := pack.makeRequest(appCookie, http.MethodGet, "/siriusec-logout")
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, status)
 
@@ -423,11 +423,11 @@ func TestAppAccessRewriteHeadersRoot(t *testing.T) {
 						},
 						// Make sure can't rewrite Siriusec headers.
 						{
-							Name:  teleport.AppJWTHeader,
+							Name:  siriusec.AppJWTHeader,
 							Value: "rewritten-app-jwt-header",
 						},
 						{
-							Name:  teleport.AppCFHeader,
+							Name:  siriusec.AppCFHeader,
 							Value: "rewritten-app-cf-header",
 						},
 						{
@@ -522,11 +522,11 @@ func TestAppAccessRewriteHeadersLeaf(t *testing.T) {
 						},
 						// Make sure can't rewrite Siriusec headers.
 						{
-							Name:  teleport.AppJWTHeader,
+							Name:  siriusec.AppJWTHeader,
 							Value: "rewritten-app-jwt-header",
 						},
 						{
-							Name:  teleport.AppCFHeader,
+							Name:  siriusec.AppCFHeader,
 							Value: "rewritten-app-cf-header",
 						},
 						{
@@ -646,7 +646,7 @@ type pack struct {
 	webCookie string
 	webToken  string
 
-	rootCluster   *TeleInstance
+	rootCluster   *SiriusecInstance
 	rootAppServer *service.SiriusecProcess
 	rootCertPool  *x509.CertPool
 
@@ -671,7 +671,7 @@ type pack struct {
 	jwtAppClusterName string
 	jwtAppURI         string
 
-	leafCluster   *TeleInstance
+	leafCluster   *SiriusecInstance
 	leafAppServer *service.SiriusecProcess
 
 	leafAppName        string
@@ -800,7 +800,7 @@ func setupWithOptions(t *testing.T, opts appTestOptions) *pack {
 	}))
 	t.Cleanup(leafWSSServer.Close)
 	jwtServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, r.Header.Get(teleport.AppJWTHeader))
+		fmt.Fprintln(w, r.Header.Get(siriusec.AppJWTHeader))
 	}))
 	t.Cleanup(jwtServer.Close)
 	headerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1387,8 +1387,8 @@ func (p *pack) waitForLogout(appCookie string) (int, error) {
 }
 
 var forwardedHeaderNames = []string{
-	teleport.AppJWTHeader,
-	teleport.AppCFHeader,
+	siriusec.AppJWTHeader,
+	siriusec.AppCFHeader,
 	"X-Forwarded-Proto",
 	"X-Forwarded-Host",
 	"X-Forwarded-Server",

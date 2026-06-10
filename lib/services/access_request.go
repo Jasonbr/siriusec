@@ -307,7 +307,7 @@ func checkReviewCompat(req types.AccessRequest, rev types.AccessReview) error {
 
 	// the default threshold should exist. if it does not, the request either is not fully
 	// initialized (i.e. variable expansion has not been run yet) or the request was inserted into
-	// the backend by a teleport instance which does not support the review feature.
+	// the backend by a siriusec instance which does not support the review feature.
 	if len(req.GetThresholds()) == 0 {
 		return trace.BadParameter("request is uninitialized or does not support reviews")
 	}
@@ -846,7 +846,7 @@ func NewRequestValidator(getter UserAndRoleGetter, username string, opts ...Vali
 	// load all statically assigned roles for the user and
 	// use them to build our validation state.
 	for _, roleName := range m.user.GetRoles() {
-		role, err := m.getter.GetRole(context.TODO(), roleName)
+		role, err := m.getter.GetRole(context.Background(), roleName)
 		if err != nil {
 			return RequestValidator{}, trace.Wrap(err)
 		}
@@ -880,7 +880,7 @@ func (m *RequestValidator) Validate(req types.AccessRequest) error {
 		}
 
 		if !m.opts.expandVars {
-			// teleport always validates new incoming pending access requests
+			// siriusec always validates new incoming pending access requests
 			// with ExpandVars(true). after that, it should be impossible to
 			// add new values to the role list.
 			return trace.BadParameter("unexpected wildcard request (this is a bug)")
@@ -943,7 +943,7 @@ func (m *RequestValidator) Validate(req types.AccessRequest) error {
 // roles in order to determine the role list.  Prefer calling CanRequestRole
 // when checking againt a known role list.
 func (m *RequestValidator) GetRequestableRoles() ([]string, error) {
-	allRoles, err := m.getter.GetRoles(context.TODO())
+	allRoles, err := m.getter.GetRoles(context.Background())
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

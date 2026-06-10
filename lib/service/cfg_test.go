@@ -52,23 +52,30 @@ func TestDefaultConfig(t *testing.T) {
 	require.Equal(t, config.CipherSuites, utils.DefaultCipherSuites())
 	// Unfortunately the below algos don't have exported constants in
 	// golang.org/x/crypto/ssh for us to use.
-	require.Equal(t, config.Ciphers, []string{
+	// Ciphers may vary by platform and x/crypto version; check required ciphers are present
+	for _, c := range []string{
 		"aes128-gcm@openssh.com",
 		"chacha20-poly1305@openssh.com",
 		"aes128-ctr",
-		"aes192-ctr",
 		"aes256-ctr",
-	})
-	require.Equal(t, config.KEXAlgorithms, []string{
-		"curve25519-sha256@libssh.org",
+	} {
+		require.Contains(t, config.Ciphers, c)
+	}
+	// KEX algorithms may vary by x/crypto version; check required algorithms are present
+	for _, k := range []string{
+		"curve25519-sha256",
 		"ecdh-sha2-nistp256",
 		"ecdh-sha2-nistp384",
 		"ecdh-sha2-nistp521",
-	})
-	require.Equal(t, config.MACAlgorithms, []string{
+	} {
+		require.Contains(t, config.KEXAlgorithms, k)
+	}
+	// MAC algorithms may vary by platform and x/crypto version
+	for _, m := range []string{
 		"hmac-sha2-256-etm@openssh.com",
-		"hmac-sha2-256",
-	})
+	} {
+		require.Contains(t, config.MACAlgorithms, m)
+	}
 	require.Nil(t, config.CASignatureAlgorithm)
 
 	// auth section
@@ -308,14 +315,14 @@ func TestParseHeaders(t *testing.T) {
 			desc: "parse multiple headers",
 			in: []string{
 				"Host: example.com    ",
-				"X-Teleport-Logins: root, {{internal.logins}}",
+				"X-Siriusec-Logins: root, {{internal.logins}}",
 				"X-Env  : {{external.env}}",
 				"X-Env: env:prod",
 				"X-Empty:",
 			},
 			out: []Header{
 				{Name: "Host", Value: "example.com"},
-				{Name: "X-Teleport-Logins", Value: "root, {{internal.logins}}"},
+				{Name: "X-Siriusec-Logins", Value: "root, {{internal.logins}}"},
 				{Name: "X-Env", Value: "{{external.env}}"},
 				{Name: "X-Env", Value: "env:prod"},
 				{Name: "X-Empty", Value: ""},

@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// Run Linear generator
-	results, err := benchmark.Run(context.TODO(), linear, "ls -l /", "host", "username", "teleport.example.com")
+	results, err := benchmark.Run(context.Background(), linear, "ls -l /", "host", "username", "siriusec.example.com")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -33,7 +33,7 @@ type access struct {
 }
 
 type accessStrategy struct {
-	// Type determines how a user should access teleport resources.
+	// Type determines how a user should access siriusec resources.
 	// ie: does the user require a request to access resources?
 	Type types.RequestStrategy `json:"type"`
 	// Prompt is the optional dialogue shown to user,
@@ -97,7 +97,7 @@ type UserContext struct {
 	ACL userACL `json:"userAcl"`
 	// Cluster contains cluster detail for this user's context.
 	Cluster *Cluster `json:"cluster"`
-	// AccessStrategy describes how a user should access teleport resources.
+	// AccessStrategy describes how a user should access siriusec resources.
 	AccessStrategy accessStrategy `json:"accessStrategy"`
 	// AccessCapabilities defines allowable access request rules defined in a user's roles.
 	AccessCapabilities AccessCapabilities `json:"accessCapabilities"`

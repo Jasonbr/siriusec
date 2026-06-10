@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -34,6 +34,7 @@ import (
 	"github.com/siriusec/siriusec/lib/auth/keystore"
 	"github.com/siriusec/siriusec/lib/auth/u2f"
 	"github.com/siriusec/siriusec/lib/backend"
+	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/events"
 	"github.com/siriusec/siriusec/lib/modules"
 	"github.com/siriusec/siriusec/lib/services"
@@ -47,7 +48,7 @@ import (
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentAuth,
+	trace.Component: siriusec.ComponentAuth,
 })
 
 // InitConfig is auth server init config
@@ -80,7 +81,7 @@ type InitConfig struct {
 	Resources []types.Resource
 
 	// AuthServiceName is a human-readable name of this CA. If several Auth services are running
-	// (managing multiple teleport clusters) this field is used to tell them apart in UIs
+	// (managing multiple siriusec clusters) this field is used to tell them apart in UIs
 	// It usually defaults to the hostname of the machine the Auth service runs on.
 	AuthServiceName string
 
@@ -177,7 +178,8 @@ func Init(cfg InitConfig, opts ...ServerOption) (*Server, error) {
 		return nil, trace.BadParameter("HostUUID: host UUID can not be empty")
 	}
 
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 
 	domainName := cfg.ClusterName.GetClusterName()
 	lock, err := backend.AcquireLock(ctx, cfg.Backend, domainName, 30*time.Second)
@@ -374,7 +376,7 @@ func Init(cfg InitConfig, opts ...ServerOption) (*Server, error) {
 	}
 
 	if lib.IsInsecureDevMode() {
-		warningMessage := "Starting teleport in insecure mode. This is " +
+		warningMessage := "Starting siriusec in insecure mode. This is " +
 			"dangerous! Sensitive information will be logged to console and " +
 			"certificates will not be verified. Proceed with caution!"
 		log.Warn(warningMessage)
@@ -535,7 +537,7 @@ func createPresets(ctx context.Context, asrv *Server) error {
 	return nil
 }
 
-const migrationAbortedMessage = "migration to RBAC has aborted because of the backend error, restart teleport to try again"
+const migrationAbortedMessage = "migration to RBAC has aborted because of the backend error, restart siriusec to try again"
 
 // migrateOSS performs migration to enable role-based access controls
 // to open source users. It creates a less privileged role 'ossuser'
@@ -551,7 +553,7 @@ func migrateOSS(ctx context.Context, asrv *Server) error {
 	if err != nil {
 		return trace.Wrap(err, "expected to find built-in admin role")
 	}
-	_, ok := existing.GetMetadata().Labels[teleport.OSSMigratedV6]
+	_, ok := existing.GetMetadata().Labels[siriusec.OSSMigratedV6]
 	if ok {
 		log.Debugf("Admin role is already migrated, skipping OSS migration.")
 		// Role is created, assume that migration has been completed.
@@ -602,11 +604,11 @@ func migrateOSSTrustedClusters(ctx context.Context, role types.Role, asrv *Serve
 
 	for _, tc := range tcs {
 		meta := tc.GetMetadata()
-		_, ok := meta.Labels[teleport.OSSMigratedV6]
+		_, ok := meta.Labels[siriusec.OSSMigratedV6]
 		if ok {
 			continue
 		}
-		setLabels(&meta.Labels, teleport.OSSMigratedV6, types.True)
+		setLabels(&meta.Labels, siriusec.OSSMigratedV6, types.True)
 		roleMap := []types.RoleMapping{{Remote: role.GetName(), Local: []string{role.GetName()}}}
 		tc.SetRoleMap(roleMap)
 		tc.SetMetadata(meta)
@@ -619,11 +621,11 @@ func migrateOSSTrustedClusters(ctx context.Context, role types.Role, asrv *Serve
 				return migratedTcs, trace.Wrap(err, migrationAbortedMessage)
 			}
 			meta := ca.GetMetadata()
-			_, ok := meta.Labels[teleport.OSSMigratedV6]
+			_, ok := meta.Labels[siriusec.OSSMigratedV6]
 			if ok {
 				continue
 			}
-			setLabels(&meta.Labels, teleport.OSSMigratedV6, types.True)
+			setLabels(&meta.Labels, siriusec.OSSMigratedV6, types.True)
 			ca.SetRoleMap(roleMap)
 			ca.SetMetadata(meta)
 			err = asrv.UpsertCertAuthority(ca)
@@ -648,11 +650,11 @@ func migrateOSSUsers(ctx context.Context, role types.Role, asrv *Server) (int, e
 
 	for _, user := range users {
 		meta := user.GetMetadata()
-		_, ok := meta.Labels[teleport.OSSMigratedV6]
+		_, ok := meta.Labels[siriusec.OSSMigratedV6]
 		if ok {
 			continue
 		}
-		setLabels(&meta.Labels, teleport.OSSMigratedV6, types.True)
+		setLabels(&meta.Labels, siriusec.OSSMigratedV6, types.True)
 		user.SetRoles([]string{role.GetName()})
 		user.SetMetadata(meta)
 		if err := asrv.UpsertUser(user); err != nil {
@@ -684,11 +686,11 @@ func migrateOSSGithubConns(ctx context.Context, role types.Role, asrv *Server) (
 	}
 	for _, conn := range conns {
 		meta := conn.GetMetadata()
-		_, ok := meta.Labels[teleport.OSSMigratedV6]
+		_, ok := meta.Labels[siriusec.OSSMigratedV6]
 		if ok {
 			continue
 		}
-		setLabels(&meta.Labels, teleport.OSSMigratedV6, types.True)
+		setLabels(&meta.Labels, siriusec.OSSMigratedV6, types.True)
 		conn.SetMetadata(meta)
 		// replace every team with a new role
 		teams := conn.GetTeamsToLogins()
@@ -1087,7 +1089,7 @@ func ReadSSHIdentityFromKeyPair(keyBytes, certBytes []byte) (*Identity, error) {
 	if roleString == "" {
 		return nil, trace.BadParameter("misssing cert extension %v", utils.CertExtensionRole)
 	}
-	roles, err := types.ParseTeleportRoles(roleString)
+	roles, err := types.ParseSiriusecRoles(roleString)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1115,7 +1117,7 @@ func ReadSSHIdentityFromKeyPair(keyBytes, certBytes []byte) (*Identity, error) {
 // ReadLocalIdentity reads, parses and returns the given pub/pri key + cert from the
 // key storage (dataDir).
 func ReadLocalIdentity(dataDir string, id IdentityID) (*Identity, error) {
-	storage, err := NewProcessStorage(context.TODO(), dataDir)
+	storage, err := NewProcessStorage(context.Background(), dataDir)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1310,7 +1312,7 @@ func migrateCertAuthority(ctx context.Context, asrv *Server, ca types.CertAuthor
 	// CA rotation can cause weird edge cases during migration, don't allow
 	// rotation and migration in parallel.
 	if ca.GetRotation().State == types.RotationStateInProgress {
-		return trace.BadParameter("CA rotation is in progress; please finish CA rotation before upgrading teleport")
+		return trace.BadParameter("CA rotation is in progress; please finish CA rotation before upgrading siriusec")
 	}
 
 	if err := services.SyncCertAuthorityKeys(ca); err != nil {

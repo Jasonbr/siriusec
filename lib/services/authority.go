@@ -224,7 +224,7 @@ type UserCertParams struct {
 	PublicUserKey []byte
 	// TTL defines how long a certificate is valid for
 	TTL time.Duration
-	// Username is teleport username
+	// Username is siriusec username
 	Username string
 	// Impersonator is set when a user requests certificate for another user
 	Impersonator string

@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 
 	radix "github.com/armon/go-radix"
@@ -94,7 +94,7 @@ func NewCircularBuffer(opts ...BufferOption) *CircularBuffer {
 	}
 	return &CircularBuffer{
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentBuffer,
+			trace.Component: siriusec.ComponentBuffer,
 		}),
 		cfg:      cfg,
 		events:   make([]Event, cfg.capacity),

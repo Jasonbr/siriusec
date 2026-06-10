@@ -37,7 +37,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
@@ -418,7 +418,7 @@ func (s *TLSSuite) TestAutoRotation(c *check.C) {
 	// old clients should no longer work
 	// new client has to be created here to force re-create the new
 	// connection instead of re-using the one from pool
-	// this is not going to be a problem in real teleport
+	// this is not going to be a problem in real siriusec
 	// as it reloads the full server after reload
 	_, err = s.server.CloneClient(proxy).GetNodes(ctx, apidefaults.Namespace)
 	c.Assert(err, check.ErrorMatches, ".*bad certificate.*")
@@ -582,7 +582,7 @@ func (s *TLSSuite) TestManualRotation(c *check.C) {
 	// old clients should no longer work
 	// new client has to be created here to force re-create the new
 	// connection instead of re-using the one from pool
-	// this is not going to be a problem in real teleport
+	// this is not going to be a problem in real siriusec
 	// as it reloads the full server after reload
 	_, err = s.server.CloneClient(proxy).GetNodes(ctx, apidefaults.Namespace)
 	c.Assert(err, check.ErrorMatches, ".*bad certificate.*")
@@ -991,7 +991,7 @@ func (s *TLSSuite) TestUsersCRUD(c *check.C) {
 	clt, err := s.server.NewClient(TestAdmin())
 	c.Assert(err, check.IsNil)
 
-	err = clt.UpsertPassword("user1", []byte("some pass"))
+	err = clt.UpsertPassword("user1", []byte("Some pass12345"))
 	c.Assert(err, check.IsNil)
 
 	users, err := clt.GetUsers(false)
@@ -1024,7 +1024,7 @@ func (s *TLSSuite) TestPasswordCRUD(c *check.C) {
 	clt, err := s.server.NewClient(TestAdmin())
 	c.Assert(err, check.IsNil)
 
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 	rawSecret := "def456"
 	otpSecret := base32.StdEncoding.EncodeToString([]byte(rawSecret))
 
@@ -1254,7 +1254,7 @@ func (s *TLSSuite) TestSharedSessions(c *check.C) {
 	forwarder, err := events.NewForwarder(events.ForwarderConfig{
 		Namespace:      apidefaults.Namespace,
 		SessionID:      sess.ID,
-		ServerID:       teleport.ComponentUpload,
+		ServerID:       siriusec.ComponentUpload,
 		DataDir:        uploadDir,
 		RecordSessions: true,
 		IAuditLog:      clt,
@@ -1287,7 +1287,7 @@ func (s *TLSSuite) TestSharedSessions(c *check.C) {
 	forwarder, err = events.NewForwarder(events.ForwarderConfig{
 		Namespace:      apidefaults.Namespace,
 		SessionID:      sess.ID,
-		ServerID:       teleport.ComponentUpload,
+		ServerID:       siriusec.ComponentUpload,
 		DataDir:        uploadDir,
 		RecordSessions: true,
 		IAuditLog:      clt,
@@ -1377,7 +1377,7 @@ func (s *TLSSuite) TestOTPCRUD(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	user := "user1"
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 	rawSecret := "def456"
 	otpSecret := base32.StdEncoding.EncodeToString([]byte(rawSecret))
 
@@ -1426,7 +1426,7 @@ func (s *TLSSuite) TestWebSessionWithoutAccessRequest(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	user := "user1"
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 
 	_, _, err = CreateUserAndRole(clt, user, []string{user})
 	c.Assert(err, check.IsNil)
@@ -1487,7 +1487,7 @@ func (s *TLSSuite) TestWebSessionWithApprovedAccessRequestAndSwitchback(c *check
 	c.Assert(err, check.IsNil)
 
 	user := "user2"
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 
 	newUser, err := CreateUserRoleAndRequestable(clt, user, "test-request-role")
 	c.Assert(err, check.IsNil)
@@ -2150,10 +2150,10 @@ func TestGenerateCerts(t *testing.T) {
 		require.Less(t, int64(apidefaults.MaxCertDuration), int64(diff))
 
 		// user should have agent forwarding (default setting)
-		require.Contains(t, parsedCert.Extensions, teleport.CertExtensionPermitAgentForwarding)
+		require.Contains(t, parsedCert.Extensions, siriusec.CertExtensionPermitAgentForwarding)
 
 		// user should not have X11 forwarding (default setting)
-		require.NotContains(t, parsedCert.Extensions, teleport.CertExtensionPermitX11Forwarding)
+		require.NotContains(t, parsedCert.Extensions, siriusec.CertExtensionPermitX11Forwarding)
 
 		// now update role to permit agent and X11 forwarding
 		roleOptions := userRole.GetOptions()
@@ -2173,10 +2173,10 @@ func TestGenerateCerts(t *testing.T) {
 		parsedCert, _ = parseCert(userCerts.SSH)
 
 		// user should get agent forwarding
-		require.Contains(t, parsedCert.Extensions, teleport.CertExtensionPermitAgentForwarding)
+		require.Contains(t, parsedCert.Extensions, siriusec.CertExtensionPermitAgentForwarding)
 
 		// user should get X11 forwarding
-		require.Contains(t, parsedCert.Extensions, teleport.CertExtensionPermitX11Forwarding)
+		require.Contains(t, parsedCert.Extensions, siriusec.CertExtensionPermitX11Forwarding)
 
 		// apply HTTP Auth to generate user cert:
 		userCerts, err = adminClient.GenerateUserCerts(ctx, proto.UserCertsRequest{
@@ -2335,13 +2335,13 @@ func (s *TLSSuite) TestCertificateFormat(c *check.C) {
 	}{
 		// 0 - take whatever the role has
 		{
-			teleport.CertificateFormatOldSSH,
-			teleport.CertificateFormatUnspecified,
+			siriusec.CertificateFormatOldSSH,
+			siriusec.CertificateFormatUnspecified,
 			false,
 		},
 		// 1 - override the role
 		{
-			teleport.CertificateFormatOldSSH,
+			siriusec.CertificateFormatOldSSH,
 			constants.CertificateFormatStandard,
 			true,
 		},
@@ -2374,7 +2374,7 @@ func (s *TLSSuite) TestCertificateFormat(c *check.C) {
 		parsedCert, err := sshutils.ParseCertificate(re.Cert)
 		c.Assert(err, check.IsNil)
 
-		_, ok := parsedCert.Extensions[teleport.CertExtensionTeleportRoles]
+		_, ok := parsedCert.Extensions[siriusec.CertExtensionTeleportRoles]
 		c.Assert(ok, check.Equals, tt.outCertContainsRole)
 	}
 }
@@ -2453,7 +2453,7 @@ func (s *TLSSuite) TestAuthenticateWebUserOTP(c *check.C) {
 	// authentication attempt fails with wrong passwrod
 	_, err = proxy.AuthenticateWebUser(AuthenticateUserRequest{
 		Username: user,
-		OTP:      &OTPCreds{Password: []byte("wrong123"), Token: validToken},
+		OTP:      &OTPCreds{Password: []byte("WrongPass999!"), Token: validToken},
 	})
 	fixtures.ExpectAccessDenied(c, err)
 
@@ -2500,7 +2500,7 @@ func (s *TLSSuite) TestLoginAttempts(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	user := "user1"
-	pass := []byte("abc123")
+	pass := []byte("Abc123456789")
 
 	_, _, err = CreateUserAndRole(clt, user, []string{user})
 	c.Assert(err, check.IsNil)
@@ -2514,7 +2514,7 @@ func (s *TLSSuite) TestLoginAttempts(c *check.C) {
 	req := AuthenticateUserRequest{
 		Username: user,
 		Pass: &PassCreds{
-			Password: []byte("bad pass"),
+			Password: []byte("Bad pass12345"),
 		},
 	}
 	// authentication attempt fails with bad password
@@ -2578,7 +2578,7 @@ func (s *TLSSuite) TestChangePasswordWithToken(c *check.C) {
 
 	_, err = s.server.Auth().ChangePasswordWithToken(context.TODO(), ChangePasswordWithTokenRequest{
 		TokenID:           token.GetName(),
-		Password:          []byte("qweqweqwe"),
+		Password:          []byte("Qweqwe123456"),
 		SecondFactorToken: otpToken,
 	})
 	c.Assert(err, check.IsNil)
@@ -2589,7 +2589,7 @@ func (s *TLSSuite) TestChangePasswordWithToken(c *check.C) {
 func (s *TLSSuite) TestLoginNoLocalAuth(c *check.C) {
 	ctx := context.Background()
 	user := "foo"
-	pass := []byte("barbaz")
+	pass := []byte("Barbaz123456")
 
 	// Create a local user.
 	clt, err := s.server.NewClient(TestAdmin())
@@ -2889,7 +2889,7 @@ func (s *TLSSuite) TestRegisterCAPath(c *check.C) {
 	c.Assert(certs, check.HasLen, 1)
 	certPem := certs[0]
 	caPath := filepath.Join(s.dataDir, defaults.CACertFile)
-	err = ioutil.WriteFile(caPath, certPem, teleport.FileMaskOwnerOnly)
+	err = ioutil.WriteFile(caPath, certPem, siriusec.FileMaskOwnerOnly)
 	c.Assert(err, check.IsNil)
 
 	// Attempt to register with valid CA path, should work.

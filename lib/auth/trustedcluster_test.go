@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	authority "github.com/siriusec/siriusec/lib/auth/testauthority"
 	"github.com/siriusec/siriusec/lib/backend/memory"
@@ -25,7 +25,7 @@ func TestRemoteClusterStatus(t *testing.T) {
 
 	wantRC := rc
 	// Initially, no tunnels exist and status should be "offline".
-	wantRC.SetConnectionStatus(teleport.RemoteClusterStatusOffline)
+	wantRC.SetConnectionStatus(siriusec.RemoteClusterStatusOffline)
 	gotRC, err := a.GetRemoteCluster(rc.GetName())
 	gotRC.SetResourceID(0)
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestRemoteClusterStatus(t *testing.T) {
 
 	// With active tunnels, the status is "online" and last_heartbeat is set to
 	// the latest tunnel heartbeat.
-	wantRC.SetConnectionStatus(teleport.RemoteClusterStatusOnline)
+	wantRC.SetConnectionStatus(siriusec.RemoteClusterStatusOnline)
 	wantRC.SetLastHeartbeat(tc2.GetLastHeartbeat())
 	gotRC, err = a.GetRemoteCluster(rc.GetName())
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestRemoteClusterStatus(t *testing.T) {
 	// The status should remain the same, since tc1 still exists.
 	// The last_heartbeat should remain the same, since tc1 has an older
 	// heartbeat.
-	wantRC.SetConnectionStatus(teleport.RemoteClusterStatusOnline)
+	wantRC.SetConnectionStatus(siriusec.RemoteClusterStatusOnline)
 	gotRC, err = a.GetRemoteCluster(rc.GetName())
 	gotRC.SetResourceID(0)
 	require.NoError(t, err)
@@ -78,7 +78,7 @@ func TestRemoteClusterStatus(t *testing.T) {
 
 	// The status should switch to "offline".
 	// The last_heartbeat should remain the same.
-	wantRC.SetConnectionStatus(teleport.RemoteClusterStatusOffline)
+	wantRC.SetConnectionStatus(siriusec.RemoteClusterStatusOffline)
 	gotRC, err = a.GetRemoteCluster(rc.GetName())
 	gotRC.SetResourceID(0)
 	require.NoError(t, err)

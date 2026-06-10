@@ -1,0 +1,13 @@
+[Unit]
+Description=Siriusec Jira Plugin
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/siriusec-jira start --config=/etc/siriusec-jira.toml
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/siriusec-jira.pid
+
+[Install]
+WantedBy=multi-user.target

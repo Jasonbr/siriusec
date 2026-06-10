@@ -1,5 +1,5 @@
 # This Dockerfile makes the "build box": the container used to build official
-# releases of Teleport and its documentation.
+# releases of Siriusec and its documentation.
 FROM centos:6
 
 ENV LANGUAGE=en_US.UTF-8 \

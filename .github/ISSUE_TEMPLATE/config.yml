@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Siriusec Documentation
-    url: https://goteleport.com/teleport/docs/
+    url: https://siriusec.com/siriusec/docs/
     about: Check out the Siriusec documentation for answers to common questions
   - name: Siriusec Discussions
-    url: https://github.com/gravitational/teleport/discussions
+    url: https://github.com/siriusec/siriusec/discussions
     about: Ask Siriusec related questions, answered by the Team and community.
   - name: Request a Demo
-    url: https://goteleport.com/get-started/
+    url: https://siriusec.com/get-started/
     about: Want to see the full power of Siriusec? Our team is happy to get you set up.

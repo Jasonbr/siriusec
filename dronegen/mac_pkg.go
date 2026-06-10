@@ -64,7 +64,7 @@ func darwinPkgPipeline(name, makeTarget string, pkgGlobs []string) pipeline {
 			Commands: []string{
 				`set -u`,
 				`cd $WORKSPACE_DIR/go/artifacts`,
-				`aws s3 sync . s3://$AWS_S3_BUCKET/teleport/tag/${DRONE_TAG##v}`,
+				`aws s3 sync . s3://$AWS_S3_BUCKET/siriusec/tag/${DRONE_TAG##v}`,
 			},
 		},
 		cleanUpExecStorageStep(p.Workspace.Path),
@@ -73,8 +73,8 @@ func darwinPkgPipeline(name, makeTarget string, pkgGlobs []string) pipeline {
 	return p
 }
 
-func darwinTeleportPkgPipeline() pipeline {
-	return darwinPkgPipeline("build-darwin-amd64-pkg", "pkg", []string{"build/teleport*.pkg", "e/build/teleport-ent*.pkg"})
+func darwinSiriusecPkgPipeline() pipeline {
+	return darwinPkgPipeline("build-darwin-amd64-pkg", "pkg", []string{"build/siriusec*.pkg", "e/build/siriusec-ent*.pkg"})
 }
 
 func darwinTshPkgPipeline() pipeline {
@@ -86,8 +86,8 @@ func darwinTagDownloadArtifactCommands() []string {
 		`set -u`,
 		`export VERSION=$(cat $WORKSPACE_DIR/go/.version.txt)`,
 		`export S3_PATH="tag/$${DRONE_TAG##v}/"`,
-		`aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-darwin-amd64-bin.tar.gz $WORKSPACE_DIR/go/artifacts/`,
-		`aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-ent-v$${VERSION}-darwin-amd64-bin.tar.gz $WORKSPACE_DIR/go/artifacts/`,
+		`aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-darwin-amd64-bin.tar.gz $WORKSPACE_DIR/go/artifacts/`,
+		`aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-darwin-amd64-bin.tar.gz $WORKSPACE_DIR/go/artifacts/`,
 	}
 }
 
@@ -102,7 +102,7 @@ func darwinTagPackageCommands(target string) []string {
 		`security unlock-keychain -p $${BUILDBOX_PASSWORD} login.keychain`,
 		// show available certificates
 		`security find-identity -v`,
-		// build pkg, target is `pkg` for teleport, `pkg-tsh` for tsh
+		// build pkg, target is `pkg` for siriusec, `pkg-tsh` for tsh
 		fmt.Sprintf(`make %s OS=$OS ARCH=$ARCH`, target),
 	}
 }

@@ -27,7 +27,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/services"
 	rsession "github.com/siriusec/siriusec/lib/session"
 	"github.com/siriusec/siriusec/lib/sshutils"
@@ -103,7 +103,7 @@ type Terminal interface {
 func NewTerminal(ctx *ServerContext) (Terminal, error) {
 	// It doesn't matter what mode the cluster is in, if this is a Siriusec node
 	// return a local terminal.
-	if ctx.srv.Component() == teleport.ComponentNode {
+	if ctx.srv.Component() == siriusec.ComponentNode {
 		return newLocalTerminal(ctx)
 	}
 
@@ -140,7 +140,7 @@ func newLocalTerminal(ctx *ServerContext) (*terminal, error) {
 
 	t := &terminal{
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentLocalTerm,
+			trace.Component: siriusec.ComponentLocalTerm,
 		}),
 		ctx: ctx,
 	}
@@ -431,7 +431,7 @@ func newRemoteTerminal(ctx *ServerContext) (*remoteTerminal, error) {
 
 	t := &remoteTerminal{
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRemoteTerm,
+			trace.Component: siriusec.ComponentRemoteTerm,
 		}),
 		ctx:       ctx,
 		session:   ctx.RemoteSession,
@@ -518,13 +518,13 @@ func (t *remoteTerminal) Wait() (*ExecResult, error) {
 		}
 
 		return &ExecResult{
-			Code:    teleport.RemoteCommandFailure,
+			Code:    siriusec.RemoteCommandFailure,
 			Command: t.ctx.ExecRequest.GetCommand(),
 		}, err
 	}
 
 	return &ExecResult{
-		Code:    teleport.RemoteCommandSuccess,
+		Code:    siriusec.RemoteCommandSuccess,
 		Command: t.ctx.ExecRequest.GetCommand(),
 	}, nil
 }
@@ -631,11 +631,11 @@ func (t *remoteTerminal) windowChange(w int, h int) error {
 // prepareRemoteSession prepares the more session for execution.
 func (t *remoteTerminal) prepareRemoteSession(session *ssh.Session, ctx *ServerContext) {
 	envs := map[string]string{
-		teleport.SSHSiriusecUser:        ctx.Identity.SiriusecUser,
-		teleport.SSHSessionWebproxyAddr: ctx.ProxyPublicAddress(),
-		teleport.SSHTeleportHostUUID:    ctx.srv.ID(),
-		teleport.SSHSiriusecClusterName: ctx.ClusterName,
-		teleport.SSHSessionID:           string(ctx.SessionID()),
+		siriusec.SSHSiriusecUser:        ctx.Identity.SiriusecUser,
+		siriusec.SSHSessionWebproxyAddr: ctx.ProxyPublicAddress(),
+		siriusec.SSHSiriusecHostUUID:    ctx.srv.ID(),
+		siriusec.SSHSiriusecClusterName: ctx.ClusterName,
+		siriusec.SSHSessionID:           string(ctx.SessionID()),
 	}
 
 	for k, v := range envs {

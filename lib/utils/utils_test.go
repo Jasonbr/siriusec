@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apiutils "github.com/siriusec/siriusec/api/utils"
 	"github.com/siriusec/siriusec/lib/fixtures"
 
@@ -201,9 +201,9 @@ func (s *UtilsSuite) TestParseSessionsURI(c *check.C) {
 		url  *url.URL
 		err  error
 	}{
-		{info: "local default file system URI", in: "/home/log", url: &url.URL{Scheme: teleport.SchemeFile, Path: "/home/log"}},
-		{info: "explicit filesystem URI", in: "file:///home/log", url: &url.URL{Scheme: teleport.SchemeFile, Path: "/home/log"}},
-		{info: "S3 URI", in: "s3://my-bucket", url: &url.URL{Scheme: teleport.SchemeS3, Host: "my-bucket"}},
+		{info: "local default file system URI", in: "/home/log", url: &url.URL{Scheme: siriusec.SchemeFile, Path: "/home/log"}},
+		{info: "explicit filesystem URI", in: "file:///home/log", url: &url.URL{Scheme: siriusec.SchemeFile, Path: "/home/log"}},
+		{info: "S3 URI", in: "s3://my-bucket", url: &url.URL{Scheme: siriusec.SchemeS3, Host: "my-bucket"}},
 	}
 	for i, testCase := range testCases {
 		comment := check.Commentf("test case %v %q", i, testCase.info)
@@ -497,7 +497,7 @@ func (s *UtilsSuite) TestReadToken(c *check.C) {
 	c.Assert(tok, check.Equals, "token")
 	c.Assert(err, check.IsNil)
 
-	_, err = ReadToken("/tmp/non-existent-token-for-teleport-tests-not-found")
+	_, err = ReadToken("/tmp/non-existent-token-for-siriusec-tests-not-found")
 	fixtures.ExpectNotFound(c, err)
 
 	dir := c.MkDir()

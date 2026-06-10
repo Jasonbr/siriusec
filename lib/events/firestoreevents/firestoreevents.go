@@ -32,7 +32,7 @@ import (
 	"github.com/siriusec/siriusec/lib/backend"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	apiutils "github.com/siriusec/siriusec/api/utils"
 	firestorebk "github.com/siriusec/siriusec/lib/backend/firestore"
@@ -138,7 +138,7 @@ const (
 	// eventNamespaceDocProperty is used internally to query for records and matches the key in the event struct tag
 	eventNamespaceDocProperty = "eventNamespace"
 
-	// credentialsPath is used to supply credentials to teleport via JSON-typed service account key file
+	// credentialsPath is used to supply credentials to siriusec via JSON-typed service account key file
 	credentialsPath = "credentialsPath"
 
 	// projectID is used to to lookup firestore resources for a given GCP project
@@ -276,7 +276,7 @@ func New(cfg EventsConfig) (*Log, error) {
 	}
 
 	l := log.WithFields(log.Fields{
-		trace.Component: teleport.Component(teleport.ComponentFirestore),
+		trace.Component: siriusec.Component(siriusec.ComponentFirestore),
 	})
 	l.Info("Initializing event backend.")
 	closeCtx, cancel := context.WithCancel(context.Background())

@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -72,7 +72,7 @@ func (c *TopCommand) TryRun(cmd string, client auth.ClientI) (match bool, err er
 		err = c.Top(diagClient)
 		if trace.IsConnectionProblem(err) {
 			return true, trace.ConnectionProblem(err,
-				"[CLIENT] Could not connect to metrics service at %v. Is teleport running with --diag-addr=%v?", *c.diagURL, *c.diagURL)
+				"[CLIENT] Could not connect to metrics service at %v. Is siriusec running with --diag-addr=%v?", *c.diagURL, *c.diagURL)
 		}
 		return true, trace.Wrap(err)
 	default:
@@ -87,7 +87,7 @@ func (c *TopCommand) Top(client *roundtrip.Client) error {
 	}
 	defer ui.Close()
 
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	uiEvents := ui.PollEvents()
@@ -372,7 +372,10 @@ func (c *TopCommand) fetchAndGenerateReport(ctx context.Context, client *roundtr
 }
 
 func (c *TopCommand) getPrometheusMetrics(client *roundtrip.Client) (map[string]*dto.MetricFamily, error) {
-	re, err := client.Get(context.TODO(), client.Endpoint("metrics"), url.Values{})
+	metricsCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	re, err := client.Get(metricsCtx, client.Endpoint("metrics"), url.Values{})
+	defer cancel()
 	if err != nil {
 		return nil, trace.Wrap(trace.ConvertSystemError(err))
 	}
@@ -522,7 +525,7 @@ func (b *BackendStats) SortedTopRequests() []Request {
 	return out
 }
 
-// ClusterStats contains some teleport specific stats
+// ClusterStats contains some siriusec specific stats
 type ClusterStats struct {
 	// InteractiveSessions is a number of active sessions.
 	InteractiveSessions float64
@@ -676,7 +679,7 @@ func generateReport(metrics map[string]*dto.MetricFamily, prev *Report, period t
 	}
 
 	collectBackendStats := func(component string, stats *BackendStats, prevStats *BackendStats) {
-		for _, req := range getRequests(component, metrics[teleport.MetricBackendRequests]) {
+		for _, req := range getRequests(component, metrics[siriusec.MetricBackendRequests]) {
 			if prev != nil {
 				prevReq, ok := prevStats.TopRequests[req.Key]
 				if ok {
@@ -686,25 +689,25 @@ func generateReport(metrics map[string]*dto.MetricFamily, prev *Report, period t
 			}
 			stats.TopRequests[req.Key] = req
 		}
-		stats.Read = getHistogram(metrics[teleport.MetricBackendReadHistogram], forLabel(component))
-		stats.Write = getHistogram(metrics[teleport.MetricBackendWriteHistogram], forLabel(component))
-		stats.BatchRead = getHistogram(metrics[teleport.MetricBackendBatchReadHistogram], forLabel(component))
-		stats.BatchWrite = getHistogram(metrics[teleport.MetricBackendBatchWriteHistogram], forLabel(component))
+		stats.Read = getHistogram(metrics[siriusec.MetricBackendReadHistogram], forLabel(component))
+		stats.Write = getHistogram(metrics[siriusec.MetricBackendWriteHistogram], forLabel(component))
+		stats.BatchRead = getHistogram(metrics[siriusec.MetricBackendBatchReadHistogram], forLabel(component))
+		stats.BatchWrite = getHistogram(metrics[siriusec.MetricBackendBatchWriteHistogram], forLabel(component))
 	}
 
 	var stats *BackendStats
 	if prev != nil {
 		stats = &prev.Backend
 	}
-	collectBackendStats(teleport.ComponentBackend, &re.Backend, stats)
+	collectBackendStats(siriusec.ComponentBackend, &re.Backend, stats)
 	if prev != nil {
 		stats = &prev.Cache
 	} else {
 		stats = nil
 	}
-	collectBackendStats(teleport.ComponentCache, &re.Cache, stats)
-	re.Cache.QueueSize = getComponentGaugeValue(teleport.Component(teleport.ComponentAuth, teleport.ComponentCache),
-		metrics[teleport.MetricBackendWatcherQueues])
+	collectBackendStats(siriusec.ComponentCache, &re.Cache, stats)
+	re.Cache.QueueSize = getComponentGaugeValue(siriusec.Component(siriusec.ComponentAuth, siriusec.ComponentCache),
+		metrics[siriusec.MetricBackendWatcherQueues])
 
 	var watchStats *WatcherStats
 	if prev != nil {
@@ -714,29 +717,29 @@ func generateReport(metrics map[string]*dto.MetricFamily, prev *Report, period t
 	re.Watcher = getWatcherStats(metrics, watchStats, period)
 
 	re.Process = ProcessStats{
-		CPUSecondsTotal:     getGaugeValue(metrics[teleport.MetricProcessCPUSecondsTotal]),
-		MaxFDs:              getGaugeValue(metrics[teleport.MetricProcessMaxFDs]),
-		OpenFDs:             getGaugeValue(metrics[teleport.MetricProcessOpenFDs]),
-		ResidentMemoryBytes: getGaugeValue(metrics[teleport.MetricProcessResidentMemoryBytes]),
-		StartTime:           time.Unix(int64(getGaugeValue(metrics[teleport.MetricProcessStartTimeSeconds])), 0),
+		CPUSecondsTotal:     getGaugeValue(metrics[siriusec.MetricProcessCPUSecondsTotal]),
+		MaxFDs:              getGaugeValue(metrics[siriusec.MetricProcessMaxFDs]),
+		OpenFDs:             getGaugeValue(metrics[siriusec.MetricProcessOpenFDs]),
+		ResidentMemoryBytes: getGaugeValue(metrics[siriusec.MetricProcessResidentMemoryBytes]),
+		StartTime:           time.Unix(int64(getGaugeValue(metrics[siriusec.MetricProcessStartTimeSeconds])), 0),
 	}
 
 	re.Go = GoStats{
-		Info:           getLabels(metrics[teleport.MetricGoInfo]),
-		Threads:        getGaugeValue(metrics[teleport.MetricGoThreads]),
-		Goroutines:     getGaugeValue(metrics[teleport.MetricGoGoroutines]),
-		AllocBytes:     getGaugeValue(metrics[teleport.MetricGoAllocBytes]),
-		HeapAllocBytes: getGaugeValue(metrics[teleport.MetricGoHeapAllocBytes]),
-		HeapObjects:    getGaugeValue(metrics[teleport.MetricGoHeapObjects]),
+		Info:           getLabels(metrics[siriusec.MetricGoInfo]),
+		Threads:        getGaugeValue(metrics[siriusec.MetricGoThreads]),
+		Goroutines:     getGaugeValue(metrics[siriusec.MetricGoGoroutines]),
+		AllocBytes:     getGaugeValue(metrics[siriusec.MetricGoAllocBytes]),
+		HeapAllocBytes: getGaugeValue(metrics[siriusec.MetricGoHeapAllocBytes]),
+		HeapObjects:    getGaugeValue(metrics[siriusec.MetricGoHeapObjects]),
 	}
 
 	re.Cluster = ClusterStats{
-		InteractiveSessions:            getGaugeValue(metrics[teleport.MetricServerInteractiveSessions]),
-		RemoteClusters:                 getRemoteClusters(metrics[teleport.MetricRemoteClusters]),
-		GenerateRequests:               getGaugeValue(metrics[teleport.MetricGenerateRequestsCurrent]),
-		GenerateRequestsCount:          Counter{Count: getCounterValue(metrics[teleport.MetricGenerateRequests])},
-		GenerateRequestsThrottledCount: Counter{Count: getCounterValue(metrics[teleport.MetricGenerateRequestsThrottled])},
-		GenerateRequestsHistogram:      getHistogram(metrics[teleport.MetricGenerateRequestsHistogram], atIndex(0)),
+		InteractiveSessions:            getGaugeValue(metrics[siriusec.MetricServerInteractiveSessions]),
+		RemoteClusters:                 getRemoteClusters(metrics[siriusec.MetricRemoteClusters]),
+		GenerateRequests:               getGaugeValue(metrics[siriusec.MetricGenerateRequestsCurrent]),
+		GenerateRequestsCount:          Counter{Count: getCounterValue(metrics[siriusec.MetricGenerateRequests])},
+		GenerateRequestsThrottledCount: Counter{Count: getCounterValue(metrics[siriusec.MetricGenerateRequestsThrottled])},
+		GenerateRequestsHistogram:      getHistogram(metrics[siriusec.MetricGenerateRequestsHistogram], atIndex(0)),
 	}
 
 	if prev != nil {
@@ -764,7 +767,7 @@ func getRequests(component string, metric *dto.MetricFamily) []Request {
 	}
 	out := make([]Request, 0, len(metric.Metric))
 	for _, counter := range metric.Metric {
-		if !matchesLabelValue(counter.Label, teleport.ComponentLabel, component) {
+		if !matchesLabelValue(counter.Label, siriusec.ComponentLabel, component) {
 			continue
 		}
 		req := Request{
@@ -773,11 +776,11 @@ func getRequests(component string, metric *dto.MetricFamily) []Request {
 			},
 		}
 		for _, label := range counter.Label {
-			if label.GetName() == teleport.TagReq {
+			if label.GetName() == siriusec.TagReq {
 				req.Key.Key = label.GetValue()
 			}
-			if label.GetName() == teleport.TagRange {
-				req.Key.Range = label.GetValue() == teleport.TagTrue
+			if label.GetName() == siriusec.TagRange {
+				req.Key.Range = label.GetValue() == siriusec.TagTrue
 			}
 		}
 		out = append(out, req)
@@ -786,7 +789,7 @@ func getRequests(component string, metric *dto.MetricFamily) []Request {
 }
 
 func getWatcherStats(metrics map[string]*dto.MetricFamily, prev *WatcherStats, period time.Duration) *WatcherStats {
-	eventsEmitted := metrics[teleport.MetricWatcherEventsEmitted]
+	eventsEmitted := metrics[siriusec.MetricWatcherEventsEmitted]
 	if eventsEmitted == nil || eventsEmitted.GetType() != dto.MetricType_HISTOGRAM || len(eventsEmitted.Metric) == 0 {
 		eventsEmitted = &dto.MetricFamily{}
 	}
@@ -797,7 +800,7 @@ func getWatcherStats(metrics map[string]*dto.MetricFamily, prev *WatcherStats, p
 
 		resource := ""
 		for _, pair := range metric.GetLabel() {
-			if pair.GetName() == teleport.TagResource {
+			if pair.GetName() == siriusec.TagResource {
 				resource = pair.GetValue()
 				break
 			}
@@ -827,7 +830,7 @@ func getWatcherStats(metrics map[string]*dto.MetricFamily, prev *WatcherStats, p
 		events[evt.Resource] = evt
 	}
 
-	histogram := getHistogram(metrics[teleport.MetricWatcherEventSizes], atIndex(0))
+	histogram := getHistogram(metrics[siriusec.MetricWatcherEventSizes], atIndex(0))
 	var (
 		eventsPerSec *utils.CircularBuffer
 		bytesPerSec  *utils.CircularBuffer
@@ -873,7 +876,7 @@ func getRemoteClusters(metric *dto.MetricFamily) []RemoteCluster {
 			Connected: counter.Gauge.GetValue() > 0,
 		}
 		for _, label := range counter.Label {
-			if label.GetName() == teleport.TagCluster {
+			if label.GetName() == siriusec.TagCluster {
 				rc.Name = label.GetValue()
 			}
 		}
@@ -887,7 +890,7 @@ func getComponentGaugeValue(component string, metric *dto.MetricFamily) float64 
 		return 0
 	}
 	for i := range metric.Metric {
-		if matchesLabelValue(metric.Metric[i].Label, teleport.ComponentLabel, component) {
+		if matchesLabelValue(metric.Metric[i].Label, siriusec.ComponentLabel, component) {
 			return *metric.Metric[i].Gauge.Value
 		}
 	}
@@ -924,7 +927,7 @@ func forLabel(label string) histogramFilterFunc {
 	return func(metrics []*dto.Metric) *dto.Histogram {
 		var hist *dto.Histogram
 		for i := range metrics {
-			if matchesLabelValue(metrics[i].Label, teleport.ComponentLabel, label) {
+			if matchesLabelValue(metrics[i].Label, siriusec.ComponentLabel, label) {
 				hist = metrics[i].Histogram
 				break
 			}

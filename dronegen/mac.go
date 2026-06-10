@@ -49,7 +49,7 @@ func darwinPushPipeline() pipeline {
 		cleanUpExecStorageStep(p.Workspace.Path),
 		{
 			Name:        "Send Slack notification (exec)",
-			Environment: map[string]value{"SLACK_WEBHOOK_DEV_TELEPORT": {fromSecret: "SLACK_WEBHOOK_DEV_TELEPORT"}},
+			Environment: map[string]value{"SLACK_WEBHOOK_DEV_SIRIUSEC": {fromSecret: "SLACK_WEBHOOK_DEV_SIRIUSEC"}},
 			Commands: []string{
 				`
 export DRONE_BUILD_LINK="${DRONE_SYSTEM_PROTO}://${DRONE_SYSTEM_HOSTNAME}/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/${DRONE_BUILD_NUMBER}"
@@ -57,7 +57,7 @@ export GOOS=$(go env GOOS)
 export GOARCH=$(go env GOARCH)
 `,
 				fmt.Sprintf(`
-curl -sL -X POST -H 'Content-type: application/json' --data "{\"text\":\"Warning: %s artifact build failed for [%s] - please investigate immediately!\nBranch: %s\nCommit: %s\nLink: $DRONE_BUILD_LINK\"}" $SLACK_WEBHOOK_DEV_TELEPORT`,
+curl -sL -X POST -H 'Content-type: application/json' --data "{\"text\":\"Warning: %s artifact build failed for [%s] - please investigate immediately!\nBranch: %s\nCommit: %s\nLink: $DRONE_BUILD_LINK\"}" $SLACK_WEBHOOK_DEV_SIRIUSEC`,
 					escapedPreformatted("${GOOS}-${GOARCH}"),
 					escapedPreformatted("${DRONE_REPO_NAME}"),
 					escapedPreformatted("${DRONE_BRANCH}"),
@@ -121,7 +121,7 @@ func pushCheckoutCommandsDarwin() []string {
 		`set -u`,
 		`mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec`,
 		`cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec`,
-		`git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .`,
+		`git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .`,
 		`git checkout ${DRONE_TAG:-$DRONE_COMMIT}`,
 		// fetch enterprise submodules
 		// suppressing the newline on the end of the private key makes git operations fail on MacOS
@@ -183,10 +183,10 @@ func darwinTagCopyPackageArtifactCommands() []string {
 		`set -u`,
 		`cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec`,
 		// copy release archives to artifact directory
-		`cp teleport*.tar.gz $WORKSPACE_DIR/go/artifacts`,
-		`cp e/teleport-ent*.tar.gz $WORKSPACE_DIR/go/artifacts`,
+		`cp siriusec*.tar.gz $WORKSPACE_DIR/go/artifacts`,
+		`cp e/siriusec-ent*.tar.gz $WORKSPACE_DIR/go/artifacts`,
 		// generate checksums (for mac)
-		`cd $WORKSPACE_DIR/go/artifacts && for FILE in teleport*.tar.gz; do shasum -a 256 $FILE > $FILE.sha256; done && ls -l`,
+		`cd $WORKSPACE_DIR/go/artifacts && for FILE in siriusec*.tar.gz; do shasum -a 256 $FILE > $FILE.sha256; done && ls -l`,
 	}
 }
 
@@ -194,6 +194,6 @@ func darwinUploadToS3Commands() []string {
 	return []string{
 		`set -u`,
 		`cd $WORKSPACE_DIR/go/artifacts`,
-		`aws s3 sync . s3://$AWS_S3_BUCKET/teleport/tag/${DRONE_TAG##v}`,
+		`aws s3 sync . s3://$AWS_S3_BUCKET/siriusec/tag/${DRONE_TAG##v}`,
 	}
 }

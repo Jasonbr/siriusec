@@ -17,13 +17,14 @@ limitations under the License.
 package db
 
 import (
+	"os"
+	"io"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"path/filepath"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/tlsca"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -78,7 +79,7 @@ func (s *Server) getCACert(ctx context.Context, server types.DatabaseServer) ([]
 	// It's already downloaded.
 	if err == nil {
 		s.log.Debugf("Loaded CA certificate %v.", filePath)
-		return ioutil.ReadFile(filePath)
+		return os.ReadFile(filePath)
 	}
 	// Otherwise download it.
 	s.log.Debugf("Downloading CA certificate for %v.", server)
@@ -87,7 +88,7 @@ func (s *Server) getCACert(ctx context.Context, server types.DatabaseServer) ([]
 		return nil, trace.Wrap(err)
 	}
 	// Save to the filesystem.
-	err = ioutil.WriteFile(filePath, bytes, teleport.FileMaskOwnerOnly)
+	err = os.WriteFile(filePath, bytes, siriusec.FileMaskOwnerOnly)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -151,7 +152,7 @@ func (d *realDownloader) downloadFromURL(downloadURL string) ([]byte, error) {
 		return nil, trace.BadParameter("status code %v when fetching from %q",
 			resp.StatusCode, downloadURL)
 	}
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

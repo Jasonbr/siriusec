@@ -20,7 +20,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -37,7 +37,7 @@ import (
 
 func (process *SiriusecProcess) initKubernetes() {
 	log := process.log.WithFields(logrus.Fields{
-		trace.Component: teleport.Component(teleport.ComponentKube, process.id),
+		trace.Component: siriusec.Component(siriusec.ComponentKube, process.id),
 	})
 
 	process.registerWithAuthServer(types.RoleKube, KubeIdentityEvent)
@@ -71,14 +71,14 @@ func (process *SiriusecProcess) initKubernetes() {
 func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *Connector) (retErr error) {
 	// clean up unused descriptors passed for proxy, but not used by it
 	defer func() {
-		if err := process.closeImportedDescriptors(teleport.ComponentKube); err != nil {
+		if err := process.closeImportedDescriptors(siriusec.ComponentKube); err != nil {
 			log.WithError(err).Warn("Failed closing imported file descriptors.")
 		}
 	}()
 	cfg := process.Config
 
 	// Create a caching auth client.
-	accessPoint, err := process.newLocalCache(conn.Client, cache.ForKubernetes, []string{teleport.ComponentKube})
+	accessPoint, err := process.newLocalCache(conn.Client, cache.ForKubernetes, []string{siriusec.ComponentKube})
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -102,7 +102,7 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 	// Filter out cases where both listen_addr and tunnel are set or both are
 	// not set.
 	case conn.UseTunnel() && !cfg.Kube.ListenAddr.IsEmpty():
-		return trace.BadParameter("either set kubernetes_service.listen_addr if this process can be reached from a teleport proxy or point teleport.auth_servers to a proxy to dial out, but don't set both")
+		return trace.BadParameter("either set kubernetes_service.listen_addr if this process can be reached from a siriusec proxy or point siriusec.auth_servers to a proxy to dial out, but don't set both")
 	case !conn.UseTunnel() && cfg.Kube.ListenAddr.IsEmpty():
 		// TODO(awly): if this process runs auth, proxy and kubernetes
 		// services, the proxy should be able to route requests to this
@@ -112,7 +112,7 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 		//
 		// For now, as a lazy shortcut, kuberentes_service.listen_addr is
 		// always required when running in the same process with a proxy.
-		return trace.BadParameter("set kubernetes_service.listen_addr if this process can be reached from a teleport proxy or point teleport.auth_servers to a proxy to dial out")
+		return trace.BadParameter("set kubernetes_service.listen_addr if this process can be reached from a siriusec proxy or point siriusec.auth_servers to a proxy to dial out")
 
 	// Start a local listener and let proxies dial in.
 	case !conn.UseTunnel() && !cfg.Kube.ListenAddr.IsEmpty():
@@ -135,7 +135,7 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 		agentPool, err = reversetunnel.NewAgentPool(
 			process.ExitContext(),
 			reversetunnel.AgentPoolConfig{
-				Component:   teleport.ComponentKube,
+				Component:   siriusec.ComponentKube,
 				HostUUID:    conn.ServerIdentity.ID.HostUUID,
 				ProxyAddr:   conn.TunnelProxy(),
 				Client:      conn.Client,
@@ -177,11 +177,11 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 		}()
 	}
 
-	teleportClusterName := conn.ServerIdentity.Cert.Extensions[utils.CertExtensionAuthority]
+	siriusecClusterName := conn.ServerIdentity.Cert.Extensions[utils.CertExtensionAuthority]
 
 	lockWatcher, err := services.NewLockWatcher(process.ExitContext(), services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentKube,
+			Component: siriusec.ComponentKube,
 			Log:       log,
 			Client:    conn.Client,
 		},
@@ -191,7 +191,7 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 	}
 
 	// Create the kube server to service listener.
-	authorizer, err := auth.NewAuthorizer(teleportClusterName, accessPoint, lockWatcher)
+	authorizer, err := auth.NewAuthorizer(siriusecClusterName, accessPoint, lockWatcher)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -209,7 +209,7 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 	streamer, err := events.NewCheckingStreamer(events.CheckingStreamerConfig{
 		Inner:       conn.Client,
 		Clock:       process.Clock,
-		ClusterName: teleportClusterName,
+		ClusterName: siriusecClusterName,
 	})
 	if err != nil {
 		return trace.Wrap(err)
@@ -228,7 +228,7 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 		ForwarderConfig: kubeproxy.ForwarderConfig{
 			Namespace:                     apidefaults.Namespace,
 			Keygen:                        cfg.Keygen,
-			ClusterName:                   teleportClusterName,
+			ClusterName:                   siriusecClusterName,
 			Authz:                         authorizer,
 			AuthClient:                    conn.Client,
 			StreamEmitter:                 streamEmitter,
@@ -239,7 +239,7 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 			KubeconfigPath:                cfg.Kube.KubeconfigPath,
 			KubeClusterName:               cfg.Kube.KubeClusterName,
 			KubeServiceType:               kubeproxy.KubeService,
-			Component:                     teleport.ComponentKube,
+			Component:                     siriusec.ComponentKube,
 			StaticLabels:                  cfg.Kube.StaticLabels,
 			DynamicLabels:                 dynLabels,
 			LockWatcher:                   lockWatcher,
@@ -251,9 +251,9 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 		LimiterConfig: cfg.Kube.Limiter,
 		OnHeartbeat: func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentKube})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentKube})
 			} else {
-				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentKube})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentKube})
 			}
 		},
 	})
@@ -268,14 +268,14 @@ func (process *SiriusecProcess) initKubernetesService(log *logrus.Entry, conn *C
 	process.RegisterCriticalFunc("kube.serve", func() error {
 		if conn.UseTunnel() {
 			log.Info("Starting Kube service via proxy reverse tunnel.")
-			utils.Consolef(cfg.Console, log, teleport.ComponentKube,
+			utils.Consolef(cfg.Console, log, siriusec.ComponentKube,
 				"Kubernetes service %s:%s is starting via proxy reverse tunnel.",
-				teleport.Version, teleport.Gitref)
+				siriusec.Version, siriusec.Gitref)
 		} else {
 			log.Infof("Starting Kube service on %v.", listener.Addr())
-			utils.Consolef(cfg.Console, log, teleport.ComponentKube,
+			utils.Consolef(cfg.Console, log, siriusec.ComponentKube,
 				"Kubernetes service %s:%s is starting on %v.",
-				teleport.Version, teleport.Gitref, listener.Addr())
+				siriusec.Version, siriusec.Gitref, listener.Addr())
 		}
 		err := kubeServer.Serve(listener)
 		if err != nil {

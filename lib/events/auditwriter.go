@@ -106,7 +106,7 @@ type AuditWriterConfig struct {
 	// BackoffDuration is a duration of the backoff before the next try
 	BackoffDuration time.Duration
 
-	// ClusterName defines the name of this teleport cluster.
+	// ClusterName defines the name of this siriusec cluster.
 	ClusterName string
 }
 

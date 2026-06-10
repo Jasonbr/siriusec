@@ -31,7 +31,7 @@ Examples:
 
   > tctl users add --roles=admin,dba joe
 
-  This creates a Teleport account 'joe' who will assume the roles 'admin' and 'dba'
+  This creates a Siriusec account 'joe' who will assume the roles 'admin' and 'dba'
   To see the permissions of 'admin' role, execute 'tctl get role/admin'
 `
 

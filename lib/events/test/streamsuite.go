@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -61,7 +60,7 @@ func StreamResumeManyParts(t *testing.T, handler events.MultipartHandler) {
 
 // StreamWithParameters tests stream upload and subsequent download and reads the results
 func StreamWithParameters(t *testing.T, handler events.MultipartHandler, params StreamParams) {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	inEvents := events.GenerateTestSession(events.SessionParams{PrintEvents: params.PrintEvents})
 	sid := session.ID(inEvents[0].(events.SessionMetadataGetter).GetSessionID())
@@ -91,7 +90,7 @@ func StreamWithParameters(t *testing.T, handler events.MultipartHandler, params 
 	err = stream.Complete(ctx)
 	require.Nil(t, err)
 
-	f, err := ioutil.TempFile("", string(sid))
+	f, err := os.CreateTemp("", string(sid))
 	require.Nil(t, err)
 	defer os.Remove(f.Name())
 	defer f.Close()
@@ -117,7 +116,7 @@ func StreamWithParameters(t *testing.T, handler events.MultipartHandler, params 
 // StreamResumeWithParameters expects initial complete attempt to fail
 // but subsequent resume to succeed
 func StreamResumeWithParameters(t *testing.T, handler events.MultipartHandler, params StreamParams) {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	inEvents := events.GenerateTestSession(events.SessionParams{PrintEvents: params.PrintEvents})
 	sid := session.ID(inEvents[0].(events.SessionMetadataGetter).GetSessionID())
@@ -158,7 +157,7 @@ func StreamResumeWithParameters(t *testing.T, handler events.MultipartHandler, p
 	err = stream.Complete(ctx)
 	require.Nil(t, err, "Complete after resume should succeed")
 
-	f, err := ioutil.TempFile("", string(sid))
+	f, err := os.CreateTemp("", string(sid))
 	require.Nil(t, err)
 	defer os.Remove(f.Name())
 	defer f.Close()

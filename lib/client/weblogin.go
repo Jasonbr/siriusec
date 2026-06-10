@@ -27,7 +27,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -89,10 +89,10 @@ type MFAChallengeRequest struct {
 }
 
 // CreateSSHCertReq are passed by web client
-// to authenticate against teleport server and receive
+// to authenticate against siriusec server and receive
 // a temporary cert signed by auth server authority
 type CreateSSHCertReq struct {
-	// User is a teleport username
+	// User is a siriusec username
 	User string `json:"user"`
 	// Password is user's pass
 	Password string `json:"password"`
@@ -117,10 +117,10 @@ type CreateSSHCertReq struct {
 }
 
 // CreateSSHCertWithMFAReq are passed by web client
-// to authenticate against teleport server and receive
+// to authenticate against siriusec server and receive
 // a temporary cert signed by auth server authority
 type CreateSSHCertWithMFAReq struct {
-	// User is a teleport username
+	// User is a siriusec username
 	User string `json:"user"`
 	// Password for the user, to authenticate in case no MFA check was
 	// performed.
@@ -207,7 +207,7 @@ type SSHLoginMFA struct {
 // initClient creates a new client to the HTTPS web proxy.
 func initClient(proxyAddr string, insecure bool, pool *x509.CertPool) (*WebClient, *url.URL, error) {
 	log := logrus.WithFields(logrus.Fields{
-		trace.Component: teleport.ComponentClient,
+		trace.Component: siriusec.ComponentClient,
 	})
 	log.Debugf("HTTPS client init(proxyAddr=%v, insecure=%v)", proxyAddr, insecure)
 
@@ -260,23 +260,23 @@ func SSHAgentSSOLogin(ctx context.Context, login SSHLoginSSO) (*auth.SSHLoginRes
 
 	// If a command was found to launch the browser, create and start it.
 	var execCmd *exec.Cmd
-	if login.Browser != teleport.BrowserNone {
+	if login.Browser != siriusec.BrowserNone {
 		switch runtime.GOOS {
 		// macOS.
 		case constants.DarwinOS:
-			path, err := exec.LookPath(teleport.OpenBrowserDarwin)
+			path, err := exec.LookPath(siriusec.OpenBrowserDarwin)
 			if err == nil {
 				execCmd = exec.Command(path, clickableURL)
 			}
 		// Windows.
 		case constants.WindowsOS:
-			path, err := exec.LookPath(teleport.OpenBrowserWindows)
+			path, err := exec.LookPath(siriusec.OpenBrowserWindows)
 			if err == nil {
 				execCmd = exec.Command(path, "url.dll,FileProtocolHandler", clickableURL)
 			}
 		// Linux or any other operating system.
 		default:
-			path, err := exec.LookPath(teleport.OpenBrowserLinux)
+			path, err := exec.LookPath(siriusec.OpenBrowserLinux)
 			if err == nil {
 				execCmd = exec.Command(path, clickableURL)
 			}
@@ -289,8 +289,8 @@ func SSHAgentSSOLogin(ctx context.Context, login SSHLoginSSO) (*auth.SSHLoginRes
 	}
 
 	// Print the URL to the screen, in case the command that launches the browser did not run.
-	// If Browser is set to the special string teleport.BrowserNone, no browser will be opened.
-	if login.Browser == teleport.BrowserNone {
+	// If Browser is set to the special string siriusec.BrowserNone, no browser will be opened.
+	if login.Browser == siriusec.BrowserNone {
 		fmt.Printf("Use the following URL to authenticate:\n %v\n", clickableURL)
 	} else {
 		fmt.Printf("If browser window does not open automatically, open it by ")

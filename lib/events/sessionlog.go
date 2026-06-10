@@ -22,13 +22,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/session"
 	"github.com/siriusec/siriusec/lib/utils"
 
@@ -94,7 +93,7 @@ func NewDiskSessionLogger(cfg DiskSessionLoggerConfig) (*DiskSessionLogger, erro
 	sessionLogger := &DiskSessionLogger{
 		DiskSessionLoggerConfig: cfg,
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentAuditLog,
+			trace.Component: siriusec.ComponentAuditLog,
 			trace.ComponentFields: log.Fields{
 				"sid": cfg.SessionID,
 			},
@@ -236,7 +235,7 @@ func (sl *DiskSessionLogger) finalize() error {
 
 	// create a sentinel to signal completion
 	signalFile := filepath.Join(sl.sessionDir, fmt.Sprintf("%v.completed", sl.SessionID.String()))
-	err := ioutil.WriteFile(signalFile, []byte("completed"), 0640)
+	err := os.WriteFile(signalFile, []byte("completed"), 0640)
 	if err != nil {
 		log.Warningf("Failed creating signal file: %v.", err)
 	}
@@ -601,7 +600,7 @@ func (f *gzipWriter) Close() error {
 	var errors []error
 	if f.Writer != nil {
 		errors = append(errors, f.Writer.Close())
-		f.Writer.Reset(ioutil.Discard)
+		f.Writer.Reset(io.Discard)
 		writerPool.Put(f.Writer)
 		f.Writer = nil
 	}
@@ -618,7 +617,7 @@ func (f *gzipWriter) Close() error {
 // internal buffers to avoid too many objects on the heap
 var writerPool = sync.Pool{
 	New: func() interface{} {
-		w, _ := gzip.NewWriterLevel(ioutil.Discard, gzip.BestSpeed)
+		w, _ := gzip.NewWriterLevel(io.Discard, gzip.BestSpeed)
 		return w
 	},
 }

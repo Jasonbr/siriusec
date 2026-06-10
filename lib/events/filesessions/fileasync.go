@@ -21,12 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/defaults"
@@ -86,7 +85,7 @@ func (cfg *UploaderConfig) CheckAndSetDefaults() error {
 		cfg.Clock = clockwork.NewRealClock()
 	}
 	if cfg.Component == "" {
-		cfg.Component = teleport.ComponentUpload
+		cfg.Component = siriusec.ComponentUpload
 	}
 	return nil
 }
@@ -159,7 +158,7 @@ func (u *Uploader) writeSessionError(sessionID session.ID, err error) error {
 		return trace.BadParameter("missing session ID")
 	}
 	path := u.sessionErrorFilePath(sessionID)
-	return trace.ConvertSystemError(ioutil.WriteFile(path, []byte(err.Error()), 0600))
+	return trace.ConvertSystemError(os.WriteFile(path, []byte(err.Error()), 0600))
 }
 
 func (u *Uploader) checkSessionError(sessionID session.ID) (bool, error) {
@@ -253,7 +252,7 @@ type ScanStats struct {
 
 // Scan scans the streaming directory and uploads recordings
 func (u *Uploader) Scan() (*ScanStats, error) {
-	files, err := ioutil.ReadDir(u.cfg.ScanDir)
+	files, err := os.ReadDir(u.cfg.ScanDir)
 	if err != nil {
 		return nil, trace.ConvertSystemError(err)
 	}
@@ -316,7 +315,7 @@ type upload struct {
 
 // readStatus reads stream status
 func (u *upload) readStatus() (*apievents.StreamStatus, error) {
-	data, err := ioutil.ReadAll(u.checkpointFile)
+	data, err := io.ReadAll(io.LimitReader(u.checkpointFile, defaults.MaxGeneralReadSize))
 	if err != nil {
 		return nil, trace.ConvertSystemError(err)
 	}

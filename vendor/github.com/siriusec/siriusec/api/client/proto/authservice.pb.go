@@ -770,7 +770,7 @@ type UserCertsRequest struct {
 	// escalated privileges should be added to the certificate.
 	AccessRequests []string `protobuf:"bytes,6,rep,name=AccessRequests,proto3" json:"access_requests,omitempty"`
 	// KubernetesCluster specifies the target kubernetes cluster for TLS
-	// identities. This can be empty on older Teleport clients.
+	// identities. This can be empty on older Siriusec clients.
 	KubernetesCluster string `protobuf:"bytes,7,opt,name=KubernetesCluster,proto3" json:"kubernetes_cluster,omitempty"`
 	// RouteToDatabase specifies the target database proxy name to encode into
 	// certificate so database client requests are routed appropriately.
@@ -899,7 +899,7 @@ func (m *UserCertsRequest) GetRouteToApp() RouteToApp {
 
 // RouteToDatabase combines parameters for database service routing information.
 type RouteToDatabase struct {
-	// ServiceName is the Teleport database proxy service name the cert is for.
+	// ServiceName is the Siriusec database proxy service name the cert is for.
 	ServiceName string `protobuf:"bytes,1,opt,name=ServiceName,proto3" json:"service_name"`
 	// Protocol is the type of the database the cert is for.
 	Protocol string `protobuf:"bytes,2,opt,name=Protocol,proto3" json:"protocol"`
@@ -1600,9 +1600,9 @@ func (m *PingRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PingRequest proto.InternalMessageInfo
 
-// PingResponse contains data about the teleport auth server.
+// PingResponse contains data about the siriusec auth server.
 type PingResponse struct {
-	// ClusterName is the name of the teleport cluster.
+	// ClusterName is the name of the siriusec cluster.
 	ClusterName string `protobuf:"bytes,1,opt,name=ClusterName,proto3" json:"cluster_name"`
 	// ServerVersion is the version of the auth server.
 	ServerVersion string `protobuf:"bytes,2,opt,name=ServerVersion,proto3" json:"server_version"`
@@ -2529,9 +2529,9 @@ func (m *DeleteAllAppServersRequest) GetNamespace() string {
 // GenerateAppTokenRequest are the parameters used to request an application
 // token.
 type GenerateAppTokenRequest struct {
-	// Username is the Teleport username.
+	// Username is the Siriusec username.
 	Username string `protobuf:"bytes,1,opt,name=Username,proto3" json:"username"`
-	// Roles is a list of Teleport roles assigned to the user.
+	// Roles is a list of Siriusec roles assigned to the user.
 	Roles []string `protobuf:"bytes,2,rep,name=Roles,proto3" json:"roles"`
 	// URI is the URI of the application this token is targeting.
 	URI string `protobuf:"bytes,3,opt,name=URI,proto3" json:"uri"`
@@ -4738,7 +4738,7 @@ func (m *U2FRegisterResponse) GetClientData() string {
 type TOTPRegisterChallenge struct {
 	// Secret is a secret shared by client and server to generate codes.
 	Secret string `protobuf:"bytes,1,opt,name=Secret,proto3" json:"Secret,omitempty"`
-	// Issuer is the name of the Teleport cluster.
+	// Issuer is the name of the Siriusec cluster.
 	Issuer string `protobuf:"bytes,2,opt,name=Issuer,proto3" json:"Issuer,omitempty"`
 	// PeriodSeconds is a period for TOTP code rotation, in seconds.
 	PeriodSeconds uint32 `protobuf:"varint,3,opt,name=PeriodSeconds,proto3" json:"PeriodSeconds,omitempty"`

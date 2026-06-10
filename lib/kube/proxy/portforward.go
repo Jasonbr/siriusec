@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/events"
 
 	"github.com/gravitational/trace"
@@ -78,7 +78,7 @@ func runPortForwarding(req portForwardRequest) error {
 
 	h := &portForwardProxy{
 		Entry: log.WithFields(log.Fields{
-			trace.Component:   teleport.Component(teleport.ComponentProxyKube),
+			trace.Component:   siriusec.Component(siriusec.ComponentProxyKube),
 			events.RemoteAddr: req.httpRequest.RemoteAddr,
 		}),
 		portForwardRequest:    req,

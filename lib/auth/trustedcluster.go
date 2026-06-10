@@ -24,11 +24,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib"
 	"github.com/siriusec/siriusec/lib/backend"
+	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/events"
 	"github.com/siriusec/siriusec/lib/httplib"
 	"github.com/siriusec/siriusec/lib/services"
@@ -378,7 +379,8 @@ func (a *Server) GetRemoteCluster(clusterName string) (types.RemoteCluster, erro
 }
 
 func (a *Server) updateRemoteClusterStatus(remoteCluster types.RemoteCluster) error {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	netConfig, err := a.GetClusterNetworkingConfig(ctx)
 	if err != nil {
 		return trace.Wrap(err)
@@ -398,8 +400,8 @@ func (a *Server) updateRemoteClusterStatus(remoteCluster types.RemoteCluster) er
 		}
 		// No tunnel connections are known, mark the cluster offline (if it
 		// wasn't already).
-		if remoteCluster.GetConnectionStatus() != teleport.RemoteClusterStatusOffline {
-			remoteCluster.SetConnectionStatus(teleport.RemoteClusterStatusOffline)
+		if remoteCluster.GetConnectionStatus() != siriusec.RemoteClusterStatusOffline {
+			remoteCluster.SetConnectionStatus(siriusec.RemoteClusterStatusOffline)
 			if err := a.UpdateRemoteCluster(ctx, remoteCluster); err != nil {
 				// if the cluster was concurrently updated, ignore the update.  either
 				// the update was consistent with our view of the world, in which case
@@ -576,7 +578,7 @@ func (a *Server) sendValidateRequestToProxy(host string, validateRequest *Valida
 		opts = append(opts, roundtrip.HTTPClient(insecureWebClient))
 	}
 
-	clt, err := roundtrip.NewClient(proxyAddr.String(), teleport.WebAPIVersion, opts...)
+	clt, err := roundtrip.NewClient(proxyAddr.String(), siriusec.WebAPIVersion, opts...)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -586,7 +588,7 @@ func (a *Server) sendValidateRequestToProxy(host string, validateRequest *Valida
 		return nil, trace.Wrap(err)
 	}
 
-	out, err := httplib.ConvertResponse(clt.PostJSON(context.TODO(), clt.Endpoint("webapi", "trustedclusters", "validate"), validateRequestRaw))
+	out, err := httplib.ConvertResponse(clt.PostJSON(context.Background(), clt.Endpoint("webapi", "trustedclusters", "validate"), validateRequestRaw))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

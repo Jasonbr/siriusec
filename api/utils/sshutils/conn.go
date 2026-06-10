@@ -17,9 +17,9 @@ limitations under the License.
 package sshutils
 
 import (
+	"io"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"strings"
 	"time"
@@ -63,7 +63,7 @@ func ConnectProxyTransport(sconn ssh.Conn, req *DialReq, exclusive bool) (*ChCon
 		return nil, false, trace.Wrap(err)
 	}
 
-	// Send a special SSH out-of-band request called "teleport-transport"
+	// Send a special SSH out-of-band request called "siriusec-transport"
 	// the agent on the other side will create a new TCP/IP connection to
 	// 'addr' on its network and will start proxying that connection over
 	// this SSH channel.
@@ -76,7 +76,7 @@ func ConnectProxyTransport(sconn ssh.Conn, req *DialReq, exclusive bool) (*ChCon
 
 		// Pull the error message from the tunnel client (remote cluster)
 		// passed to us via stderr.
-		errMessageBytes, _ := ioutil.ReadAll(channel.Stderr())
+		errMessageBytes, _ := io.ReadAll(io.LimitReader(channel.Stderr(), 1<<20))
 		errMessage := strings.TrimSpace(string(errMessageBytes))
 		if len(errMessage) == 0 {
 			errMessage = fmt.Sprintf("failed connecting to %v [%v]", req.Address, req.ServerID)

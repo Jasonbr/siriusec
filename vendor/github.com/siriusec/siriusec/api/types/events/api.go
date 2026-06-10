@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package events contains event related types and logic required by the Teleport API.
+// Package events contains event related types and logic required by the Siriusec API.
 package events
 
 import (
@@ -64,10 +64,10 @@ type AuditEvent interface {
 	// SetIndex sets event index
 	SetIndex(idx int64)
 
-	// GetClusterName returns the name of the teleport cluster
+	// GetClusterName returns the name of the siriusec cluster
 	// as set on the event.
 	GetClusterName() string
-	// SetClusterName sets the name of the teleport cluster on the event.
+	// SetClusterName sets the name of the siriusec cluster on the event.
 	SetClusterName(string)
 }
 

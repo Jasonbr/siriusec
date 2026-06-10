@@ -29,7 +29,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apiclient "github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/types"
@@ -259,7 +259,7 @@ func (c *SessionContext) newRemoteTLSClient(cluster reversetunnel.RemoteSite) (a
 	})
 }
 
-// GetUser returns the authenticated teleport user
+// GetUser returns the authenticated siriusec user
 func (c *SessionContext) GetUser() string {
 	return c.user
 }
@@ -938,14 +938,14 @@ func (h *Handler) waitForWebSession(ctx context.Context, req types.GetWebSession
 	}
 	// Establish a watch.
 	watcher, err := h.cfg.AccessPoint.NewWatcher(ctx, types.Watch{
-		Name: teleport.ComponentWebProxy,
+		Name: siriusec.ComponentWebProxy,
 		Kinds: []types.WatchKind{
 			{
 				Kind:    types.KindWebSession,
 				SubKind: types.KindWebSession,
 			},
 		},
-		MetricComponent: teleport.ComponentWebProxy,
+		MetricComponent: siriusec.ComponentWebProxy,
 	})
 	if err != nil {
 		return trace.Wrap(err)

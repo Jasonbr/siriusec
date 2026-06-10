@@ -62,7 +62,7 @@ echo "[6/6] 创建配置文件..."
 
 cat > /etc/siriusec/siriusec.yaml <<'YAML'
 # Siriusec 配置文件
-teleport:
+siriusec:
   nodename: node-01
   data_dir: /var/lib/siriusec
   log:

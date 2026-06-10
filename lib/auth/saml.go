@@ -22,11 +22,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -90,7 +90,8 @@ func (a *Server) DeleteSAMLConnector(ctx context.Context, connectorName string) 
 }
 
 func (a *Server) CreateSAMLAuthRequest(req services.SAMLAuthRequest) (*services.SAMLAuthRequest, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	connector, err := a.Identity.GetSAMLConnector(ctx, req.ConnectorID, true)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -117,7 +118,7 @@ func (a *Server) CreateSAMLAuthRequest(req services.SAMLAuthRequest) (*services.
 	// only provides these parameters when binding == BindingHttpRedirect.
 	// Luckily, BuildAuthURLRedirect sets this and is otherwise identical to
 	// the standard BuildAuthURLFromDocument.
-	if connector.GetProvider() == teleport.Ping {
+	if connector.GetProvider() == siriusec.Ping {
 		req.RedirectURL, err = provider.BuildAuthURLRedirect("", doc)
 	} else {
 		req.RedirectURL, err = provider.BuildAuthURLFromDocument("", doc)
@@ -208,7 +209,7 @@ func (a *Server) createSAMLUser(p *createUserParams) (types.User, error) {
 			},
 			CreatedBy: types.CreatedBy{
 				User: types.UserRef{
-					Name: teleport.UserSystem,
+					Name: siriusec.UserSystem,
 				},
 				Time: a.clock.Now().UTC(),
 				Connector: &types.ConnectorRef{
@@ -226,7 +227,8 @@ func (a *Server) createSAMLUser(p *createUserParams) (types.User, error) {
 		return nil, trace.Wrap(err)
 	}
 
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 
 	// Overwrite exisiting user if it was created from an external identity provider.
 	if existingUser != nil {
@@ -260,7 +262,7 @@ func parseSAMLInResponseTo(response string) (string, error) {
 	err := doc.ReadFromBytes(raw)
 	if err != nil {
 		// Attempt to inflate the response in case it happens to be compressed (as with one case at saml.oktadev.com)
-		buf, err := ioutil.ReadAll(flate.NewReader(bytes.NewReader(raw)))
+		buf, err := io.ReadAll(io.LimitReader(flate.NewReader(bytes.NewReader(raw)), defaults.MaxHTTPRequestSize))
 		if err != nil {
 			return "", trace.Wrap(err)
 		}
@@ -276,14 +278,14 @@ func parseSAMLInResponseTo(response string) (string, error) {
 		return "", trace.BadParameter("unable to parse response")
 	}
 
-	// teleport only supports sending party initiated flows (Siriusec sends an
+	// siriusec only supports sending party initiated flows (Siriusec sends an
 	// AuthnRequest to the IdP and gets a SAMLResponse from the IdP). identity
 	// provider initiated flows (where Siriusec gets an unsolicited SAMLResponse
 	// from the IdP) are not supported.
 	el := doc.Root()
 	responseTo := el.SelectAttr("InResponseTo")
 	if responseTo == nil {
-		message := "teleport does not support initiating login from a SAML identity provider, login must be initiated from either the Siriusec Web UI or CLI"
+		message := "siriusec does not support initiating login from a SAML identity provider, login must be initiated from either the Siriusec Web UI or CLI"
 		log.Infof(message)
 		return "", trace.NotImplemented(message)
 	}
@@ -296,7 +298,7 @@ func parseSAMLInResponseTo(response string) (string, error) {
 // SAMLAuthResponse is returned when auth server validated callback parameters
 // returned from SAML identity provider
 type SAMLAuthResponse struct {
-	// Username is an authenticated teleport username
+	// Username is an authenticated siriusec username
 	Username string `json:"username"`
 	// Identity contains validated SAML identity
 	Identity types.ExternalIdentity `json:"identity"`
@@ -359,7 +361,8 @@ type samlAuthResponse struct {
 }
 
 func (a *Server) validateSAMLResponse(samlResponse string) (*samlAuthResponse, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	requestID, err := parseSAMLInResponseTo(samlResponse)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -379,7 +382,7 @@ func (a *Server) validateSAMLResponse(samlResponse string) (*samlAuthResponse, e
 	assertionInfo, err := provider.RetrieveAssertionInfo(samlResponse)
 	if err != nil {
 		return nil, trace.AccessDenied(
-			"received response with incorrect or missing attribute statements, please check the identity provider configuration to make sure that mappings for claims/attribute statements are set up correctly. <See: https://siriusec.com/teleport/docs/enterprise/sso/ssh-sso/>, failed to retrieve SAML assertion info from response: %v.", err)
+			"received response with incorrect or missing attribute statements, please check the identity provider configuration to make sure that mappings for claims/attribute statements are set up correctly. <See: https://siriusec.com/siriusec/docs/enterprise/sso/ssh-sso/>, failed to retrieve SAML assertion info from response: %v.", err)
 	}
 
 	if assertionInfo.WarningInfo.InvalidTime {
@@ -433,7 +436,7 @@ func (a *Server) validateSAMLResponse(samlResponse string) (*samlAuthResponse, e
 
 	// If the request is coming from a browser, create a web session.
 	if request.CreateWebSession {
-		session, err := a.createWebSession(context.TODO(), types.NewWebSessionRequest{
+		session, err := a.createWebSession(context.Background(), types.NewWebSessionRequest{
 			User:       user.GetName(),
 			Roles:      user.GetRoles(),
 			Traits:     user.GetTraits(),

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/events"
 	"github.com/siriusec/siriusec/lib/session"
@@ -190,7 +190,7 @@ func (h *Handler) ListUploads(ctx context.Context) ([]events.StreamUpload, error
 // GetUploadMetadata gets the metadata for session upload
 func (h *Handler) GetUploadMetadata(sessionID session.ID) events.UploadMetadata {
 	return events.UploadMetadata{
-		URL:       fmt.Sprintf("%v://%v/%v", teleport.SchemeS3, h.Bucket, sessionID),
+		URL:       fmt.Sprintf("%v://%v/%v", siriusec.SchemeS3, h.Bucket, sessionID),
 		SessionID: sessionID,
 	}
 }

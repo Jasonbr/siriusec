@@ -21,6 +21,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/siriusec/siriusec/lib/utils"
 	"github.com/siriusec/siriusec/tool/siriusec/common"
 )
 
@@ -29,6 +30,7 @@ func init() {
 }
 
 func main() {
+	utils.EnsureEnvFallback()
 	common.Run(common.Options{
 		Args: os.Args[1:],
 	})

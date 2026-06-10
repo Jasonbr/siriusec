@@ -3,7 +3,7 @@ Security Groups and Rules for Cluster.
 
 Note: Please see our Production Guide for network security
 recommendations. 
-https://gravitational.com/teleport/docs/production/#firewall-configuration
+https://siriusec.com/docs/docs/production/#firewall-configuration
 */
 
 // Create a Security Group
@@ -12,7 +12,7 @@ resource "aws_security_group" "cluster" {
   vpc_id = data.aws_vpc.default.id
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -25,7 +25,7 @@ resource "aws_security_group_rule" "cluster_ingress_ssh" {
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.cluster.id
 }
-// Permit inbound to Teleport Web interface
+// Permit inbound to Siriusec Web interface
 resource "aws_security_group_rule" "cluster_ingress_web" {
   type              = "ingress"
   from_port         = 3080
@@ -34,7 +34,7 @@ resource "aws_security_group_rule" "cluster_ingress_web" {
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.cluster.id
 }
-// Permit inbound to Teleport services
+// Permit inbound to Siriusec services
 resource "aws_security_group_rule" "cluster_ingress_services" {
   type              = "ingress"
   from_port         = 3022

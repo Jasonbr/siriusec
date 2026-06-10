@@ -66,12 +66,12 @@ func (process *SiriusecProcess) reconnectToAuthService(role types.SystemRole) (*
 		}
 		process.log.Errorf("%v failed to establish connection to cluster: %v.", role, err)
 
-		// Wait in between attempts, but return if teleport is shutting down
+		// Wait in between attempts, but return if siriusec is shutting down
 		select {
 		case <-time.After(retryTime):
 		case <-process.ExitContext().Done():
-			process.log.Infof("%v stopping connection attempts, teleport is shutting down.", role)
-			return nil, ErrTeleportExited
+			process.log.Infof("%v stopping connection attempts, siriusec is shutting down.", role)
+			return nil, ErrSiriusecExited
 		}
 	}
 }
@@ -437,7 +437,7 @@ func (process *SiriusecProcess) firstTimeConnect(role types.SystemRole) (*Connec
 // periodicSyncRotationState checks rotation state periodically and
 // takes action if necessary
 func (process *SiriusecProcess) periodicSyncRotationState() error {
-	// start rotation only after teleport process has started
+	// start rotation only after siriusec process has started
 	eventC := make(chan Event, 1)
 	process.WaitForEvent(process.ExitContext(), SiriusecReadyEvent, eventC)
 	select {
@@ -487,7 +487,7 @@ func (process *SiriusecProcess) periodicSyncRotationState() error {
 
 // syncRotationCycle executes a rotation cycle that returns:
 //
-// * nil whenever rotation state leads to teleport reload event
+// * nil whenever rotation state leads to siriusec reload event
 // * error whenever rotation cycle has to be restarted
 //
 // the function accepts extra delay timer extraDelay in case if parent
@@ -631,10 +631,10 @@ func (process *SiriusecProcess) syncServiceRotationState(ca types.CertAuthority,
 
 type rotationStatus struct {
 	// needsReload means that phase has been updated
-	// and teleport process has to reload
+	// and siriusec process has to reload
 	needsReload bool
-	// phaseChanged means that teleport phase has been updated,
-	// but teleport does not need reload
+	// phaseChanged means that siriusec phase has been updated,
+	// but siriusec does not need reload
 	phaseChanged bool
 	// ca is the certificate authority
 	// fetched during status check
@@ -780,7 +780,7 @@ func (process *SiriusecProcess) rotate(conn *Connector, localState auth.StateV2,
 			if err != nil {
 				return nil, trace.Wrap(err)
 			}
-			// Require reload of teleport process to update client and servers.
+			// Require reload of siriusec process to update client and servers.
 			return &rotationStatus{needsReload: true}, nil
 		case types.RotationPhaseUpdateServers:
 			// Allow transition to this phase only if the previous
@@ -797,7 +797,7 @@ func (process *SiriusecProcess) rotate(conn *Connector, localState auth.StateV2,
 			if err != nil {
 				return nil, trace.Wrap(err)
 			}
-			// Require reload of teleport process to update servers.
+			// Require reload of siriusec process to update servers.
 			return &rotationStatus{needsReload: true}, nil
 		case types.RotationPhaseRollback:
 			// Allow transition to this phase from any other local phase
@@ -812,7 +812,7 @@ func (process *SiriusecProcess) rotate(conn *Connector, localState auth.StateV2,
 			if err != nil {
 				return nil, trace.Wrap(err)
 			}
-			// Require reload of teleport process to update servers.
+			// Require reload of siriusec process to update servers.
 			return &rotationStatus{needsReload: true}, nil
 		default:
 			return nil, trace.BadParameter("unsupported phase: %q", remote.Phase)

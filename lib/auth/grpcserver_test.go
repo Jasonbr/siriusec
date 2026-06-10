@@ -33,7 +33,7 @@ import (
 	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -58,8 +58,8 @@ func TestMFADeviceManagement(t *testing.T) {
 		Type:         constants.Local,
 		SecondFactor: constants.SecondFactorOptional,
 		U2F: &types.U2F{
-			AppID:  "teleport",
-			Facets: []string{"teleport"},
+			AppID:  "siriusec",
+			Facets: []string{"siriusec"},
 		},
 	})
 	require.NoError(t, err)
@@ -553,8 +553,8 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 		Type:         constants.Local,
 		SecondFactor: constants.SecondFactorOn,
 		U2F: &types.U2F{
-			AppID:  "teleport",
-			Facets: []string{"teleport"},
+			AppID:  "siriusec",
+			Facets: []string{"siriusec"},
 		}})
 	require.NoError(t, err)
 	err = srv.Auth().SetAuthPreference(ctx, authPref)
@@ -689,7 +689,7 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 				initReq: &proto.UserCertsRequest{
 					PublicKey: pub,
 					Username:  user.GetName(),
-					Expires:   clock.Now().Add(teleport.UserSingleUseCertTTL),
+					Expires:   clock.Now().Add(siriusec.UserSingleUseCertTTL),
 					Usage:     proto.UserCertsRequest_SSH,
 					NodeName:  "node-a",
 				},
@@ -703,9 +703,9 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 					cert, err := sshutils.ParseCertificate(crt)
 					require.NoError(t, err)
 
-					require.Equal(t, cert.Extensions[teleport.CertExtensionMFAVerified], u2fDevID)
-					require.True(t, net.ParseIP(cert.Extensions[teleport.CertExtensionClientIP]).IsLoopback())
-					require.Equal(t, cert.ValidBefore, uint64(clock.Now().Add(teleport.UserSingleUseCertTTL).Unix()))
+					require.Equal(t, cert.Extensions[siriusec.CertExtensionMFAVerified], u2fDevID)
+					require.True(t, net.ParseIP(cert.Extensions[siriusec.CertExtensionClientIP]).IsLoopback())
+					require.Equal(t, cert.ValidBefore, uint64(clock.Now().Add(siriusec.UserSingleUseCertTTL).Unix()))
 				},
 			},
 		},
@@ -715,7 +715,7 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 				initReq: &proto.UserCertsRequest{
 					PublicKey:         pub,
 					Username:          user.GetName(),
-					Expires:           clock.Now().Add(teleport.UserSingleUseCertTTL),
+					Expires:           clock.Now().Add(siriusec.UserSingleUseCertTTL),
 					Usage:             proto.UserCertsRequest_Kubernetes,
 					KubernetesCluster: "kube-a",
 				},
@@ -728,13 +728,13 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 
 					cert, err := tlsca.ParseCertificatePEM(crt)
 					require.NoError(t, err)
-					require.Equal(t, cert.NotAfter, clock.Now().Add(teleport.UserSingleUseCertTTL))
+					require.Equal(t, cert.NotAfter, clock.Now().Add(siriusec.UserSingleUseCertTTL))
 
 					identity, err := tlsca.FromSubject(cert.Subject, cert.NotAfter)
 					require.NoError(t, err)
 					require.Equal(t, identity.MFAVerified, u2fDevID)
 					require.True(t, net.ParseIP(identity.ClientIP).IsLoopback())
-					require.Equal(t, identity.Usage, []string{teleport.UsageKubeOnly})
+					require.Equal(t, identity.Usage, []string{siriusec.UsageKubeOnly})
 					require.Equal(t, identity.KubernetesCluster, "kube-a")
 				},
 			},
@@ -745,7 +745,7 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 				initReq: &proto.UserCertsRequest{
 					PublicKey: pub,
 					Username:  user.GetName(),
-					Expires:   clock.Now().Add(teleport.UserSingleUseCertTTL),
+					Expires:   clock.Now().Add(siriusec.UserSingleUseCertTTL),
 					Usage:     proto.UserCertsRequest_Database,
 					RouteToDatabase: proto.RouteToDatabase{
 						ServiceName: "db-a",
@@ -760,13 +760,13 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 
 					cert, err := tlsca.ParseCertificatePEM(crt)
 					require.NoError(t, err)
-					require.Equal(t, cert.NotAfter, clock.Now().Add(teleport.UserSingleUseCertTTL))
+					require.Equal(t, cert.NotAfter, clock.Now().Add(siriusec.UserSingleUseCertTTL))
 
 					identity, err := tlsca.FromSubject(cert.Subject, cert.NotAfter)
 					require.NoError(t, err)
 					require.Equal(t, identity.MFAVerified, u2fDevID)
 					require.True(t, net.ParseIP(identity.ClientIP).IsLoopback())
-					require.Equal(t, identity.Usage, []string{teleport.UsageDatabaseOnly})
+					require.Equal(t, identity.Usage, []string{siriusec.UsageDatabaseOnly})
 					require.Equal(t, identity.RouteToDatabase.ServiceName, "db-a")
 				},
 			},
@@ -777,7 +777,7 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 				initReq: &proto.UserCertsRequest{
 					PublicKey: pub,
 					Username:  user.GetName(),
-					Expires:   clock.Now().Add(teleport.UserSingleUseCertTTL),
+					Expires:   clock.Now().Add(siriusec.UserSingleUseCertTTL),
 					Usage:     proto.UserCertsRequest_All,
 					NodeName:  "node-a",
 				},
@@ -792,7 +792,7 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 					Username:  user.GetName(),
 					// This expiry is longer than allowed, should be
 					// automatically adjusted.
-					Expires:  clock.Now().Add(2 * teleport.UserSingleUseCertTTL),
+					Expires:  clock.Now().Add(2 * siriusec.UserSingleUseCertTTL),
 					Usage:    proto.UserCertsRequest_SSH,
 					NodeName: "node-a",
 				},
@@ -806,9 +806,9 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 					cert, err := sshutils.ParseCertificate(crt)
 					require.NoError(t, err)
 
-					require.Equal(t, cert.Extensions[teleport.CertExtensionMFAVerified], u2fDevID)
-					require.True(t, net.ParseIP(cert.Extensions[teleport.CertExtensionClientIP]).IsLoopback())
-					require.Equal(t, cert.ValidBefore, uint64(clock.Now().Add(teleport.UserSingleUseCertTTL).Unix()))
+					require.Equal(t, cert.Extensions[siriusec.CertExtensionMFAVerified], u2fDevID)
+					require.True(t, net.ParseIP(cert.Extensions[siriusec.CertExtensionClientIP]).IsLoopback())
+					require.Equal(t, cert.ValidBefore, uint64(clock.Now().Add(siriusec.UserSingleUseCertTTL).Unix()))
 				},
 			},
 		},
@@ -818,7 +818,7 @@ func TestGenerateUserSingleUseCert(t *testing.T) {
 				initReq: &proto.UserCertsRequest{
 					PublicKey: pub,
 					Username:  user.GetName(),
-					Expires:   clock.Now().Add(teleport.UserSingleUseCertTTL),
+					Expires:   clock.Now().Add(siriusec.UserSingleUseCertTTL),
 					Usage:     proto.UserCertsRequest_SSH,
 					NodeName:  "node-a",
 				},
@@ -880,8 +880,8 @@ func TestIsMFARequired(t *testing.T) {
 		Type:         constants.Local,
 		SecondFactor: constants.SecondFactorOptional,
 		U2F: &types.U2F{
-			AppID:  "teleport",
-			Facets: []string{"teleport"},
+			AppID:  "siriusec",
+			Facets: []string{"siriusec"},
 		},
 	})
 	require.NoError(t, err)
@@ -939,8 +939,8 @@ func TestDeleteLastMFADevice(t *testing.T) {
 		Type:         constants.Local,
 		SecondFactor: constants.SecondFactorOn,
 		U2F: &types.U2F{
-			AppID:  "teleport",
-			Facets: []string{"teleport"},
+			AppID:  "siriusec",
+			Facets: []string{"siriusec"},
 		},
 	})
 	require.NoError(t, err)

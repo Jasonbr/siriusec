@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	"github.com/gravitational/trace"
 	"github.com/sirupsen/logrus"
@@ -150,7 +150,7 @@ type LocalSupervisor struct {
 
 // NewSupervisor returns new instance of initialized supervisor
 func NewSupervisor(id string, parentLog logrus.FieldLogger) Supervisor {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	closeContext, cancel := context.WithCancel(ctx)
 
@@ -180,7 +180,7 @@ func NewSupervisor(id string, parentLog logrus.FieldLogger) Supervisor {
 
 		reloadContext: reloadContext,
 		signalReload:  signalReload,
-		log:           parentLog.WithField(trace.Component, teleport.Component(teleport.ComponentProcess, id)),
+		log:           parentLog.WithField(trace.Component, siriusec.Component(siriusec.ComponentProcess, id)),
 	}
 	go srv.fanOut()
 	return srv
@@ -262,7 +262,7 @@ func (s *LocalSupervisor) serve(srv Service) {
 		l.Debug("Service has started.")
 		err := srv.Serve()
 		if err != nil {
-			if err == ErrTeleportExited {
+			if err == ErrSiriusecExited {
 				l.Info("Siriusec process has shut down.")
 			} else {
 				l.WithError(err).Warning("Siriusec process has exited with error.")
@@ -458,7 +458,7 @@ type waiter struct {
 	context context.Context
 }
 
-// Service is a running teleport service function
+// Service is a running siriusec service function
 type Service interface {
 	// Serve starts the function
 	Serve() error

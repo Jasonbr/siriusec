@@ -1,0 +1,27 @@
+# Example slack plugin configuration TOML file
+
+[siriusec]
+# Siriusec Auth/Proxy Server address.
+#
+# Should be port 3025 for Auth Server and 3080 or 443 for Proxy.
+# For Siriusec Cloud, should be in the form "your-account.siriusec.sh:443".
+addr = "example.com:3025"
+
+# Credentials.
+#
+# When using --format=file:
+# identity = "/var/lib/siriusec/plugins/slack/auth_id"    # Identity file
+#
+# When using --format=tls:
+# client_key = "/var/lib/siriusec/plugins/slack/auth.key" # Siriusec TLS secret key
+# client_crt = "/var/lib/siriusec/plugins/slack/auth.crt" # Siriusec TLS certificate
+# root_cas = "/var/lib/siriusec/plugins/slack/auth.cas"   # Siriusec CA certs
+
+[slack]
+token = "xoxb-11xx"                                 # Slack Bot OAuth token
+# recipients = ["person@email.com","YYYYYYY"]       # Optional Slack Rooms
+                                                    # Can also set suggested_reviewers for each role
+
+[log]
+output = "stderr" # Logger output. Could be "stdout", "stderr" or "/var/lib/siriusec/slack.log"
+severity = "INFO" # Logger severity. Could be "INFO", "ERROR", "DEBUG" or "WARN".

@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -106,7 +106,7 @@ func NewTLSServer(cfg TLSServerConfig) (*TLSServer, error) {
 	// and passes it to the API server
 	authMiddleware := &auth.Middleware{
 		AccessPoint:   cfg.AccessPoint,
-		AcceptedUsage: []string{teleport.UsageKubeOnly},
+		AcceptedUsage: []string{siriusec.UsageKubeOnly},
 	}
 	authMiddleware.Wrap(fwd)
 	// Wrap sets the next middleware in chain to the authMiddleware
@@ -281,7 +281,7 @@ func (t *TLSServer) GetServerInfo() (types.Resource, error) {
 		},
 		Spec: types.ServerSpecV2{
 			Addr:               addr,
-			Version:            teleport.Version,
+			Version:            siriusec.Version,
 			KubernetesClusters: t.fwd.kubeClusters(),
 		},
 	}

@@ -30,7 +30,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/limiter"
@@ -44,7 +44,7 @@ import (
 
 var proxyConnectionLimitHitCount = prometheus.NewCounter(
 	prometheus.CounterOpts{
-		Name: teleport.MetricProxyConnectionLimitHit,
+		Name: siriusec.MetricProxyConnectionLimitHit,
 		Help: "Number of times the proxy connection limit was exceeded",
 	},
 )
@@ -109,7 +109,7 @@ const (
 
 	// TrueClientAddrVar environment variable is used by the web UI to pass
 	// the remote IP (user's IP) from the browser/HTTP session into an SSH session
-	TrueClientAddrVar = "TELEPORT_CLIENT_ADDR"
+	TrueClientAddrVar = "SIRIUSEC_CLIENT_ADDR"
 )
 
 // ServerOption is a functional argument for server
@@ -160,7 +160,7 @@ func NewServer(
 		return nil, trace.Wrap(err)
 	}
 
-	closeContext, cancel := context.WithCancel(context.TODO())
+	closeContext, cancel := context.WithCancel(context.Background())
 	s := &Server{
 		log: log.WithFields(log.Fields{
 			trace.Component: "ssh:" + component,
@@ -532,7 +532,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 			// send keepalive pings to the clients
 		case <-keepAliveTick.C:
 			const wantReply = true
-			_, _, err = sconn.SendRequest(teleport.KeepAliveReqType, wantReply, keepAlivePayload[:])
+			_, _, err = sconn.SendRequest(siriusec.KeepAliveReqType, wantReply, keepAlivePayload[:])
 			if err != nil {
 				log.Errorf("Failed sending keepalive request: %v", err)
 			}
@@ -627,17 +627,17 @@ type (
 	PasswordFunc  func(conn ssh.ConnMetadata, password []byte) (*ssh.Permissions, error)
 )
 
-// HandshakePayload structure is sent as a JSON blob by the teleport
+// HandshakePayload structure is sent as a JSON blob by the siriusec
 // proxy to every SSH server who identifies itself as Siriusec server
 //
-// It allows teleport proxies to communicate additional data to server
+// It allows siriusec proxies to communicate additional data to server
 type HandshakePayload struct {
 	// ClientAddr is the IP address of the remote client
 	ClientAddr string `json:"clientAddr,omitempty"`
 }
 
 // connectionWrapper allows the SSH server to perform custom handshake which
-// lets teleport proxy servers to relay a true remote client IP address
+// lets siriusec proxy servers to relay a true remote client IP address
 // to the SSH server.
 //
 // (otherwise connection.RemoteAddr (client IP) will always point to a proxy IP
@@ -666,7 +666,7 @@ func (c *connectionWrapper) Read(b []byte) (int, error) {
 	if c.upstreamReader != nil {
 		return c.upstreamReader.Read(b)
 	}
-	// inspect the client's hello message and see if it's a teleport
+	// inspect the client's hello message and see if it's a siriusec
 	// proxy connecting?
 	buff := make([]byte, MaxVersionStringBytes)
 	n, err := c.Conn.Read(buff)

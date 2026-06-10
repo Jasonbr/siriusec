@@ -191,7 +191,7 @@ const (
 )
 
 // DefaultCipherSuites returns the default list of cipher suites that
-// Teleport supports. By default Siriusec only support modern ciphers
+// Siriusec supports. By default Siriusec only support modern ciphers
 // (Chacha20 and AES GCM) and key exchanges which support perfect forward
 // secrecy (ECDHE).
 //

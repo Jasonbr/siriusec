@@ -17,9 +17,9 @@ limitations under the License.
 package client
 
 import (
+	"os"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/identityfile"
@@ -114,7 +114,7 @@ func (c *keypairCreds) TLSConfig() (*tls.Config, error) {
 		return nil, trace.Wrap(err)
 	}
 
-	cas, err := ioutil.ReadFile(c.caFile)
+	cas, err := os.ReadFile(c.caFile)
 	if err != nil {
 		return nil, trace.ConvertSystemError(err)
 	}

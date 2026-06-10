@@ -6,7 +6,7 @@ resource "aws_security_group" "proxy" {
   name   = "${var.cluster_name}-proxy"
   vpc_id = local.vpc_id
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_security_group" "proxy_acm" {
   vpc_id = local.vpc_id
   count  = var.use_acm ? 1 : 0
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -124,7 +124,7 @@ resource "aws_lb" "proxy" {
   enable_cross_zone_load_balancing  = true
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -138,7 +138,7 @@ resource "aws_lb" "proxy_acm" {
   security_groups    = [aws_security_group.proxy_acm[0].id]
   count              = var.use_acm ? 1 : 0
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -146,7 +146,7 @@ resource "aws_lb" "proxy_acm" {
 resource "aws_lb_target_group" "proxy_proxy" {
   name     = "${var.cluster_name}-proxy-proxy"
   port     = 3023
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "TCP"
 }
 
@@ -162,11 +162,11 @@ resource "aws_lb_listener" "proxy_proxy" {
 }
 
 // Tunnel endpoint/listener on LB - this is only used with ACM (as
-// Teleport web/tunnel multiplexing can be used with Letsencrypt)
+// Siriusec web/tunnel multiplexing can be used with Letsencrypt)
 resource "aws_lb_target_group" "proxy_tunnel_acm" {
   name     = "${var.cluster_name}-proxy-tunnel"
   port     = 3024
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "TCP"
   count    = var.use_acm ? 1 : 0
 }
@@ -187,7 +187,7 @@ resource "aws_lb_listener" "proxy_tunnel_acm" {
 resource "aws_lb_target_group" "proxy_kube" {
   name     = "${var.cluster_name}-proxy-kube"
   port     = 3026
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "TCP"
 }
 
@@ -209,7 +209,7 @@ resource "aws_lb_listener" "proxy_kube" {
 resource "aws_lb_target_group" "proxy_web" {
   name     = "${var.cluster_name}-proxy-web"
   port     = 3080
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   count    = var.use_acm ? 0 : 1
   protocol = "TCP"
 }
@@ -231,7 +231,7 @@ resource "aws_lb_listener" "proxy_web" {
 resource "aws_lb_target_group" "proxy_web_acm" {
   name     = "${var.cluster_name}-proxy-web"
   port     = 3080
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "HTTPS"
   count    = var.use_acm ? 1 : 0
 
@@ -261,7 +261,7 @@ resource "aws_lb_listener" "proxy_web_acm" {
 resource "aws_lb_target_group" "proxy_grafana" {
   name     = "${var.cluster_name}-proxy-grafana"
   port     = 8443
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "TCP"
   count    = var.use_acm ? 0 : 1
 }
@@ -282,7 +282,7 @@ resource "aws_lb_listener" "proxy_grafana" {
 resource "aws_lb_target_group" "proxy_grafana_acm" {
   name     = "${var.cluster_name}-proxy-grafana"
   port     = 8444
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "HTTP"
   count    = var.use_acm ? 1 : 0
 }

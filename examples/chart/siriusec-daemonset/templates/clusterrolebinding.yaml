@@ -1,0 +1,33 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ template "siriusec.fullname" . }}
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "siriusec.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "siriusec.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{ if .Values.usePSP -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ template "siriusec.fullname" . }}-psp-clusterrolebinding
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "siriusec.fullname" . }}-psp-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: {{ template "siriusec.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end -}}
+{{- end -}}

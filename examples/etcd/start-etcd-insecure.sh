@@ -8,7 +8,7 @@ HERE=$(readlink -f $0)
 cd "$(dirname $HERE)" || exit
 
 mkdir -p data
-etcd --name teleportstorage \
+etcd --name siriusecstorage \
      --data-dir data/etcd \
      --initial-cluster-state new \
      --advertise-client-urls=http://127.0.0.1:2379 \

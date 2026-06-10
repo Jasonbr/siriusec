@@ -34,7 +34,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	apisshutils "github.com/siriusec/siriusec/api/utils/sshutils"
@@ -75,8 +75,8 @@ func TestMain(m *testing.M) {
 	utils.InitLoggerForTests()
 	// If the test is re-executing itself, execute the command that comes over
 	// the pipe.
-	if len(os.Args) == 2 && os.Args[1] == teleport.ExecSubCommand {
-		RunAndExit(teleport.ExecSubCommand)
+	if len(os.Args) == 2 && os.Args[1] == siriusec.ExecSubCommand {
+		RunAndExit(siriusec.ExecSubCommand)
 		return
 	}
 
@@ -236,21 +236,21 @@ func (s *ExecSuite) TestEmitExecAuditEvent(c *check.C) {
 			inCommand:  "exit 0",
 			inError:    nil,
 			outCommand: "exit 0",
-			outCode:    strconv.Itoa(teleport.RemoteCommandSuccess),
+			outCode:    strconv.Itoa(siriusec.RemoteCommandSuccess),
 		},
 		// Exited with error.
 		{
 			inCommand:  "exit 255",
 			inError:    fmt.Errorf("unknown error"),
 			outCommand: "exit 255",
-			outCode:    strconv.Itoa(teleport.RemoteCommandFailure),
+			outCode:    strconv.Itoa(siriusec.RemoteCommandFailure),
 		},
 		// Command injection.
 		{
-			inCommand:  "/bin/teleport scp --remote-addr=127.0.0.1:50862 --local-addr=127.0.0.1:54895 -f ~/file.txt && touch /tmp/new.txt",
+			inCommand:  "/bin/siriusec scp --remote-addr=127.0.0.1:50862 --local-addr=127.0.0.1:54895 -f ~/file.txt && touch /tmp/new.txt",
 			inError:    fmt.Errorf("unknown error"),
-			outCommand: "/bin/teleport scp --remote-addr=127.0.0.1:50862 --local-addr=127.0.0.1:54895 -f ~/file.txt && touch /tmp/new.txt",
-			outCode:    strconv.Itoa(teleport.RemoteCommandFailure),
+			outCommand: "/bin/siriusec scp --remote-addr=127.0.0.1:50862 --local-addr=127.0.0.1:54895 -f ~/file.txt && touch /tmp/new.txt",
+			outCode:    strconv.Itoa(siriusec.RemoteCommandFailure),
 		},
 	}
 	for _, tt := range tests {
@@ -496,7 +496,7 @@ func (f *fakeServer) GetInfo() types.Server {
 			Addr:      "",
 			Hostname:  hostname,
 			UseTunnel: false,
-			Version:   teleport.Version,
+			Version:   siriusec.Version,
 		},
 	}
 }

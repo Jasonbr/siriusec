@@ -17,13 +17,13 @@ limitations under the License.
 package auth
 
 import (
+	"io"
 	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -31,7 +31,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
@@ -62,12 +62,12 @@ const (
 // Client is the Auth API client. It works by connecting to auth servers
 // via gRPC and HTTP.
 //
-// When Teleport servers connect to auth API, they usually establish an SSH
+// When Siriusec servers connect to auth API, they usually establish an SSH
 // tunnel first, and then do HTTP-over-SSH. This client is wrapped by auth.TunClient
 // in lib/auth/tun.go
 //
 // NOTE: This client is being deprecated in favor of the gRPC Client in
-// teleport/api/client. This Client should only be used internally, or for
+// siriusec/api/client. This Client should only be used internally, or for
 // functionality that hasn't been ported to the new client yet.
 type Client struct {
 	// APIClient is used to make gRPC requests to the server
@@ -79,18 +79,18 @@ type Client struct {
 // Make sure Client implements all the necessary methods.
 var _ ClientI = &Client{}
 
-// NewClient creates a new API client with a connection to a Teleport server.
+// NewClient creates a new API client with a connection to a Siriusec server.
 //
 // The client will use the first credentials and the given dialer. If
 // no dialer is given, the first address will be used. This address must
 // be an auth server address.
 //
 // NOTE: This client is being deprecated in favor of the gRPC Client in
-// teleport/api/client. This Client should only be used internally, or for
+// siriusec/api/client. This Client should only be used internally, or for
 // functionality that hasn't been ported to the new client yet.
 func NewClient(cfg client.Config, params ...roundtrip.ClientParam) (*Client, error) {
 	cfg.DialInBackground = true
-	apiClient, err := client.New(context.TODO(), cfg)
+	apiClient, err := client.New(context.Background(), cfg)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -111,7 +111,7 @@ func NewClient(cfg client.Config, params ...roundtrip.ClientParam) (*Client, err
 // APIClient is aliased here so that it can be embedded in Client.
 type APIClient = client.Client
 
-// HTTPClient is a teleport HTTP API client.
+// HTTPClient is a siriusec HTTP API client.
 type HTTPClient struct {
 	roundtrip.Client
 	// transport defines the methods by which the client can reach the server.
@@ -148,11 +148,11 @@ func NewHTTPClient(cfg client.Config, tls *tls.Config, params ...roundtrip.Clien
 	// multiplexer for protocol detection. Unless next protocol is specified
 	// it will attempt to upgrade to HTTP2 and at that point there is no way
 	// to distinguish between HTTP2/JSON or GPRC.
-	tls.NextProtos = []string{teleport.HTTPNextProtoTLS}
+	tls.NextProtos = []string{siriusec.HTTPNextProtoTLS}
 
 	transport := &http.Transport{
 		// notice that below roundtrip.Client is passed
-		// teleport.APIDomain as an address for the API server, this is
+		// siriusec.APIDomain as an address for the API server, this is
 		// to make sure client verifies the DNS name of the API server and
 		// custom DialContext overrides this DNS name to the real address.
 		// In addition this dialer tries multiple addresses if provided
@@ -161,7 +161,7 @@ func NewHTTPClient(cfg client.Config, tls *tls.Config, params ...roundtrip.Clien
 		TLSClientConfig:       tls,
 
 		// Increase the size of the connection pool. This substantially improves the
-		// performance of Teleport under load as it reduces the number of TLS
+		// performance of Siriusec under load as it reduces the number of TLS
 		// handshakes performed.
 		MaxIdleConns:        defaults.HTTPMaxIdleConns,
 		MaxIdleConnsPerHost: defaults.HTTPMaxIdleConnsPerHost,
@@ -293,27 +293,27 @@ func ClientTimeout(timeout time.Duration) roundtrip.ClientParam {
 
 // PostJSON is a generic method that issues http POST request to the server
 func (c *Client) PostJSON(endpoint string, val interface{}) (*roundtrip.Response, error) {
-	return httplib.ConvertResponse(c.Client.PostJSON(context.TODO(), endpoint, val))
+	return httplib.ConvertResponse(c.Client.PostJSON(context.Background(), endpoint, val))
 }
 
 // PutJSON is a generic method that issues http PUT request to the server
 func (c *Client) PutJSON(endpoint string, val interface{}) (*roundtrip.Response, error) {
-	return httplib.ConvertResponse(c.Client.PutJSON(context.TODO(), endpoint, val))
+	return httplib.ConvertResponse(c.Client.PutJSON(context.Background(), endpoint, val))
 }
 
 // PostForm is a generic method that issues http POST request to the server
 func (c *Client) PostForm(endpoint string, vals url.Values, files ...roundtrip.File) (*roundtrip.Response, error) {
-	return httplib.ConvertResponse(c.Client.PostForm(context.TODO(), endpoint, vals, files...))
+	return httplib.ConvertResponse(c.Client.PostForm(context.Background(), endpoint, vals, files...))
 }
 
 // Get issues http GET request to the server
 func (c *Client) Get(u string, params url.Values) (*roundtrip.Response, error) {
-	return httplib.ConvertResponse(c.Client.Get(context.TODO(), u, params))
+	return httplib.ConvertResponse(c.Client.Get(context.Background(), u, params))
 }
 
 // Delete issues http Delete Request to the server
 func (c *Client) Delete(u string) (*roundtrip.Response, error) {
-	return httplib.ConvertResponse(c.Client.Delete(context.TODO(), u))
+	return httplib.ConvertResponse(c.Client.Delete(context.Background(), u))
 }
 
 // ProcessKubeCSR processes CSR request against Kubernetes CA, returns
@@ -1382,7 +1382,7 @@ func (c *Client) PostSessionSlice(slice events.SessionSlice) error {
 	// we **must** consume response by reading all of its body, otherwise the http
 	// client will allocate a new connection for subsequent requests
 	defer re.Body.Close()
-	responseBytes, _ := ioutil.ReadAll(re.Body)
+	responseBytes, _ := io.ReadAll(io.LimitReader(re.Body, defaults.MaxHTTPRequestSize))
 	return trace.ReadError(re.StatusCode, responseBytes)
 }
 
@@ -1461,7 +1461,7 @@ func (c *Client) StreamSessionEvents(ctx context.Context, sessionID session.ID, 
 
 // SearchEvents allows searching for audit events with pagination support.
 func (c *Client) SearchEvents(fromUTC, toUTC time.Time, namespace string, eventTypes []string, limit int, order types.EventOrder, startKey string) ([]apievents.AuditEvent, string, error) {
-	events, lastKey, err := c.APIClient.SearchEvents(context.TODO(), fromUTC, toUTC, namespace, eventTypes, limit, order, startKey)
+	events, lastKey, err := c.APIClient.SearchEvents(context.Background(), fromUTC, toUTC, namespace, eventTypes, limit, order, startKey)
 	if err != nil {
 		return nil, "", trace.Wrap(err)
 	}
@@ -1471,7 +1471,7 @@ func (c *Client) SearchEvents(fromUTC, toUTC time.Time, namespace string, eventT
 
 // SearchSessionEvents returns session related events to find completed sessions.
 func (c *Client) SearchSessionEvents(fromUTC time.Time, toUTC time.Time, limit int, order types.EventOrder, startKey string) ([]apievents.AuditEvent, string, error) {
-	events, lastKey, err := c.APIClient.SearchSessionEvents(context.TODO(), fromUTC, toUTC, limit, order, startKey)
+	events, lastKey, err := c.APIClient.SearchSessionEvents(context.Background(), fromUTC, toUTC, limit, order, startKey)
 	if err != nil {
 		return nil, "", trace.Wrap(err)
 	}

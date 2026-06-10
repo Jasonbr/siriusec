@@ -18,7 +18,7 @@ resource "aws_dynamodb_table" "locks" {
   }
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 

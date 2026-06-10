@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/api/types/wrappers"
 
@@ -169,7 +169,7 @@ func (l *LogAction) Log(level, format string, args ...interface{}) predicate.Boo
 	}
 }
 
-// Context is a default rule context used in teleport
+// Context is a default rule context used in siriusec
 type Context struct {
 	// User is currently authenticated user
 	User types.User
@@ -213,7 +213,7 @@ func (ctx *Context) GetIdentifier(fields []string) (interface{}, error) {
 		} else {
 			user = ctx.User
 		}
-		return predicate.GetFieldByTag(user, teleport.JSON, fields[1:])
+		return predicate.GetFieldByTag(user, siriusec.JSON, fields[1:])
 	case ResourceIdentifier:
 		var resource types.Resource
 		if ctx.Resource == nil {
@@ -342,7 +342,7 @@ func NewJSONBoolParser(ctx interface{}) (BoolPredicateParser, error) {
 			"contains": predicate.Contains,
 		},
 		GetIdentifier: func(fields []string) (interface{}, error) {
-			return predicate.GetFieldByTag(ctx, teleport.JSON, fields)
+			return predicate.GetFieldByTag(ctx, siriusec.JSON, fields)
 		},
 		GetProperty: GetStringMapValue,
 	})

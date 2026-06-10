@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package web implements web proxy handler that provides
-// web interface to view and connect to teleport nodes
+// web interface to view and connect to siriusec nodes
 package web
 
 import (
@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -35,7 +34,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/client/webclient"
 	"github.com/siriusec/siriusec/api/constants"
@@ -72,12 +71,12 @@ import (
 
 const (
 	// ssoLoginConsoleErr is a generic error message to hide revealing sso login failure msgs.
-	ssoLoginConsoleErr = "Failed to login. Please check Teleport's log for more details."
+	ssoLoginConsoleErr = "Failed to login. Please check Siriusec's log for more details."
 	metaRedirectHTML   = `
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Teleport Redirection Service</title>
+		<title>Siriusec Redirection Service</title>
 		<meta http-equiv="cache-control" content="no-cache"/>
 		<meta http-equiv="refresh" content="0;URL='{{.}}'" />
 	</head>
@@ -152,13 +151,13 @@ type Config struct {
 	// ProxyPublicAddr contains web proxy public addresses.
 	ProxyPublicAddrs []utils.NetAddr
 
-	// CipherSuites is the list of cipher suites Teleport suppports.
+	// CipherSuites is the list of cipher suites Siriusec suppports.
 	CipherSuites []uint16
 
 	// ProxySettings is a settings communicated to proxy
 	ProxySettings webclient.ProxySettings
 
-	// FIPS mode means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// FIPS mode means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 
@@ -220,7 +219,7 @@ func (h *RewritingHandler) Close() error {
 
 // NewHandler returns a new instance of web proxy handler
 func NewHandler(cfg Config, opts ...HandlerOption) (*RewritingHandler, error) {
-	const apiPrefix = "/" + teleport.WebAPIVersion
+	const apiPrefix = "/" + siriusec.WebAPIVersion
 	h := &Handler{
 		cfg:             cfg,
 		log:             newPackageLogger(),
@@ -428,7 +427,7 @@ func NewHandler(cfg Config, opts ...HandlerOption) (*RewritingHandler, error) {
 			return nil, trace.Wrap(err)
 		}
 		defer index.Close()
-		indexContent, err := ioutil.ReadAll(index)
+		indexContent, err := io.ReadAll(io.LimitReader(index, 1<<20))
 		if err != nil {
 			return nil, trace.ConvertSystemError(err)
 		}
@@ -834,7 +833,7 @@ func (h *Handler) createTokenHandle(w http.ResponseWriter, r *http.Request, _ ht
 		expiry = time.Now().UTC().Add(d)
 	}
 
-	roles, err := types.NewTeleportRoles(req.Roles)
+	roles, err := types.NewSiriusecRoles(req.Roles)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1045,16 +1044,16 @@ func (h *Handler) ping(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	return webclient.PingResponse{
 		Auth:             defaultSettings,
 		Proxy:            h.cfg.ProxySettings,
-		ServerVersion:    teleport.Version,
-		MinClientVersion: teleport.MinClientVersion,
+		ServerVersion:    siriusec.Version,
+		MinClientVersion: siriusec.MinClientVersion,
 	}, nil
 }
 
 func (h *Handler) find(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	return webclient.PingResponse{
 		Proxy:            h.cfg.ProxySettings,
-		ServerVersion:    teleport.Version,
-		MinClientVersion: teleport.MinClientVersion,
+		ServerVersion:    siriusec.Version,
+		MinClientVersion: siriusec.MinClientVersion,
 	}, nil
 }
 
@@ -1069,7 +1068,7 @@ func (h *Handler) pingWithConnector(w http.ResponseWriter, r *http.Request, p ht
 
 	response := &webclient.PingResponse{
 		Proxy:         h.cfg.ProxySettings,
-		ServerVersion: teleport.Version,
+		ServerVersion: siriusec.Version,
 	}
 
 	if connectorName == constants.Local {
@@ -1488,7 +1487,7 @@ func (h *Handler) oidcCallback(w http.ResponseWriter, r *http.Request, p httprou
 // AuthParams are used to construct redirect URL containing auth
 // information back to tsh login
 type AuthParams struct {
-	// Username is authenticated teleport username
+	// Username is authenticated siriusec username
 	Username string
 	// Identity contains validated OIDC identity
 	Identity types.ExternalIdentity
@@ -1503,7 +1502,7 @@ type AuthParams struct {
 	HostSigners []types.CertAuthority
 	// ClientRedirectURL is a URL to redirect client to
 	ClientRedirectURL string
-	// FIPS mode means Teleport started in a FedRAMP/FIPS 140-2 compliant
+	// FIPS mode means Siriusec started in a FedRAMP/FIPS 140-2 compliant
 	// configuration.
 	FIPS bool
 }
@@ -1554,7 +1553,7 @@ func ConstructSSHResponse(response AuthParams) (*url.URL, error) {
 		// If FIPS mode was requested, make sure older clients that use NaCl get rejected.
 		if response.FIPS {
 			return nil, trace.BadParameter("non-FIPS compliant encryption: NaCl, check " +
-				"that tsh release was downloaded from https://dashboard.gravitational.com")
+				"that tsh release was downloaded from https://dashboard.siriusec.com")
 		}
 
 		secretKeyBytes, err := lemma_secret.EncodedStringToKey(secretV1)
@@ -1587,7 +1586,7 @@ func ConstructSSHResponse(response AuthParams) (*url.URL, error) {
 // CreateSessionReq is a request to create session from username, password and
 // second factor token.
 type CreateSessionReq struct {
-	// User is the Teleport username.
+	// User is the Siriusec username.
 	User string `json:"user"`
 	// Pass is the password.
 	Pass string `json:"pass"`
@@ -1963,7 +1962,7 @@ func (h *Handler) getClusters(w http.ResponseWriter, r *http.Request, p httprout
 		return nil, trace.Wrap(err)
 	}
 	rc.SetLastHeartbeat(time.Now().UTC())
-	rc.SetConnectionStatus(teleport.RemoteClusterStatusOnline)
+	rc.SetConnectionStatus(siriusec.RemoteClusterStatusOnline)
 	clusters := make([]types.RemoteCluster, 0, len(remoteClusters)+1)
 	clusters = append(clusters, rc)
 	clusters = append(clusters, remoteClusters...)
@@ -2807,9 +2806,9 @@ func makeResponse(items interface{}) (interface{}, error) {
 	return responseData{Items: items}, nil
 }
 
-// makeTeleportClientConfig creates default teleport client configuration
+// makeSiriusecClientConfig creates default siriusec client configuration
 // that is used to initiate an SSH terminal session or SCP file transfer
-func makeTeleportClientConfig(ctx *SessionContext) (*client.Config, error) {
+func makeSiriusecClientConfig(ctx *SessionContext) (*client.Config, error) {
 	agent, cert, err := ctx.GetAgent()
 	if err != nil {
 		return nil, trace.BadParameter("failed to get user credentials: %v", err)

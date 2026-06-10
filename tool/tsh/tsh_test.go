@@ -908,35 +908,35 @@ func TestEnvFlags(t *testing.T) {
 		}))
 	})
 
-	t.Run("teleport home env", func(t *testing.T) {
+	t.Run("siriusec home env", func(t *testing.T) {
 		t.Run("nothing set", testEnvFlag(testCase{
 			outCLIConf: CLIConf{},
 		}))
 		t.Run("CLI flag is set", testEnvFlag(testCase{
 			inCLIConf: CLIConf{
-				HomePath: "teleport-data",
+				HomePath: "siriusec-data",
 			},
 			outCLIConf: CLIConf{
-				HomePath: "teleport-data",
+				HomePath: "siriusec-data",
 			},
 		}))
 		t.Run("TELEPORT_HOME set", testEnvFlag(testCase{
 			envMap: map[string]string{
-				homeEnvVar: "teleport-data/",
+				homeEnvVar: "siriusec-data/",
 			},
 			outCLIConf: CLIConf{
-				HomePath: "teleport-data",
+				HomePath: "siriusec-data",
 			},
 		}))
 		t.Run("TELEPORT_HOME and CLI flag is set, prefer env", testEnvFlag(testCase{
 			inCLIConf: CLIConf{
-				HomePath: "teleport-data",
+				HomePath: "siriusec-data",
 			},
 			envMap: map[string]string{
-				homeEnvVar: "teleport-data/",
+				homeEnvVar: "siriusec-data/",
 			},
 			outCLIConf: CLIConf{
-				HomePath: "teleport-data",
+				HomePath: "siriusec-data",
 			},
 		}))
 	})
@@ -961,7 +961,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			},
 			kubeStatus: &kubernetesStatus{
 				clusterAddr:         "https://a.example.com:3026",
-				teleportClusterName: "a.example.com",
+				siriusecClusterName: "a.example.com",
 				kubeClusters:        []string{"dev", "prod"},
 				credentials:         creds,
 			},
@@ -985,7 +985,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			},
 			kubeStatus: &kubernetesStatus{
 				clusterAddr:         "https://a.example.com:3026",
-				teleportClusterName: "a.example.com",
+				siriusecClusterName: "a.example.com",
 				kubeClusters:        []string{"dev", "prod"},
 				credentials:         creds,
 			},
@@ -1009,7 +1009,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			},
 			kubeStatus: &kubernetesStatus{
 				clusterAddr:         "https://a.example.com:3026",
-				teleportClusterName: "a.example.com",
+				siriusecClusterName: "a.example.com",
 				kubeClusters:        []string{"dev", "prod"},
 				credentials:         creds,
 			},
@@ -1026,7 +1026,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			},
 			kubeStatus: &kubernetesStatus{
 				clusterAddr:         "https://a.example.com:3026",
-				teleportClusterName: "a.example.com",
+				siriusecClusterName: "a.example.com",
 				kubeClusters:        []string{},
 				credentials:         creds,
 			},
@@ -1046,7 +1046,7 @@ func TestKubeConfigUpdate(t *testing.T) {
 			},
 			kubeStatus: &kubernetesStatus{
 				clusterAddr:         "https://a.example.com:3026",
-				teleportClusterName: "a.example.com",
+				siriusecClusterName: "a.example.com",
 				kubeClusters:        []string{"dev", "prod"},
 				credentials:         creds,
 			},

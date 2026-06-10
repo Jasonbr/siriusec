@@ -3,7 +3,7 @@
   tasks:
     - name: "simple copy"
       copy:
-        src: /root/go/src/github.com/gravitational/teleport/docker/ansible/simple.txt
+        src: /root/go/src/github.com/siriusec/siriusec/docker/ansible/simple.txt
         dest: /tmp/simple.txt.out
         owner: root
         group: root
@@ -11,7 +11,7 @@
 
     - name: recursive copy
       copy:
-        src: /root/go/src/github.com/gravitational/teleport/docker/ansible/rdir
+        src: /root/go/src/github.com/siriusec/siriusec/docker/ansible/rdir
         dest: /tmp
         owner: root
         group: root
@@ -19,7 +19,7 @@
 
     - name: simple template
       template:
-        src: /root/go/src/github.com/gravitational/teleport/docker/ansible/template.j2
+        src: /root/go/src/github.com/siriusec/siriusec/docker/ansible/template.j2
         dest: /tmp/template.out
         owner: root
         group: root

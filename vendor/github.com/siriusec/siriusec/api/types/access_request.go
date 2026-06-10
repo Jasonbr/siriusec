@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package types contains all types and logic required by the Teleport API.
+// Package types contains all types and logic required by the Siriusec API.
 package types
 
 import (
@@ -66,9 +66,9 @@ type AccessRequest interface {
 	// SetResolveAnnotations sets the annotations associated with
 	// the request's resolution.
 	SetResolveAnnotations(map[string][]string)
-	// GetSystemAnnotations gets the teleport-applied annotations.
+	// GetSystemAnnotations gets the siriusec-applied annotations.
 	GetSystemAnnotations() map[string][]string
-	// SetSystemAnnotations sets the teleport-applied annotations.
+	// SetSystemAnnotations sets the siriusec-applied annotations.
 	SetSystemAnnotations(map[string][]string)
 	// GetOriginalRoles gets the original (pre-override) role list.
 	GetOriginalRoles() []string

@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package benchmark package provides tools to run progressive or independent benchmarks against teleport services.
+// Package benchmark package provides tools to run progressive or independent benchmarks against siriusec services.
 package benchmark
 
 import (
@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -157,8 +156,8 @@ func ExportLatencyProfile(path string, h *hdrhistogram.Histogram, ticks int32, v
 // to benchmark spec. It returns benchmark result when completed.
 // This is a blocking function that can be cancelled via context argument.
 func (c *Config) Benchmark(ctx context.Context, tc *client.SiriusecClient) (Result, error) {
-	tc.Stdout = ioutil.Discard
-	tc.Stderr = ioutil.Discard
+	tc.Stdout = io.Discard
+	tc.Stderr = io.Discard
 	tc.Stdin = &bytes.Buffer{}
 	var delay time.Duration
 	ctx, cancel := context.WithCancel(ctx)
@@ -247,7 +246,10 @@ func execute(m benchMeasure) error {
 		// do not use parent context that will cancel in flight requests
 		// because we give test some time to gracefully wrap up
 		// the in-flight connections to avoid extra errors
-		return m.client.SSH(context.TODO(), m.command, false)
+		sshCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		return m.client.SSH(sshCtx, m.command, false)
+		defer cancel()
 	}
 	config := m.client.Config
 	client, err := client.NewClient(&config)
@@ -261,7 +263,10 @@ func execute(m benchMeasure) error {
 	out := &utils.SyncBuffer{}
 	client.Stdout = out
 	client.Stderr = out
-	err = m.client.SSH(context.TODO(), nil, false)
+	sshCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	err = m.client.SSH(sshCtx, nil, false)
+	defer cancel()
 	if err != nil {
 		return err
 	}
@@ -269,7 +274,7 @@ func execute(m benchMeasure) error {
 	return nil
 }
 
-// makeSiriusecClient creates an instance of a teleport client
+// makeSiriusecClient creates an instance of a siriusec client
 func makeSiriusecClient(host, login, proxy string) (*client.SiriusecClient, error) {
 	c := client.Config{Host: host}
 	path := profile.FullProfilePath("")

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -319,7 +319,7 @@ func TestHSMRotation(t *testing.T) {
 
 	log.Debug("TestHSMRotation: starting auth server")
 	authConfig := newHSMAuthConfig(ctx, t, storageConfig, log)
-	auth1 := newTeleportService(authConfig, "auth1")
+	auth1 := newSiriusecService(authConfig, "auth1")
 	t.Cleanup(func() {
 		require.NoError(t, auth1.process.GetAuthServer().GetKeyStore().DeleteUnusedKeys(nil))
 		require.NoError(t, auth1.process.Close())
@@ -331,7 +331,7 @@ func TestHSMRotation(t *testing.T) {
 
 	// start a proxy to make sure it can get creds at each stage of rotation
 	log.Debug("TestHSMRotation: starting proxy")
-	proxy := newTeleportService(newProxyConfig(ctx, t, authConfig.Auth.SSHAddr, log), "proxy")
+	proxy := newSiriusecService(newProxyConfig(ctx, t, authConfig.Auth.SSHAddr, log), "proxy")
 	require.NoError(t, proxy.waitForStart(ctx))
 	siriusecServices = append(siriusecServices, proxy)
 
@@ -400,7 +400,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 	// start a cluster with 1 auth server and a proxy
 	log.Debug("TestHSMDualAuthRotation: Starting auth server 1")
 	auth1Config := newHSMAuthConfig(ctx, t, storageConfig, log)
-	auth1 := newTeleportService(auth1Config, "auth1")
+	auth1 := newSiriusecService(auth1Config, "auth1")
 	t.Cleanup(func() {
 		require.NoError(t, auth1.process.GetAuthServer().GetKeyStore().DeleteUnusedKeys(nil))
 		require.NoError(t, auth1.process.Close())
@@ -430,14 +430,14 @@ func TestHSMDualAuthRotation(t *testing.T) {
 	// start a proxy to make sure it can get creds at each stage of rotation
 	log.Debug("TestHSMDualAuthRotation: Starting proxy")
 	proxyConfig := newProxyConfig(ctx, t, *authAddr, log)
-	proxy := newTeleportService(proxyConfig, "proxy")
+	proxy := newSiriusecService(proxyConfig, "proxy")
 	require.NoError(t, proxy.waitForStart(ctx))
 	siriusecServices = append(siriusecServices, proxy)
 
 	// add a new auth server
 	log.Debug("TestHSMDualAuthRotation: Starting auth server 2")
 	auth2Config := newHSMAuthConfig(ctx, t, storageConfig, log)
-	auth2 := newTeleportService(auth2Config, "auth2")
+	auth2 := newSiriusecService(auth2Config, "auth2")
 	require.NoError(t, auth2.waitForStart(ctx))
 	t.Cleanup(func() {
 		require.NoError(t, auth2.process.GetAuthServer().GetKeyStore().DeleteUnusedKeys(nil))
@@ -449,7 +449,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 	// make sure the admin identity used by tctl works
 	getAdminClient := func() *auth.Client {
 		identity, err := auth.ReadLocalIdentity(
-			filepath.Join(auth2Config.DataDir, teleport.ComponentProcess),
+			filepath.Join(auth2Config.DataDir, siriusec.ComponentProcess),
 			auth.IdentityID{Role: types.RoleAdmin, HostUUID: auth2Config.HostUUID})
 		require.NoError(t, err)
 		tlsConfig, err := identity.TLSConfig(nil)
@@ -527,7 +527,7 @@ func TestHSMDualAuthRotation(t *testing.T) {
 	// load balanced client shoud work with either backend
 	getAdminClient = func() *auth.Client {
 		identity, err := auth.ReadLocalIdentity(
-			filepath.Join(auth2Config.DataDir, teleport.ComponentProcess),
+			filepath.Join(auth2Config.DataDir, siriusec.ComponentProcess),
 			auth.IdentityID{Role: types.RoleAdmin, HostUUID: auth2Config.HostUUID})
 		require.NoError(t, err)
 		tlsConfig, err := identity.TLSConfig(nil)
@@ -706,13 +706,13 @@ func TestHSMMigrate(t *testing.T) {
 	log.Debug("TestHSMMigrate: Starting auth server 1")
 	auth1Config := newHSMAuthConfig(ctx, t, storageConfig, log)
 	auth1Config.Auth.KeyStore = keystore.Config{}
-	auth1 := newTeleportService(auth1Config, "auth1")
+	auth1 := newSiriusecService(auth1Config, "auth1")
 	t.Cleanup(func() {
 		require.NoError(t, auth1.process.Close())
 	})
 	auth2Config := newHSMAuthConfig(ctx, t, storageConfig, log)
 	auth2Config.Auth.KeyStore = keystore.Config{}
-	auth2 := newTeleportService(auth2Config, "auth2")
+	auth2 := newSiriusecService(auth2Config, "auth2")
 	t.Cleanup(func() {
 		require.NoError(t, auth2.process.Close())
 	})
@@ -740,7 +740,7 @@ func TestHSMMigrate(t *testing.T) {
 	// start a proxy to make sure it can get creds at each stage of migration
 	log.Debug("TestHSMMigrate: Starting proxy")
 	proxyConfig := newProxyConfig(ctx, t, *authAddr, log)
-	proxy := newTeleportService(proxyConfig, "proxy")
+	proxy := newSiriusecService(proxyConfig, "proxy")
 	require.NoError(t, proxy.waitForStart(ctx))
 	t.Cleanup(func() {
 		require.NoError(t, proxy.process.Close())
@@ -749,7 +749,7 @@ func TestHSMMigrate(t *testing.T) {
 	// make sure the admin identity used by tctl works
 	getAdminClient := func() *auth.Client {
 		identity, err := auth.ReadLocalIdentity(
-			filepath.Join(auth2Config.DataDir, teleport.ComponentProcess),
+			filepath.Join(auth2Config.DataDir, siriusec.ComponentProcess),
 			auth.IdentityID{Role: types.RoleAdmin, HostUUID: auth2Config.HostUUID})
 		require.NoError(t, err)
 		tlsConfig, err := identity.TLSConfig(nil)
@@ -777,7 +777,7 @@ func TestHSMMigrate(t *testing.T) {
 	auth1.process.Close()
 	require.NoError(t, auth1.waitForShutdown(ctx))
 	auth1Config.Auth.KeyStore = keystore.SetupSoftHSMTest(t)
-	auth1 = newTeleportService(auth1Config, "auth1")
+	auth1 = newSiriusecService(auth1Config, "auth1")
 	require.NoError(t, auth1.waitForStart(ctx))
 
 	clt = getAdminClient()
@@ -844,7 +844,7 @@ func TestHSMMigrate(t *testing.T) {
 	auth2.process.Close()
 	require.NoError(t, auth2.waitForShutdown(ctx))
 	auth2Config.Auth.KeyStore = keystore.SetupSoftHSMTest(t)
-	auth2 = newTeleportService(auth2Config, "auth2")
+	auth2 = newSiriusecService(auth2Config, "auth2")
 	require.NoError(t, auth2.waitForStart(ctx))
 
 	authServices = SiriusecServices{auth1, auth2}

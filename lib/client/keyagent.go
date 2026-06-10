@@ -30,7 +30,7 @@ import (
 
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/utils/sshutils"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/utils/prompt"
@@ -43,7 +43,7 @@ type LocalKeyAgent struct {
 	// log holds the structured logger.
 	log *logrus.Entry
 
-	// Agent is the teleport agent
+	// Agent is the siriusec agent
 	agent.Agent
 
 	// keyStore is the storage backend for certificates and keys
@@ -105,14 +105,14 @@ func NewKeyStoreCertChecker(keyStore LocalKeyStore) ssh.HostKeyCallback {
 }
 
 func agentIsPresent() bool {
-	return os.Getenv(teleport.SSHAuthSock) != ""
+	return os.Getenv(siriusec.SSHAuthSock) != ""
 }
 
 // agentSupportsSSHCertificates checks if the running agent supports SSH certificates.
 // This detection implementation is as described in RFD 18 and works by simply checking for
 // presence of gpg-agent which is a common agent known to not support SSH certificates.
 func agentSupportsSSHCertificates() bool {
-	agent := os.Getenv(teleport.SSHAuthSock)
+	agent := os.Getenv(siriusec.SSHAuthSock)
 	return !strings.Contains(agent, "gpg-agent")
 }
 
@@ -134,7 +134,7 @@ type LocalAgentConfig struct {
 func NewLocalAgent(conf LocalAgentConfig) (a *LocalKeyAgent, err error) {
 	a = &LocalKeyAgent{
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.ComponentKeyAgent,
+			trace.Component: siriusec.ComponentKeyAgent,
 		}),
 		Agent:     agent.NewKeyring(),
 		keyStore:  conf.Keystore,
@@ -195,7 +195,7 @@ func (a *LocalKeyAgent) LoadKey(key Key) (*agent.AddedKey, error) {
 		return nil, trace.Wrap(err)
 	}
 
-	// iterate over all teleport and system agent and load key
+	// iterate over all siriusec and system agent and load key
 	for _, agent := range agents {
 		for _, agentKey := range agentKeys {
 			err = agent.Add(agentKey)
@@ -210,7 +210,7 @@ func (a *LocalKeyAgent) LoadKey(key Key) (*agent.AddedKey, error) {
 	return &agentKeys[0], nil
 }
 
-// UnloadKey will unload key for user from the teleport ssh agent as well as
+// UnloadKey will unload key for user from the siriusec ssh agent as well as
 // the system agent.
 func (a *LocalKeyAgent) UnloadKey() error {
 	agents := []agent.Agent{a.Agent}
@@ -226,9 +226,9 @@ func (a *LocalKeyAgent) UnloadKey() error {
 			a.log.Warnf("Unable to communicate with agent and list keys: %v", err)
 		}
 
-		// remove any teleport keys we currently have loaded in the agent for this user
+		// remove any siriusec keys we currently have loaded in the agent for this user
 		for _, key := range keyList {
-			if key.Comment == fmt.Sprintf("teleport:%v", a.username) {
+			if key.Comment == fmt.Sprintf("siriusec:%v", a.username) {
 				err = agent.Remove(key)
 				if err != nil {
 					a.log.Warnf("Unable to communicate with agent and remove key: %v", err)
@@ -240,7 +240,7 @@ func (a *LocalKeyAgent) UnloadKey() error {
 	return nil
 }
 
-// UnloadKeys will unload all Siriusec keys from the teleport agent as well as
+// UnloadKeys will unload all Siriusec keys from the siriusec agent as well as
 // the system agent.
 func (a *LocalKeyAgent) UnloadKeys() error {
 	agents := []agent.Agent{a.Agent}
@@ -256,9 +256,9 @@ func (a *LocalKeyAgent) UnloadKeys() error {
 			a.log.Warnf("Unable to communicate with agent and list keys: %v", err)
 		}
 
-		// remove any teleport keys we currently have loaded in the agent
+		// remove any siriusec keys we currently have loaded in the agent
 		for _, key := range keyList {
-			if strings.HasPrefix(key.Comment, "teleport:") {
+			if strings.HasPrefix(key.Comment, "siriusec:") {
 				err = agent.Remove(key)
 				if err != nil {
 					a.log.Warnf("Unable to communicate with agent and remove key: %v", err)
@@ -467,7 +467,7 @@ func (a *LocalKeyAgent) AddKey(key *Key) (*agent.AddedKey, error) {
 	if err := a.keyStore.AddKey(key); err != nil {
 		return nil, trace.Wrap(err)
 	}
-	// Load key into the teleport agent and system agent.
+	// Load key into the siriusec agent and system agent.
 	return a.LoadKey(*key)
 }
 
@@ -480,7 +480,7 @@ func (a *LocalKeyAgent) DeleteKey() error {
 		return trace.Wrap(err)
 	}
 
-	// remove any keys that are loaded for this user from the teleport and
+	// remove any keys that are loaded for this user from the siriusec and
 	// system agents
 	err = a.UnloadKey()
 	if err != nil {

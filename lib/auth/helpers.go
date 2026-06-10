@@ -25,13 +25,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	authority "github.com/siriusec/siriusec/lib/auth/testauthority"
 	"github.com/siriusec/siriusec/lib/backend"
+	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/backend/memory"
 	"github.com/siriusec/siriusec/lib/events"
 	"github.com/siriusec/siriusec/lib/limiter"
@@ -87,14 +88,14 @@ func (cfg *TestAuthServerConfig) CheckAndSetDefaults() error {
 func CreateUploaderDir(dir string) error {
 	// DELETE IN(5.1.0)
 	// this folder is no longer used past 5.0 upgrade
-	err := os.MkdirAll(filepath.Join(dir, teleport.LogsDir, teleport.ComponentUpload,
-		events.SessionLogsDir, apidefaults.Namespace), teleport.SharedDirMode)
+	err := os.MkdirAll(filepath.Join(dir, siriusec.LogsDir, siriusec.ComponentUpload,
+		events.SessionLogsDir, apidefaults.Namespace), siriusec.SharedDirMode)
 	if err != nil {
 		return trace.ConvertSystemError(err)
 	}
 
-	err = os.MkdirAll(filepath.Join(dir, teleport.LogsDir, teleport.ComponentUpload,
-		events.StreamingLogsDir, apidefaults.Namespace), teleport.SharedDirMode)
+	err = os.MkdirAll(filepath.Join(dir, siriusec.LogsDir, siriusec.ComponentUpload,
+		events.StreamingLogsDir, apidefaults.Namespace), siriusec.SharedDirMode)
 	if err != nil {
 		return trace.ConvertSystemError(err)
 	}
@@ -328,7 +329,7 @@ func NewTestAuthServer(cfg TestAuthServerConfig) (*TestAuthServer, error) {
 
 	srv.LockWatcher, err = services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentAuth,
+			Component: siriusec.ComponentAuth,
 			Client:    srv.AuthServer,
 			Clock:     cfg.Clock,
 		},
@@ -864,7 +865,8 @@ type clt interface {
 // CreateUserRoleAndRequestable creates two roles for a user, one base role with allowed login
 // matching username, and another role with a login matching rolename that can be requested.
 func CreateUserRoleAndRequestable(clt clt, username string, rolename string) (types.User, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	user, err := types.NewUser(username)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -926,7 +928,8 @@ func CreateAccessPluginUser(ctx context.Context, clt clt, username string) (type
 
 // CreateUser creates user and role and assignes role to a user, used in tests
 func CreateUser(clt clt, username string, roles ...types.Role) (types.User, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	user, err := types.NewUser(username)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -949,7 +952,8 @@ func CreateUser(clt clt, username string, roles ...types.Role) (types.User, erro
 
 // CreateUserAndRole creates user and role and assignes role to a user, used in tests
 func CreateUserAndRole(clt clt, username string, allowedLogins []string) (types.User, types.Role, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	user, err := types.NewUser(username)
 	if err != nil {
 		return nil, nil, trace.Wrap(err)
@@ -970,7 +974,8 @@ func CreateUserAndRole(clt clt, username string, allowedLogins []string) (types.
 
 // CreateUserAndRoleWithoutRoles creates user and role, but does not assign user to a role, used in tests
 func CreateUserAndRoleWithoutRoles(clt clt, username string, allowedLogins []string) (types.User, types.Role, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	user, err := types.NewUser(username)
 	if err != nil {
 		return nil, nil, trace.Wrap(err)

@@ -22,7 +22,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/session"
@@ -121,7 +121,7 @@ type CheckingEmitterConfig struct {
 	Clock clockwork.Clock
 	// UIDGenerator is unique ID generator
 	UIDGenerator utils.UID
-	// ClusterName specifies the name of this teleport cluster
+	// ClusterName specifies the name of this siriusec cluster
 	// as configured on the auth server
 	ClusterName string
 }
@@ -319,7 +319,7 @@ func (*LoggingEmitter) EmitAuditEvent(ctx context.Context, event apievents.Audit
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	fields[trace.Component] = teleport.Component(teleport.ComponentAuditLog)
+	fields[trace.Component] = siriusec.Component(siriusec.ComponentAuditLog)
 
 	log.WithFields(fields).Infof(event.GetType())
 	return nil
@@ -364,7 +364,7 @@ type CheckingStreamerConfig struct {
 	Clock clockwork.Clock
 	// UIDGenerator is unique ID generator
 	UIDGenerator utils.UID
-	// ClusterName specifies the name of this teleport cluster.
+	// ClusterName specifies the name of this siriusec cluster.
 	ClusterName string
 }
 

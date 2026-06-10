@@ -14,7 +14,7 @@ auth_service:
   cluster_name: siriusec.local
   listen_addr: 0.0.0.0:3025
   tokens:
-    - "proxy,node:siriusec-join-token-2026"
+    - "proxy,node:${SIRIUSEC_JOIN_TOKEN}"
   authentication:
     type: local
     # For initial setup, use "off". After setting up OTP devices via the

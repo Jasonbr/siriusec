@@ -22,7 +22,7 @@ import (
 	"github.com/coreos/go-oidc/jose"
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/utils"
 )
@@ -48,8 +48,8 @@ func ValidateOIDCConnector(oc types.OIDCConnector) error {
 		if err != nil {
 			return trace.Wrap(err)
 		}
-		if uri.Scheme != teleport.SchemeFile {
-			return trace.BadParameter("only %v:// scheme is supported for google_service_account_uri", teleport.SchemeFile)
+		if uri.Scheme != siriusec.SchemeFile {
+			return trace.BadParameter("only %v:// scheme is supported for google_service_account_uri", siriusec.SchemeFile)
 		}
 		if oc.GetGoogleAdminEmail() == "" {
 			return trace.BadParameter("whenever google_service_account_uri is specified, google_admin_email should be set as well, read https://developers.google.com/identity/protocols/OAuth2ServiceAccount#delegatingauthority for more details")
@@ -72,7 +72,7 @@ func GetClaimNames(claims jose.Claims) []string {
 	return out
 }
 
-// OIDCClaimsToTraits converts OIDC-style claims into teleport-specific trait format
+// OIDCClaimsToTraits converts OIDC-style claims into siriusec-specific trait format
 func OIDCClaimsToTraits(claims jose.Claims) map[string][]string {
 	traits := make(map[string][]string)
 

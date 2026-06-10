@@ -18,13 +18,13 @@ package terminal
 import (
 	"sync"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/gravitational/trace"
 	"github.com/sirupsen/logrus"
 )
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentClient,
+	trace.Component: siriusec.ComponentClient,
 })
 
 // ResizeEvent is emitted when a terminal window is resized.

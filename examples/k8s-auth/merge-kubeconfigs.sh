@@ -15,6 +15,6 @@ kubectl config view --raw >merged-kubeconfig
 
 echo "Wrote merged-kubeconfig.
 
-Copy the generated kubeconfig file to your Teleport Proxy server, and set the
-kubeconfig_file parameter in your teleport.yaml config file to point to this
+Copy the generated kubeconfig file to your Siriusec Proxy server, and set the
+kubeconfig_file parameter in your siriusec.yaml config file to point to this
 kubeconfig file."

@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	apisshutils "github.com/siriusec/siriusec/api/utils/sshutils"
@@ -668,9 +668,9 @@ func TestMigrateOSS(t *testing.T) {
 		require.NoError(t, err)
 
 		// OSS user role was updated
-		role, err := as.GetRole(ctx, teleport.AdminRoleName)
+		role, err := as.GetRole(ctx, siriusec.AdminRoleName)
 		require.NoError(t, err)
-		require.Equal(t, types.True, role.GetMetadata().Labels[teleport.OSSMigratedV6])
+		require.Equal(t, types.True, role.GetMetadata().Labels[siriusec.OSSMigratedV6])
 	})
 
 	t.Run("User", func(t *testing.T) {
@@ -690,8 +690,8 @@ func TestMigrateOSS(t *testing.T) {
 
 		out, err := as.GetUser(user.GetName(), false)
 		require.NoError(t, err)
-		require.Equal(t, []string{teleport.AdminRoleName}, out.GetRoles())
-		require.Equal(t, types.True, out.GetMetadata().Labels[teleport.OSSMigratedV6])
+		require.Equal(t, []string{siriusec.AdminRoleName}, out.GetRoles())
+		require.Equal(t, types.True, out.GetMetadata().Labels[siriusec.OSSMigratedV6])
 
 		err = migrateOSS(ctx, as)
 		require.NoError(t, err)
@@ -737,21 +737,21 @@ func TestMigrateOSS(t *testing.T) {
 
 		out, err := as.GetTrustedCluster(ctx, foo.GetName())
 		require.NoError(t, err)
-		mapping := types.RoleMap{{Remote: teleport.AdminRoleName, Local: []string{teleport.AdminRoleName}}}
+		mapping := types.RoleMap{{Remote: siriusec.AdminRoleName, Local: []string{siriusec.AdminRoleName}}}
 		require.Equal(t, mapping, out.GetRoleMap())
 
 		for _, catype := range []types.CertAuthType{types.UserCA, types.HostCA} {
 			ca, err := as.GetCertAuthority(types.CertAuthID{Type: catype, DomainName: foo.GetName()}, true)
 			require.NoError(t, err)
 			require.Equal(t, mapping, ca.GetRoleMap())
-			require.Equal(t, types.True, ca.GetMetadata().Labels[teleport.OSSMigratedV6])
+			require.Equal(t, types.True, ca.GetMetadata().Labels[siriusec.OSSMigratedV6])
 		}
 
 		// root cluster CA are not updated
 		for _, catype := range []types.CertAuthType{types.UserCA, types.HostCA} {
 			ca, err := as.GetCertAuthority(types.CertAuthID{Type: catype, DomainName: clusterName}, true)
 			require.NoError(t, err)
-			_, found := ca.GetMetadata().Labels[teleport.OSSMigratedV6]
+			_, found := ca.GetMetadata().Labels[siriusec.OSSMigratedV6]
 			require.False(t, found)
 		}
 
@@ -775,14 +775,14 @@ func TestMigrateOSS(t *testing.T) {
 			Display:      "Github",
 			TeamsToLogins: []types.TeamMapping{
 				{
-					Organization: "gravitational",
+					Organization: "siriusec",
 					Team:         "admins",
 					Logins:       []string{"admin", "dev"},
 					KubeGroups:   []string{"system:masters", "kube-devs"},
 					KubeUsers:    []string{"alice@example.com"},
 				},
 				{
-					Organization: "gravitational",
+					Organization: "siriusec",
 					Team:         "devs",
 					Logins:       []string{"dev", "test"},
 					KubeGroups:   []string{"kube-devs"},
@@ -799,7 +799,7 @@ func TestMigrateOSS(t *testing.T) {
 
 		out, err := as.GetGithubConnector(ctx, connector.GetName(), false)
 		require.NoError(t, err)
-		require.Equal(t, types.True, out.GetMetadata().Labels[teleport.OSSMigratedV6])
+		require.Equal(t, types.True, out.GetMetadata().Labels[siriusec.OSSMigratedV6])
 
 		// Teams to logins mapping were converted to roles
 		mappings := out.GetTeamsToLogins()
@@ -1178,7 +1178,7 @@ func TestIdentityChecker(t *testing.T) {
 
 	lockWatcher, err := services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentAuth,
+			Component: siriusec.ComponentAuth,
 			Client:    authServer,
 		},
 	})

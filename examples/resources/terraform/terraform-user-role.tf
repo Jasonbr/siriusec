@@ -1,20 +1,20 @@
 terraform {
   required_providers {
-    teleport = {
-      version = ">= (=teleport.version=)"
-      source  = "gravitational.com/teleport/teleport"
+    siriusec = {
+      version = ">= (=siriusec.version=)"
+      source  = "siriusec.com/docs/siriusec"
     }
   }
 }
 
-provider "teleport" {
-  # Update addr to point to Teleport Auth/Proxy
+provider "siriusec" {
+  # Update addr to point to Siriusec Auth/Proxy
   # addr               = "auth.example.com:3025"
   addr               = "proxy.example.com:443"
   identity_file_path = "terraform-identity"
 }
 
-resource "teleport_role" "terraform-test" {
+resource "siriusec_role" "terraform-test" {
   metadata {
     name        = "terraform-test"
     description = "Terraform test role"
@@ -63,7 +63,7 @@ resource "teleport_role" "terraform-test" {
   }
 }
 
-resource "teleport_user" "terraform-test" {
+resource "siriusec_user" "terraform-test" {
   metadata {
     name        = "terraform-test"
     description = "Test terraform user"

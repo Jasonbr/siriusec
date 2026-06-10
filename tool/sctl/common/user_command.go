@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/gravitational/kingpin"
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/asciitable"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -96,7 +96,7 @@ func (u *UserCommand) Initialize(app *kingpin.Application, config *service.Confi
 	u.userAdd.Flag("ttl", fmt.Sprintf("Set expiration time for token, default is %v, maximum is %v",
 		defaults.SignupTokenTTL, defaults.MaxSignupTokenTTL)).
 		Default(fmt.Sprintf("%v", defaults.SignupTokenTTL)).DurationVar(&u.ttl)
-	u.userAdd.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&u.format)
+	u.userAdd.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(siriusec.Text).StringVar(&u.format)
 	u.userAdd.Alias(AddUserHelp)
 
 	u.userUpdate = users.Command("update", "Update properties for existing user").Hidden()
@@ -105,7 +105,7 @@ func (u *UserCommand) Initialize(app *kingpin.Application, config *service.Confi
 		Default("").StringVar(&u.updateRoles)
 
 	u.userList = users.Command("ls", "List all user accounts "+helpPrefix)
-	u.userList.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&u.format)
+	u.userList.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(siriusec.Text).StringVar(&u.format)
 
 	u.userDelete = users.Command("rm", "Deletes user accounts").Alias("del")
 	u.userDelete.Arg("logins", "Comma-separated list of user logins to delete").
@@ -116,7 +116,7 @@ func (u *UserCommand) Initialize(app *kingpin.Application, config *service.Confi
 	u.userResetPassword.Flag("ttl", fmt.Sprintf("Set expiration time for token, default is %v, maximum is %v",
 		defaults.ChangePasswordTokenTTL, defaults.MaxChangePasswordTokenTTL)).
 		Default(fmt.Sprintf("%v", defaults.ChangePasswordTokenTTL)).DurationVar(&u.ttl)
-	u.userResetPassword.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&u.format)
+	u.userResetPassword.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(siriusec.Text).StringVar(&u.format)
 }
 
 // TryRun takes the CLI command as an argument (like "users add") and executes it.
@@ -145,7 +145,7 @@ func (u *UserCommand) ResetPassword(client auth.ClientI) error {
 		TTL:  u.ttl,
 		Type: auth.ResetPasswordTokenTypePassword,
 	}
-	token, err := client.CreateResetPasswordToken(context.TODO(), req)
+	token, err := client.CreateResetPasswordToken(context.Background(), req)
 	if err != nil {
 		return err
 	}
@@ -187,9 +187,9 @@ func (u *UserCommand) PrintResetPasswordTokenAsInvite(token types.ResetPasswordT
 // PrintResetPasswordToken prints ResetPasswordToken
 func (u *UserCommand) printResetPasswordToken(token types.ResetPasswordToken, format string, messageFormat string) (err error) {
 	switch strings.ToLower(u.format) {
-	case teleport.JSON:
+	case siriusec.JSON:
 		err = printTokenAsJSON(token)
-	case teleport.Text:
+	case siriusec.Text:
 		err = printTokenAsText(token, messageFormat)
 	default:
 		err = printTokenAsText(token, messageFormat)
@@ -238,15 +238,15 @@ func (u *UserCommand) Add(client auth.ClientI) error {
 
 	// Validate roles (server does not do this yet).
 	for _, roleName := range u.createRoles {
-		if _, err := client.GetRole(context.TODO(), roleName); err != nil {
+		if _, err := client.GetRole(context.Background(), roleName); err != nil {
 			return trace.Wrap(err)
 		}
 	}
 
 	traits := map[string][]string{
-		teleport.TraitLogins:     u.allowedLogins,
-		teleport.TraitKubeUsers:  flattenSlice([]string{u.kubeUsers}),
-		teleport.TraitKubeGroups: flattenSlice([]string{u.kubeGroups}),
+		siriusec.TraitLogins:     u.allowedLogins,
+		siriusec.TraitKubeUsers:  flattenSlice([]string{u.kubeUsers}),
+		siriusec.TraitKubeGroups: flattenSlice([]string{u.kubeGroups}),
 	}
 
 	user, err := types.NewUser(u.login)
@@ -257,12 +257,12 @@ func (u *UserCommand) Add(client auth.ClientI) error {
 	user.SetTraits(traits)
 	user.SetRoles(u.createRoles)
 
-	if err := client.CreateUser(context.TODO(), user); err != nil {
+	if err := client.CreateUser(context.Background(), user); err != nil {
 		return trace.Wrap(err)
 
 	}
 
-	token, err := client.CreateResetPasswordToken(context.TODO(), auth.CreateResetPasswordTokenRequest{
+	token, err := client.CreateResetPasswordToken(context.Background(), auth.CreateResetPasswordTokenRequest{
 		Name: u.login,
 		TTL:  u.ttl,
 		Type: auth.ResetPasswordTokenTypeInvite,
@@ -282,16 +282,16 @@ func (u *UserCommand) Add(client auth.ClientI) error {
 // A user is not created until they visit the sign-up URL and completes the
 // process
 func (u *UserCommand) legacyAdd(client auth.ClientI) error {
-	fmt.Printf(`NOTE: Teleport 6.0 added RBAC in Open Source edition.
+	fmt.Printf(`NOTE: Siriusec 6.0 added RBAC in Open Source edition.
 
 In the future, please create a role and use a new format with --roles flag:
 
 $ tctl users add "%v" --roles=[add your role here]
 
-We will deprecate the old format in the next release of Teleport.
+We will deprecate the old format in the next release of Siriusec.
 Meanwhile we are going to assign user %q to role %q created during migration.
 
-`, u.login, u.login, teleport.AdminRoleName)
+`, u.login, u.login, siriusec.AdminRoleName)
 
 	// If no local logins were specified, default to 'login' for SSH and k8s
 	// logins.
@@ -308,19 +308,19 @@ Meanwhile we are going to assign user %q to role %q created during migration.
 	}
 
 	traits := map[string][]string{
-		teleport.TraitLogins:     flattenSlice([]string{u.legacyAllowedLogins}),
-		teleport.TraitKubeUsers:  flattenSlice([]string{u.kubeUsers}),
-		teleport.TraitKubeGroups: flattenSlice([]string{u.kubeGroups}),
+		siriusec.TraitLogins:     flattenSlice([]string{u.legacyAllowedLogins}),
+		siriusec.TraitKubeUsers:  flattenSlice([]string{u.kubeUsers}),
+		siriusec.TraitKubeGroups: flattenSlice([]string{u.kubeGroups}),
 	}
 
 	user.SetTraits(traits)
-	user.AddRole(teleport.AdminRoleName)
-	err = client.CreateUser(context.TODO(), user)
+	user.AddRole(siriusec.AdminRoleName)
+	err = client.CreateUser(context.Background(), user)
 	if err != nil {
 		return trace.Wrap(err)
 	}
 
-	token, err := client.CreateResetPasswordToken(context.TODO(), auth.CreateResetPasswordTokenRequest{
+	token, err := client.CreateResetPasswordToken(context.Background(), auth.CreateResetPasswordTokenRequest{
 		Name: u.login,
 		TTL:  u.ttl,
 		Type: auth.ResetPasswordTokenTypeInvite,
@@ -377,7 +377,7 @@ func (u *UserCommand) Update(client auth.ClientI) error {
 	}
 	roles := flattenSlice([]string{u.updateRoles})
 	for _, role := range roles {
-		if _, err := client.GetRole(context.TODO(), role); err != nil {
+		if _, err := client.GetRole(context.Background(), role); err != nil {
 			return trace.Wrap(err)
 		}
 	}
@@ -395,7 +395,7 @@ func (u *UserCommand) List(client auth.ClientI) error {
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	if u.format == teleport.Text {
+	if u.format == siriusec.Text {
 		if len(users) == 0 {
 			fmt.Println("No users found")
 			return nil
@@ -417,11 +417,11 @@ func (u *UserCommand) List(client auth.ClientI) error {
 	return nil
 }
 
-// Delete deletes teleport user(s). User IDs are passed as a comma-separated
+// Delete deletes siriusec user(s). User IDs are passed as a comma-separated
 // list in UserCommand.login
 func (u *UserCommand) Delete(client auth.ClientI) error {
 	for _, l := range strings.Split(u.login, ",") {
-		if err := client.DeleteUser(context.TODO(), l); err != nil {
+		if err := client.DeleteUser(context.Background(), l); err != nil {
 			return trace.Wrap(err)
 		}
 		fmt.Printf("User %q has been deleted\n", l)

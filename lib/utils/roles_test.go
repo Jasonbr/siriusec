@@ -27,7 +27,7 @@ type RolesTestSuite struct {
 var _ = check.Suite(&RolesTestSuite{})
 
 func (s *RolesTestSuite) TestParsing(c *check.C) {
-	roles, err := types.ParseTeleportRoles("auth, Proxy,nODE")
+	roles, err := types.ParseSiriusecRoles("auth, Proxy,nODE")
 	c.Assert(err, check.IsNil)
 	c.Assert(roles, check.DeepEquals, types.SystemRoles{
 		"Auth",

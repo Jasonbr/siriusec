@@ -48,7 +48,7 @@ const js = `
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Teleport Redirection Service</title>
+    <title>Siriusec Redirection Service</title>
     <script nonce="%v">
       (function() {
         var searchParts = window.location.search.split('=');
@@ -63,7 +63,7 @@ const js = `
           state_value: searchParts[1],
           cookie_value: hashParts[1],
         };
-        fetch('/x-teleport-auth', {
+        fetch('/x-siriusec-auth', {
           method: 'POST',
           mode: 'same-origin',
           cache: 'no-store',

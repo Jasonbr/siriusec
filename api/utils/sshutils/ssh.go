@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package sshutils defines several functions and types used across the
-// Teleport API and other Siriusec packages when working with SSH.
+// Siriusec API and other Siriusec packages when working with SSH.
 package sshutils
 
 import (
@@ -151,8 +151,8 @@ func AsAgentKeys(sshCert *ssh.Certificate, privKey []byte) ([]agent.AddedKey, er
 		return nil, trace.Wrap(err)
 	}
 
-	// put a teleport identifier along with the teleport user into the comment field
-	comment := fmt.Sprintf("teleport:%v", sshCert.KeyId)
+	// put a siriusec identifier along with the siriusec user into the comment field
+	comment := fmt.Sprintf("siriusec:%v", sshCert.KeyId)
 
 	// On Windows, return the certificate with the private key embedded.
 	if runtime.GOOS == constants.WindowsOS {

@@ -242,7 +242,7 @@ siriusec/
 
 | 问题 | 位置 | 说明 |
 |------|------|------|
-| 品牌替换不完整 | 全项目 | 部分代码仍使用 "teleport" 而非 "siriusec" |
+| 品牌替换不完整 | 全项目 | 部分代码仍使用 "siriusec" 而非 "siriusec" |
 | gRPC 未使用 | apiserver.go | gRPC 已实现但前端未调用 (使用的是 HTTP API) |
 
 ---

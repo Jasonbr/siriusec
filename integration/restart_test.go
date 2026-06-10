@@ -34,7 +34,7 @@ func TestLostConnectionToAuthCausesReload(t *testing.T) {
 	// Because testing that the node does a full restart is a bit tricky when
 	// running a cluster from inside a test runner (i.e. we don't want to
 	// SIGTERM the test runner), we will watch for the node emitting a
-	// `TeleportReload` even instead. In a proper Siriusec instance, this
+	// `SiriusecReload` even instead. In a proper Siriusec instance, this
 	// event would be picked up at the Supervisor level and would eventually
 	// cause the instance to gracefully restart.
 

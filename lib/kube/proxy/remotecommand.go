@@ -65,7 +65,7 @@ func (req remoteCommandRequest) eventPodMeta(ctx context.Context, creds *kubeCre
 
 	// Optionally, try to get more info about the pod.
 	//
-	// This can fail if a user has set tight RBAC rules for teleport. Failure
+	// This can fail if a user has set tight RBAC rules for siriusec. Failure
 	// here shouldn't prevent a session from starting.
 	pod, err := creds.kubeClient.CoreV1().Pods(req.podNamespace).Get(ctx, req.podName, metav1.GetOptions{})
 	if err != nil {

@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
@@ -32,7 +31,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/client/proto"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -48,10 +47,10 @@ import (
 	"github.com/gravitational/trace"
 )
 
-// ProxyClient implements ssh client to a teleport proxy
+// ProxyClient implements ssh client to a siriusec proxy
 // It can provide list of nodes or connect to nodes
 type ProxyClient struct {
-	teleportClient  *SiriusecClient
+	siriusecClient  *SiriusecClient
 	Client          *ssh.Client
 	hostLogin       string
 	proxyAddress    string
@@ -62,7 +61,7 @@ type ProxyClient struct {
 	clientAddr      string
 }
 
-// NodeClient implements ssh client to a ssh node (teleport or any regular ssh node)
+// NodeClient implements ssh client to a ssh node (siriusec or any regular ssh node)
 // NodeClient can run shell and commands or upload and download files.
 type NodeClient struct {
 	Namespace string
@@ -71,7 +70,7 @@ type NodeClient struct {
 	TC        *SiriusecClient
 }
 
-// GetSites returns list of the "sites" (AKA teleport clusters) connected to the proxy
+// GetSites returns list of the "sites" (AKA siriusec clusters) connected to the proxy
 // Each site is returned as an instance of its auth server
 //
 func (proxy *ProxyClient) GetSites() ([]types.Site, error) {
@@ -415,7 +414,7 @@ func (proxy *ProxyClient) IssueUserCertsWithMFA(ctx context.Context, params Reis
 	if mfaChal == nil {
 		return nil, trace.BadParameter("server sent a %T on GenerateUserSingleUseCerts, expected MFAChallenge", resp.Response)
 	}
-	mfaResp, err := promptMFAChallenge(ctx, proxy.teleportClient.WebProxyAddr, mfaChal)
+	mfaResp, err := promptMFAChallenge(ctx, proxy.siriusecClient.WebProxyAddr, mfaChal)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -481,7 +480,7 @@ func (proxy *ProxyClient) prepareUserCertsRequest(params ReissueParams, key *Key
 		RouteToApp:        params.RouteToApp,
 		NodeName:          params.NodeName,
 		Usage:             params.usage(),
-		Format:            proxy.teleportClient.CertificateFormat,
+		Format:            proxy.siriusecClient.CertificateFormat,
 	}, nil
 }
 
@@ -647,7 +646,7 @@ func (proxy *ProxyClient) ClusterAccessPoint(ctx context.Context, clusterName st
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	return proxy.teleportClient.accessPoint(clt, proxy.proxyAddress, clusterName)
+	return proxy.siriusecClient.accessPoint(clt, proxy.proxyAddress, clusterName)
 }
 
 // ConnectToCurrentCluster connects to the auth server of the currently selected
@@ -686,24 +685,24 @@ func (proxy *ProxyClient) ConnectToCluster(ctx context.Context, clusterName stri
 		return proxy.dialAuthServer(ctx, clusterName)
 	})
 
-	if proxy.teleportClient.SkipLocalAuth {
+	if proxy.siriusecClient.SkipLocalAuth {
 		return auth.NewClient(client.Config{
 			Dialer: dialer,
 			Credentials: []client.Credentials{
-				client.LoadTLS(proxy.teleportClient.TLS),
+				client.LoadTLS(proxy.siriusecClient.TLS),
 			},
 		})
 	}
 
 	tlsKey, err := proxy.localAgent().GetCoreKey()
 	if err != nil {
-		return nil, trace.Wrap(err, "failed to fetch TLS key for %v", proxy.teleportClient.Username)
+		return nil, trace.Wrap(err, "failed to fetch TLS key for %v", proxy.siriusecClient.Username)
 	}
 	tlsConfig, err := tlsKey.SiriusecClientTLSConfig(nil)
 	if err != nil {
 		return nil, trace.Wrap(err, "failed to generate client TLS config")
 	}
-	tlsConfig.InsecureSkipVerify = proxy.teleportClient.InsecureSkipVerify
+	tlsConfig.InsecureSkipVerify = proxy.siriusecClient.InsecureSkipVerify
 	clt, err := auth.NewClient(client.Config{
 		Dialer: dialer,
 		Credentials: []client.Credentials{
@@ -742,7 +741,7 @@ func (proxy *ProxyClient) isRecordingProxy() (bool, error) {
 	// don't hear anything back, most likley we are trying to connect to an older
 	// version of Siriusec and we should not try and forward our agent.
 	go func() {
-		ok, responseBytes, err := proxy.Client.SendRequest(teleport.RecordingProxyReqType, true, nil)
+		ok, responseBytes, err := proxy.Client.SendRequest(siriusec.RecordingProxyReqType, true, nil)
 		if err != nil {
 			responseCh <- proxyResponse{isRecord: false, err: trace.Wrap(err)}
 			return
@@ -811,7 +810,7 @@ func (proxy *ProxyClient) dialAuthServer(ctx context.Context, clusterName string
 	if err != nil {
 		// read the stderr output from the failed SSH session and append
 		// it to the end of our own message:
-		serverErrorMsg, _ := ioutil.ReadAll(proxyErr)
+		serverErrorMsg, _ := io.ReadAll(io.LimitReader(proxyErr, 1<<20))
 		return nil, trace.ConnectionProblem(err, "failed connecting to node %v. %s",
 			nodeName(strings.Split(address, "@")[0]), serverErrorMsg)
 	}
@@ -882,7 +881,7 @@ func requestSubsystem(ctx context.Context, session *ssh.Session, name string) er
 // It returns connected and authenticated NodeClient
 func (proxy *ProxyClient) ConnectToNode(ctx context.Context, nodeAddress NodeAddr, user string, quiet bool) (*NodeClient, error) {
 	log.Infof("Client=%v connecting to node=%v", proxy.clientAddr, nodeAddress)
-	if len(proxy.teleportClient.JumpHosts) > 0 {
+	if len(proxy.siriusecClient.JumpHosts) > 0 {
 		return proxy.PortForwardToNode(ctx, nodeAddress, user, quiet)
 	}
 
@@ -938,10 +937,10 @@ func (proxy *ProxyClient) ConnectToNode(ctx context.Context, nodeAddress NodeAdd
 	// creates a new context which holds the agent. if ForwardToAgent returns an error
 	// "already have handler for" we ignore it.
 	if recordingProxy {
-		if proxy.teleportClient.localAgent == nil {
+		if proxy.siriusecClient.localAgent == nil {
 			return nil, trace.BadParameter("cluster is in proxy recording mode and requires agent forwarding for connections, but no agent was initialized")
 		}
-		err = agent.ForwardToAgent(proxy.Client, proxy.teleportClient.localAgent.Agent)
+		err = agent.ForwardToAgent(proxy.Client, proxy.siriusecClient.localAgent.Agent)
 		if err != nil && !strings.Contains(err.Error(), "agent: already have handler for") {
 			return nil, trace.Wrap(err)
 		}
@@ -962,7 +961,7 @@ func (proxy *ProxyClient) ConnectToNode(ctx context.Context, nodeAddress NodeAdd
 
 		// read the stderr output from the failed SSH session and append
 		// it to the end of our own message:
-		serverErrorMsg, _ := ioutil.ReadAll(proxyErr)
+		serverErrorMsg, _ := io.ReadAll(io.LimitReader(proxyErr, 1<<20))
 		return nil, trace.ConnectionProblem(err, "failed connecting to node %v. %s",
 			nodeName(nodeAddress.Addr), serverErrorMsg)
 	}
@@ -998,7 +997,7 @@ func (proxy *ProxyClient) ConnectToNode(ctx context.Context, nodeAddress NodeAdd
 		Client:    client,
 		Proxy:     proxy,
 		Namespace: apidefaults.Namespace,
-		TC:        proxy.teleportClient,
+		TC:        proxy.siriusecClient,
 	}
 
 	// Start a goroutine that will run for the duration of the client to process
@@ -1031,10 +1030,10 @@ func (proxy *ProxyClient) PortForwardToNode(ctx context.Context, nodeAddress Nod
 	// creates a new context which holds the agent. if ForwardToAgent returns an error
 	// "already have handler for" we ignore it.
 	if recordingProxy {
-		if proxy.teleportClient.localAgent == nil {
+		if proxy.siriusecClient.localAgent == nil {
 			return nil, trace.BadParameter("cluster is in proxy recording mode and requires agent forwarding for connections, but no agent was initialized")
 		}
-		err = agent.ForwardToAgent(proxy.Client, proxy.teleportClient.localAgent.Agent)
+		err = agent.ForwardToAgent(proxy.Client, proxy.siriusecClient.localAgent.Agent)
 		if err != nil && !strings.Contains(err.Error(), "agent: already have handler for") {
 			return nil, trace.Wrap(err)
 		}
@@ -1070,7 +1069,7 @@ func (proxy *ProxyClient) PortForwardToNode(ctx context.Context, nodeAddress Nod
 		Client:    client,
 		Proxy:     proxy,
 		Namespace: apidefaults.Namespace,
-		TC:        proxy.teleportClient,
+		TC:        proxy.siriusecClient,
 	}
 
 	// Start a goroutine that will run for the duration of the client to process
@@ -1091,7 +1090,7 @@ func (c *NodeClient) handleGlobalRequests(ctx context.Context, requestCh <-chan 
 			}
 
 			switch r.Type {
-			case teleport.SessionEvent:
+			case siriusec.SessionEvent:
 				// Parse event and create events.EventFields that can be consumed directly
 				// by caller.
 				var e events.EventFields
@@ -1426,7 +1425,7 @@ func (proxy *ProxyClient) currentCluster() (*types.Site, error) {
 }
 
 func (proxy *ProxyClient) sessionSSHCertificate(ctx context.Context, nodeAddr NodeAddr) ([]ssh.AuthMethod, error) {
-	if _, err := proxy.teleportClient.localAgent.GetKey(nodeAddr.Cluster); err != nil {
+	if _, err := proxy.siriusecClient.localAgent.GetKey(nodeAddr.Cluster); err != nil {
 		if trace.IsNotFound(err) {
 			// Either running inside the web UI in a proxy or using an identity
 			// file. Fall back to whatever AuthMethod we currently have.
@@ -1457,5 +1456,5 @@ func (proxy *ProxyClient) sessionSSHCertificate(ctx context.Context, nodeAddr No
 
 // localAgent returns for the Siriusec client's local agent.
 func (proxy *ProxyClient) localAgent() *LocalKeyAgent {
-	return proxy.teleportClient.LocalAgent()
+	return proxy.siriusecClient.LocalAgent()
 }

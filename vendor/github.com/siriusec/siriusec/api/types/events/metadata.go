@@ -68,12 +68,12 @@ func (m *Metadata) GetIndex() int64 {
 	return m.Index
 }
 
-// GetClusterName returns originating teleport cluster name
+// GetClusterName returns originating siriusec cluster name
 func (m *Metadata) GetClusterName() string {
 	return m.ClusterName
 }
 
-// SetClusterName returns originating teleport cluster name
+// SetClusterName returns originating siriusec cluster name
 func (m *Metadata) SetClusterName(clusterName string) {
 	m.ClusterName = clusterName
 }

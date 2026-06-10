@@ -5,22 +5,22 @@ import "fmt"
 var (
 	triggerPullRequest = trigger{
 		Event: triggerRef{Include: []string{"pull_request"}},
-		Repo:  triggerRef{Include: []string{"gravitational/*"}},
+		Repo:  triggerRef{Include: []string{"siriusec/*"}},
 	}
 	triggerPush = trigger{
 		Event:  triggerRef{Include: []string{"push"}, Exclude: []string{"pull_request"}},
 		Branch: triggerRef{Include: []string{"master", "branch/*"}},
-		Repo:   triggerRef{Include: []string{"gravitational/*"}},
+		Repo:   triggerRef{Include: []string{"siriusec/*"}},
 	}
 	triggerTag = trigger{
 		Event: triggerRef{Include: []string{"tag"}},
 		Ref:   triggerRef{Include: []string{"refs/tags/v*"}},
-		Repo:  triggerRef{Include: []string{"gravitational/*"}},
+		Repo:  triggerRef{Include: []string{"siriusec/*"}},
 	}
 	triggerPushMasterOnly = trigger{
 		Event:  triggerRef{Include: []string{"push"}},
 		Branch: triggerRef{Include: []string{"master"}},
-		Repo:   triggerRef{Include: []string{"gravitational/teleport"}},
+		Repo:   triggerRef{Include: []string{"siriusec/siriusec"}},
 	}
 
 	volumeDocker = volume{

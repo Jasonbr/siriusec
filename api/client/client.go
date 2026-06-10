@@ -395,7 +395,7 @@ func (c *Client) waitForConnectionReady(ctx context.Context) error {
 
 // Config contains configuration of the client
 type Config struct {
-	// Addrs is a list of teleport auth/proxy server addresses to dial.
+	// Addrs is a list of siriusec auth/proxy server addresses to dial.
 	Addrs []string
 	// Credentials are a list of credentials to use when attempting
 	// to connect to the server.
@@ -541,7 +541,8 @@ func (c *Client) GetUser(name string, withSecrets bool) (types.User, error) {
 	if name == "" {
 		return nil, trace.BadParameter("missing username")
 	}
-	user, err := c.grpc.GetUser(context.TODO(), &proto.GetUserRequest{
+	user, err := c.grpc.GetUser(context.WithTimeout(ctx, 30*time.Second), &proto.GetUserRequest{
+	defer cancel()
 		Name:        name,
 		WithSecrets: withSecrets,
 	}, c.callOpts...)
@@ -554,7 +555,8 @@ func (c *Client) GetUser(name string, withSecrets bool) (types.User, error) {
 // GetUsers returns a list of users.
 // withSecrets controls whether authentication details are returned.
 func (c *Client) GetUsers(withSecrets bool) ([]types.User, error) {
-	stream, err := c.grpc.GetUsers(context.TODO(), &proto.GetUsersRequest{
+	stream, err := c.grpc.GetUsers(context.WithTimeout(ctx, 30*time.Second), &proto.GetUsersRequest{
+	defer cancel()
 		WithSecrets: withSecrets,
 	}, c.callOpts...)
 	if err != nil {

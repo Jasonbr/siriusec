@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -166,13 +166,13 @@ func (w *RestrictionsWatcher) getNetworkRestrictions(ctx context.Context) (*Netw
 // watch sets up the watch on proxies
 func (w *RestrictionsWatcher) watch(ctx context.Context) error {
 	watcher, err := w.Client.NewWatcher(ctx, types.Watch{
-		Name: teleport.ComponentRestrictedSession,
+		Name: siriusec.ComponentRestrictedSession,
 		Kinds: []types.WatchKind{
 			{
 				Kind: types.KindNetworkRestrictions,
 			},
 		},
-		MetricComponent: teleport.ComponentRestrictedSession,
+		MetricComponent: siriusec.ComponentRestrictedSession,
 	})
 	if err != nil {
 		return trace.Wrap(err)

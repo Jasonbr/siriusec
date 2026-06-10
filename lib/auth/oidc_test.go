@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/oauth2"
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	authority "github.com/siriusec/siriusec/lib/auth/testauthority"
 	"github.com/siriusec/siriusec/lib/backend"
@@ -127,7 +127,7 @@ func (s *OIDCSuite) TestPingProvider(c *check.C) {
 		IssuerURL:    idp.s.URL,
 		ClientID:     "00000000000000000000000000000000",
 		ClientSecret: "0000000000000000000000000000000000000000000000000000000000000000",
-		Provider:     teleport.Ping,
+		Provider:     siriusec.Ping,
 	})
 	c.Assert(err, check.IsNil)
 	oidcClient, err := s.a.getOrCreateOIDCClient(connector)

@@ -19,7 +19,7 @@ package types
 const (
 	// DefaultAPIGroup is a default group of permissions API,
 	// lets us to add different permission types
-	DefaultAPIGroup = "gravitational.io/teleport"
+	DefaultAPIGroup = "siriusec.io/siriusec"
 
 	// ActionRead grants read access (get, list)
 	ActionRead = "read"
@@ -272,7 +272,7 @@ const (
 const (
 	// OriginLabel is a resource metadata label name used to identify a source
 	// that the resource originates from.
-	OriginLabel = "teleport.dev/origin"
+	OriginLabel = "siriusec.dev/origin"
 
 	// OriginConfigFile is an origin value indicating that the resource was
 	// constructed as a default value.

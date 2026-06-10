@@ -163,7 +163,7 @@ func (s *KubeconfigSuite) TestSave(c *check.C) {
 
 func (s *KubeconfigSuite) TestUpdate(c *check.C) {
 	const (
-		clusterName = "teleport-cluster"
+		clusterName = "siriusec-cluster"
 		clusterAddr = "https://1.2.3.6:3080"
 	)
 	creds, caCertPEM, err := s.genUserKey()
@@ -203,13 +203,13 @@ func (s *KubeconfigSuite) TestUpdate(c *check.C) {
 
 func (s *KubeconfigSuite) TestRemove(c *check.C) {
 	const (
-		clusterName = "teleport-cluster"
+		clusterName = "siriusec-cluster"
 		clusterAddr = "https://1.2.3.6:3080"
 	)
 	creds, _, err := s.genUserKey()
 	c.Assert(err, check.IsNil)
 
-	// Add teleport-generated entries to kubeconfig.
+	// Add siriusec-generated entries to kubeconfig.
 	err = Update(s.kubeconfigPath, Values{
 		SiriusecClusterName: clusterName,
 		ClusterAddr:         clusterAddr,
@@ -231,7 +231,7 @@ func (s *KubeconfigSuite) TestRemove(c *check.C) {
 	wantConfig.CurrentContext = config.CurrentContext
 	c.Assert(config, check.DeepEquals, wantConfig)
 
-	// Add teleport-generated entries to kubeconfig again.
+	// Add siriusec-generated entries to kubeconfig again.
 	err = Update(s.kubeconfigPath, Values{
 		SiriusecClusterName: clusterName,
 		ClusterAddr:         clusterAddr,
@@ -247,7 +247,7 @@ func (s *KubeconfigSuite) TestRemove(c *check.C) {
 	err = Save(s.kubeconfigPath, *config)
 	c.Assert(err, check.IsNil)
 
-	// Remove teleport-generated entries from kubeconfig.
+	// Remove siriusec-generated entries from kubeconfig.
 	err = Remove(s.kubeconfigPath, clusterName)
 	c.Assert(err, check.IsNil)
 
@@ -288,7 +288,7 @@ func (s *KubeconfigSuite) genUserKey() (*client.Key, []byte, error) {
 		Clock:     clock,
 		PublicKey: cryptoPub,
 		Subject: pkix.Name{
-			CommonName: "teleport-user",
+			CommonName: "siriusec-user",
 		},
 		NotAfter: clock.Now().UTC().Add(time.Minute),
 	})

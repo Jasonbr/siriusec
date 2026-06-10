@@ -33,7 +33,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/defaults"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -195,7 +195,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 			Name:      s.hostUUID,
 		},
 		Spec: types.ServerSpecV2{
-			Version: teleport.Version,
+			Version: siriusec.Version,
 			Apps: []*types.App{
 				{
 					Name:          "foo",
@@ -255,14 +255,14 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	// Make sure the upload directory is created.
 	err = os.MkdirAll(filepath.Join(
-		s.dataDir, teleport.LogsDir, teleport.ComponentUpload,
+		s.dataDir, siriusec.LogsDir, siriusec.ComponentUpload,
 		events.StreamingLogsDir, apidefaults.Namespace,
 	), 0755)
 	c.Assert(err, check.IsNil)
 
 	lockWatcher, err := services.NewLockWatcher(s.closeContext, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentApp,
+			Component: siriusec.ComponentApp,
 			Client:    s.authClient,
 		},
 	})

@@ -17,7 +17,7 @@ limitations under the License.
 package service
 
 import (
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/cache"
@@ -39,8 +39,8 @@ func (process *SiriusecProcess) initDatabases() {
 }
 
 func (process *SiriusecProcess) initDatabaseService() (retErr error) {
-	log := process.log.WithField(trace.Component, teleport.Component(
-		teleport.ComponentDatabase, process.id))
+	log := process.log.WithField(trace.Component, siriusec.Component(
+		siriusec.ComponentDatabase, process.id))
 
 	eventsCh := make(chan Event)
 	process.WaitForEvent(process.ExitContext(), DatabasesIdentityEvent, eventsCh)
@@ -70,7 +70,7 @@ func (process *SiriusecProcess) initDatabaseService() (retErr error) {
 		}
 	}
 
-	accessPoint, err := process.newLocalCache(conn.Client, cache.ForDatabases, []string{teleport.ComponentDatabase})
+	accessPoint, err := process.newLocalCache(conn.Client, cache.ForDatabases, []string{siriusec.ComponentDatabase})
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -104,7 +104,7 @@ func (process *SiriusecProcess) initDatabaseService() (retErr error) {
 					InstanceID: db.GCP.InstanceID,
 				},
 				DynamicLabels: types.LabelsToV2(db.DynamicLabels),
-				Version:       teleport.Version,
+				Version:       siriusec.Version,
 				Hostname:      process.Config.Hostname,
 				HostID:        process.Config.HostUUID,
 			})
@@ -118,7 +118,7 @@ func (process *SiriusecProcess) initDatabaseService() (retErr error) {
 
 	lockWatcher, err := services.NewLockWatcher(process.ExitContext(), services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentDatabase,
+			Component: siriusec.ComponentDatabase,
 			Log:       log,
 			Client:    conn.Client,
 		},
@@ -171,9 +171,9 @@ func (process *SiriusecProcess) initDatabaseService() (retErr error) {
 		Servers:     databaseServers,
 		OnHeartbeat: func(err error) {
 			if err != nil {
-				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: teleport.ComponentDatabase})
+				process.BroadcastEvent(Event{Name: SiriusecDegradedEvent, Payload: siriusec.ComponentDatabase})
 			} else {
-				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: teleport.ComponentDatabase})
+				process.BroadcastEvent(Event{Name: SiriusecOKEvent, Payload: siriusec.ComponentDatabase})
 			}
 		},
 		LockWatcher: lockWatcher,
@@ -193,7 +193,7 @@ func (process *SiriusecProcess) initDatabaseService() (retErr error) {
 	// Create and start the agent pool.
 	agentPool, err := reversetunnel.NewAgentPool(process.ExitContext(),
 		reversetunnel.AgentPoolConfig{
-			Component:   teleport.ComponentDatabase,
+			Component:   siriusec.ComponentDatabase,
 			HostUUID:    conn.ServerIdentity.ID.HostUUID,
 			ProxyAddr:   tunnelAddr,
 			Client:      conn.Client,

@@ -1,0 +1,5 @@
+clusterName: helm-lint
+initContainers:
+- name: "siriusec-init"
+  image: "alpine"
+  args: ["echo test"]

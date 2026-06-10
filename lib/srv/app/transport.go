@@ -24,7 +24,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/api/types/wrappers"
@@ -177,8 +177,8 @@ func (t *transport) rewriteRequest(r *http.Request) error {
 	}
 
 	// Add in JWT headers.
-	r.Header.Set(teleport.AppJWTHeader, t.c.jwt)
-	r.Header.Set(teleport.AppCFHeader, t.c.jwt)
+	r.Header.Set(siriusec.AppJWTHeader, t.c.jwt)
+	r.Header.Set(siriusec.AppCFHeader, t.c.jwt)
 
 	return nil
 }
@@ -198,7 +198,7 @@ func (t *transport) rewriteHeaders(r *http.Request) {
 		r.Header.Del(header.Name)
 		for _, value := range values {
 			switch http.CanonicalHeaderKey(header.Name) {
-			case teleport.HostHeader:
+			case siriusec.HostHeader:
 				r.Host = value
 			default:
 				r.Header.Add(header.Name, value)
@@ -209,8 +209,8 @@ func (t *transport) rewriteHeaders(r *http.Request) {
 
 // ReservedHeaders is a list of headers injected by Siriusec.
 var ReservedHeaders = []string{
-	teleport.AppJWTHeader,
-	teleport.AppCFHeader,
+	siriusec.AppJWTHeader,
+	siriusec.AppCFHeader,
 	forward.XForwardedFor,
 	forward.XForwardedHost,
 	forward.XForwardedProto,

@@ -123,7 +123,7 @@ func (process *SiriusecProcess) WaitForSignals(ctx context.Context) error {
 			}
 		case <-process.ReloadContext().Done():
 			process.log.Infof("Exiting signal handler: process has started internal reload.")
-			return ErrTeleportReloading
+			return ErrSiriusecReloading
 		case <-process.ExitContext().Done():
 			process.log.Infof("Someone else has closed context, exiting.")
 			return nil
@@ -143,7 +143,7 @@ func (process *SiriusecProcess) WaitForSignals(ctx context.Context) error {
 			if se.Service.IsCritical() {
 				process.log.Errorf("Critical service %v has exited with error %v, aborting.", se.Service, se.Error)
 				if err := process.Close(); err != nil {
-					process.log.Errorf("Error when shutting down teleport %v.", err)
+					process.log.Errorf("Error when shutting down siriusec %v.", err)
 				}
 				return trace.Wrap(se.Error)
 			}
@@ -153,11 +153,11 @@ func (process *SiriusecProcess) WaitForSignals(ctx context.Context) error {
 }
 
 // ErrSiriusecReloading is returned when signal waiter exits
-// because the teleport process has initiaded shutdown
-var ErrTeleportReloading = &trace.CompareFailedError{Message: "teleport process is reloading"}
+// because the siriusec process has initiaded shutdown
+var ErrSiriusecReloading = &trace.CompareFailedError{Message: "siriusec process is reloading"}
 
-// ErrSiriusecExited means that teleport has exited
-var ErrTeleportExited = &trace.CompareFailedError{Message: "teleport process has shutdown"}
+// ErrSiriusecExited means that siriusec has exited
+var ErrSiriusecExited = &trace.CompareFailedError{Message: "siriusec process has shutdown"}
 
 func (process *SiriusecProcess) writeToSignalPipe(signalPipe *os.File, message string) error {
 	messageSignalled, cancel := context.WithCancel(context.Background())
@@ -282,7 +282,7 @@ func (process *SiriusecProcess) ExportFileDescriptors() ([]FileDescriptor, error
 // importFileDescriptors imports file descriptors from environment if there are any
 func importFileDescriptors(log logrus.FieldLogger) ([]FileDescriptor, error) {
 	// These files may be passed in by the parent process
-	filesString := os.Getenv(teleportFilesEnvVar)
+	filesString := utils.GetEnvWithFallback(siriusecFilesEnvVar, "TELEPORT_OS_FILES")
 	if filesString == "" {
 		return nil, nil
 	}
@@ -300,7 +300,7 @@ func importFileDescriptors(log logrus.FieldLogger) ([]FileDescriptor, error) {
 }
 
 // registeredListener is a listener registered
-// within teleport process, can be passed to child process
+// within siriusec process, can be passed to child process
 type registeredListener struct {
 	// Type is a listener type, e.g. auth:ssh
 	typ listenerType
@@ -358,7 +358,7 @@ func filesToString(files []FileDescriptor) (string, error) {
 	return string(bytes), nil
 }
 
-const teleportFilesEnvVar = "TELEPORT_OS_FILES"
+const siriusecFilesEnvVar = "SIRIUSEC_OS_FILES"
 
 func execPath() (string, error) {
 	name, err := exec.LookPath(os.Args[0])
@@ -389,7 +389,7 @@ func filesFromString(in string) ([]FileDescriptor, error) {
 }
 
 const (
-	signalPipeName = "teleport-signal-pipe"
+	signalPipeName = "siriusec-signal-pipe"
 	// signalPipeTimeout is a time parent process is expecting
 	// the child process to initialize and write back,
 	// or child process is blocked on write to the pipe
@@ -442,7 +442,7 @@ func (process *SiriusecProcess) forkChild() error {
 	}
 
 	log.Infof("Passing %s to child", vals)
-	os.Setenv(teleportFilesEnvVar, vals)
+	os.Setenv(siriusecFilesEnvVar, vals)
 
 	p, err := os.StartProcess(path, os.Args, &os.ProcAttr{
 		Dir:   workingDir,
@@ -456,7 +456,7 @@ func (process *SiriusecProcess) forkChild() error {
 	process.pushForkedPID(p.Pid)
 	log.WithFields(logrus.Fields{"pid": p.Pid}).Infof("Forked new child process.")
 
-	messageReceived, cancel := context.WithCancel(context.TODO())
+	messageReceived, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go func() {
 		data := make([]byte, 1024)
@@ -480,8 +480,8 @@ func (process *SiriusecProcess) forkChild() error {
 }
 
 // collectStatuses attempts to collect exit statuses from
-// forked teleport child processes.
-// If forked teleport process exited with an error during graceful
+// forked siriusec child processes.
+// If forked siriusec process exited with an error during graceful
 // restart, parent process has to collect the child process status
 // otherwise the child process will become a zombie process.
 // Call Wait4(-1) is trying to collect status of any child
@@ -503,7 +503,7 @@ func (process *SiriusecProcess) collectStatuses() {
 		}
 		if rpid == pid {
 			process.popForkedPID(pid)
-			process.log.Warningf("Forked teleport process %v has exited with status: %v.", pid, wait.ExitStatus())
+			process.log.Warningf("Forked siriusec process %v has exited with status: %v.", pid, wait.ExitStatus())
 		}
 	}
 }

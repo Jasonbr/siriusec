@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // package modules allows external packages override certain behavioral
-// aspects of teleport
+// aspects of siriusec
 package modules
 
 import (
@@ -25,7 +25,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
@@ -71,9 +71,9 @@ func (f Features) ToProto() *proto.Features {
 }
 
 // Modules defines interface that external libraries can implement customizing
-// default teleport behavior
+// default siriusec behavior
 type Modules interface {
-	// PrintVersion prints teleport version
+	// PrintVersion prints siriusec version
 	PrintVersion()
 	// IsBoringBinary checks if the binary was compiled with BoringCrypto.
 	IsBoringBinary() bool
@@ -138,7 +138,7 @@ func (p *defaultModules) BuildType() string {
 
 // PrintVersion prints the Siriusec version.
 func (p *defaultModules) PrintVersion() {
-	fmt.Printf("Sirius v%s git:%s %s\n", teleport.Version, teleport.Gitref, runtime.Version())
+	fmt.Printf("Sirius v%s git:%s %s\n", siriusec.Version, siriusec.Gitref, runtime.Version())
 }
 
 // Features returns supported features

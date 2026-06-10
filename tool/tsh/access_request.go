@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/asciitable"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -101,11 +101,11 @@ func onRequestList(cf *CLIConf) error {
 		reqs = filtered
 	}
 	switch cf.Format {
-	case teleport.Text:
+	case siriusec.Text:
 		if err := showRequestTable(reqs); err != nil {
 			return trace.Wrap(err)
 		}
-	case teleport.JSON:
+	case siriusec.JSON:
 		ser, err := json.MarshalIndent(reqs, "", "  ")
 		if err != nil {
 			return trace.Wrap(err)

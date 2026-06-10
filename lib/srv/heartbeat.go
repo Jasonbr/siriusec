@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/services"
@@ -134,7 +134,7 @@ func NewHeartbeat(cfg HeartbeatConfig) (*Heartbeat, error) {
 		cancel:          cancel,
 		HeartbeatConfig: cfg,
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.Component(cfg.Component, "beat"),
+			trace.Component: siriusec.Component(cfg.Component, "beat"),
 		}),
 		checkTicker: cfg.Clock.NewTicker(cfg.CheckPeriod),
 		announceC:   make(chan struct{}, 1),

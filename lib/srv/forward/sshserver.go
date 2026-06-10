@@ -26,7 +26,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -265,7 +265,7 @@ func New(c ServerConfig) (*Server, error) {
 
 	s := &Server{
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.ComponentForwardingNode,
+			trace.Component: siriusec.ComponentForwardingNode,
 			trace.ComponentFields: map[string]string{
 				"src-addr": c.SrcAddr.String(),
 				"dst-addr": c.DstAddr.String(),
@@ -304,7 +304,7 @@ func New(c ServerConfig) (*Server, error) {
 	// Common auth handlers.
 	authHandlerConfig := srv.AuthHandlerConfig{
 		Server:      s,
-		Component:   teleport.ComponentForwardingNode,
+		Component:   siriusec.ComponentForwardingNode,
 		Emitter:     c.Emitter,
 		AccessPoint: c.AuthClient,
 		FIPS:        c.FIPS,
@@ -363,7 +363,7 @@ func (s *Server) AdvertiseAddr() string {
 
 // Component is the type of node this server is.
 func (s *Server) Component() string {
-	return teleport.ComponentForwardingNode
+	return siriusec.ComponentForwardingNode
 }
 
 // PermitUserEnvironment is always false because it's up the the remote host
@@ -472,10 +472,10 @@ func (s *Server) Serve() {
 
 	sconn, chans, reqs, err := ssh.NewServerConn(s.serverConn, config)
 	if err != nil {
-		s.userAgent.Close()
-		s.targetConn.Close()
-		s.clientConn.Close()
-		s.serverConn.Close()
+		defer s.userAgent.Close()
+		defer s.targetConn.Close()
+		defer s.clientConn.Close()
+		defer s.serverConn.Close()
 
 		s.log.Errorf("Unable to create server connection: %v.", err)
 		return
@@ -485,13 +485,12 @@ func (s *Server) Serve() {
 	ctx := context.Background()
 	ctx, s.connectionContext = sshutils.NewConnectionContext(ctx, s.serverConn, s.sconn)
 
-	// Take connection and extract identity information for the user from it.
 	s.identityContext, err = s.authHandlers.CreateIdentityContext(sconn)
 	if err != nil {
-		s.userAgent.Close()
-		s.targetConn.Close()
-		s.clientConn.Close()
-		s.serverConn.Close()
+		defer s.userAgent.Close()
+		defer s.targetConn.Close()
+		defer s.clientConn.Close()
+		defer s.serverConn.Close()
 
 		s.log.Errorf("Unable to create server connection: %v.", err)
 		return
@@ -501,15 +500,13 @@ func (s *Server) Serve() {
 	s.log.Debugf("Creating remote connection to %v@%v", sconn.User(), s.clientConn.RemoteAddr().String())
 	s.remoteClient, err = s.newRemoteClient(sconn.User())
 	if err != nil {
-		// Reject the connection with an error so the client doesn't hang then
-		// close the connection.
 		s.rejectChannel(chans, err.Error())
 		sconn.Close()
 
-		s.userAgent.Close()
-		s.targetConn.Close()
-		s.clientConn.Close()
-		s.serverConn.Close()
+		defer s.userAgent.Close()
+		defer s.targetConn.Close()
+		defer s.clientConn.Close()
+		defer s.serverConn.Close()
 
 		s.log.Errorf("Unable to create remote connection: %v", err)
 		return
@@ -639,8 +636,8 @@ func (s *Server) rejectChannel(chans <-chan ssh.NewChannel, errMessage string) {
 func (s *Server) handleGlobalRequest(req *ssh.Request) {
 	// Version requests are internal Siriusec requests, they should not be
 	// forwarded to the remote server.
-	if req.Type == teleport.VersionRequest {
-		err := req.Reply(true, []byte(teleport.Version))
+	if req.Type == siriusec.VersionRequest {
+		err := req.Reply(true, []byte(siriusec.Version))
 		if err != nil {
 			s.log.Debugf("Failed to reply to version request: %v.", err)
 		}
@@ -667,11 +664,11 @@ func (s *Server) handleChannel(ctx context.Context, nch ssh.NewChannel) {
 	switch channelType {
 	// Channels of type "session" handle requests that are involved in running
 	// commands on a server, subsystem requests, and agent forwarding.
-	case teleport.ChanSession:
+	case siriusec.ChanSession:
 		go s.handleSessionChannel(ctx, nch)
 
 	// Channels of type "direct-tcpip" handles request for port forwarding.
-	case teleport.ChanDirectTCPIP:
+	case siriusec.ChanDirectTCPIP:
 		req, err := sshutils.ParseDirectTCPIPReq(nch.ExtraData())
 		if err != nil {
 			s.log.Errorf("Failed to parse request data: %v, err: %v", string(nch.ExtraData()), err)
@@ -707,7 +704,7 @@ func (s *Server) handleDirectTCPIPRequest(ctx context.Context, ch ssh.Channel, r
 		return
 	}
 	scx.RemoteClient = s.remoteClient
-	scx.ChannelType = teleport.ChanDirectTCPIP
+	scx.ChannelType = siriusec.ChanDirectTCPIP
 	scx.SrcAddr = fmt.Sprintf("%v:%d", req.Orig, req.OrigPort)
 	scx.DstAddr = fmt.Sprintf("%v:%d", req.Host, req.Port)
 	defer scx.Close()
@@ -791,7 +788,7 @@ func (s *Server) handleSessionChannel(ctx context.Context, nch ssh.NewChannel) {
 	// Create context for this channel. This context will be closed when the
 	// session request is complete.
 	// There is no need for the forwarding server to initiate disconnects,
-	// based on teleport business logic, because this logic is already
+	// based on siriusec business logic, because this logic is already
 	// done on the server's terminating side.
 	ctx, scx, err := srv.NewServerContext(ctx, s.connectionContext, s, s.identityContext)
 	if err != nil {
@@ -803,7 +800,7 @@ func (s *Server) handleSessionChannel(ctx context.Context, nch ssh.NewChannel) {
 	}
 
 	scx.RemoteClient = s.remoteClient
-	scx.ChannelType = teleport.ChanSession
+	scx.ChannelType = siriusec.ChanSession
 	defer scx.Close()
 
 	// Create a "session" channel on the remote host.  Note that we
@@ -849,7 +846,7 @@ func (s *Server) handleSessionChannel(ctx context.Context, nch ssh.NewChannel) {
 
 			// Write the error to channel and close it.
 			s.stderrWrite(ch, errorMessage)
-			_, err := ch.SendRequest("exit-status", false, ssh.Marshal(struct{ C uint32 }{C: teleport.RemoteCommandFailure}))
+			_, err := ch.SendRequest("exit-status", false, ssh.Marshal(struct{ C uint32 }{C: siriusec.RemoteCommandFailure}))
 			if err != nil {
 				scx.Errorf("Failed to send exit status %v", errorMessage)
 			}

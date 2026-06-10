@@ -5,7 +5,7 @@ resource "aws_route_table" "public" {
   vpc_id = local.vpc_id
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -24,7 +24,7 @@ resource "aws_subnet" "public" {
   availability_zone = element(local.azs, count.index)
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 

@@ -68,8 +68,8 @@ func (params DialParams) String() string {
 	return fmt.Sprintf("from: %q to: %q", params.From, to)
 }
 
-// RemoteSite represents remote teleport site that can be accessed via
-// teleport tunnel or directly by proxy
+// RemoteSite represents remote siriusec site that can be accessed via
+// siriusec tunnel or directly by proxy
 //
 // There are two implementations of this interface: local and remote sites.
 type RemoteSite interface {

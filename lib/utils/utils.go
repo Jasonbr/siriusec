@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -32,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apiutils "github.com/siriusec/siriusec/api/utils"
 	"github.com/siriusec/siriusec/lib/modules"
@@ -240,9 +239,9 @@ func StringsSet(in []string) map[string]struct{} {
 // reporting purposes, defaultValue is returned when no value is set
 func ParseOnOff(parameterName, val string, defaultValue bool) (bool, error) {
 	switch val {
-	case teleport.On:
+	case siriusec.On:
 		return true, nil
-	case teleport.Off:
+	case siriusec.Off:
 		return false, nil
 	case "":
 		return defaultValue, nil
@@ -323,7 +322,7 @@ func ReadPath(path string) ([]byte, error) {
 	if err != nil {
 		return nil, trace.ConvertSystemError(err)
 	}
-	bytes, err := ioutil.ReadFile(abs)
+	bytes, err := os.ReadFile(abs)
 	if err != nil {
 		return nil, trace.ConvertSystemError(err)
 	}
@@ -437,7 +436,7 @@ func ReadHostUUID(dataDir string) (string, error) {
 
 // WriteHostUUID writes host UUID into a file
 func WriteHostUUID(dataDir string, id string) error {
-	err := ioutil.WriteFile(filepath.Join(dataDir, HostUUIDFile), []byte(id), os.ModeExclusive|0400)
+	err := os.WriteFile(filepath.Join(dataDir, HostUUIDFile), []byte(id), os.ModeExclusive|0400)
 	if err != nil {
 		return trace.ConvertSystemError(err)
 	}
@@ -523,7 +522,7 @@ func RemoveFromSlice(slice []string, values ...string) []string {
 // CheckCertificateFormatFlag checks if the certificate format is valid.
 func CheckCertificateFormatFlag(s string) (string, error) {
 	switch s {
-	case constants.CertificateFormatStandard, teleport.CertificateFormatOldSSH, teleport.CertificateFormatUnspecified:
+	case constants.CertificateFormatStandard, siriusec.CertificateFormatOldSSH, siriusec.CertificateFormatUnspecified:
 		return s, nil
 	default:
 		return "", trace.BadParameter("invalid certificate format parameter: %q", s)
@@ -561,7 +560,7 @@ func StoreErrorOf(f func() error, err *error) {
 // when limit bytes are read.
 func ReadAtMost(r io.Reader, limit int64) ([]byte, error) {
 	limitedReader := &io.LimitedReader{R: r, N: limit}
-	data, err := ioutil.ReadAll(limitedReader)
+	data, err := io.ReadAll(limitedReader)
 	if err != nil {
 		return data, err
 	}
@@ -575,23 +574,23 @@ func ReadAtMost(r io.Reader, limit int64) ([]byte, error) {
 var ErrLimitReached = &trace.LimitExceededError{Message: "the read limit is reached"}
 
 const (
-	// CertSiriusecUser specifies teleport user
-	CertSiriusecUser = "x-teleport-user"
-	// CertSiriusecUserCA specifies teleport certificate authority
-	CertSiriusecUserCA = "x-teleport-user-ca"
-	// CertExtensionRole specifies teleport role
-	CertExtensionRole = "x-teleport-role"
-	// CertExtensionAuthority specifies teleport authority's name
+	// CertSiriusecUser specifies siriusec user
+	CertSiriusecUser = "x-siriusec-user"
+	// CertSiriusecUserCA specifies siriusec certificate authority
+	CertSiriusecUserCA = "x-siriusec-user-ca"
+	// CertExtensionRole specifies siriusec role
+	CertExtensionRole = "x-siriusec-role"
+	// CertExtensionAuthority specifies siriusec authority's name
 	// that signed this domain
-	CertExtensionAuthority = "x-teleport-authority"
+	CertExtensionAuthority = "x-siriusec-authority"
 	// HostUUIDFile is the file name where the host UUID file is stored
 	HostUUIDFile = "host_uuid"
-	// CertSiriusecClusterName is a name of the teleport cluster
-	CertSiriusecClusterName = "x-teleport-cluster-name"
+	// CertSiriusecClusterName is a name of the siriusec cluster
+	CertSiriusecClusterName = "x-siriusec-cluster-name"
 	// CertSiriusecUserCertificate is the certificate of the authenticated in user.
-	CertSiriusecUserCertificate = "x-teleport-certificate"
+	CertSiriusecUserCertificate = "x-siriusec-certificate"
 	// ExtIntCertType is an internal extension used to propagate cert type.
-	ExtIntCertType = "certtype@teleport"
+	ExtIntCertType = "certtype@siriusec"
 	// ExtIntCertTypeHost indicates a host-type certificate.
 	ExtIntCertTypeHost = "host"
 	// ExtIntCertTypeUser indicates a user-type certificate.

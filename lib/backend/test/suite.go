@@ -335,7 +335,7 @@ func (s *BackendSuite) KeepAlive(c *check.C) {
 	})
 
 	expiresAt := addSeconds(s.Clock.Now(), 2)
-	item, lease := s.addItem(context.TODO(), c, prefix("key"), "val1", expiresAt)
+	item, lease := s.addItem(context.Background(), c, prefix("key"), "val1", expiresAt)
 
 	s.Clock.Advance(1 * time.Second)
 
@@ -343,7 +343,7 @@ func (s *BackendSuite) KeepAlive(c *check.C) {
 	// skew and ensure the item is available when we delete it.
 	// It does not affect the running time of the test
 	updatedAt := addSeconds(s.Clock.Now(), 60)
-	err = s.B.KeepAlive(context.TODO(), lease, updatedAt)
+	err = s.B.KeepAlive(context.Background(), lease, updatedAt)
 	c.Assert(err, check.IsNil)
 
 	// Since the backend translates absolute expiration timestamp to a TTL
@@ -355,15 +355,15 @@ func (s *BackendSuite) KeepAlive(c *check.C) {
 		{Type: types.OpPut, Item: backend.Item{Key: prefix("key"), Value: []byte("val1"), Expires: updatedAt}},
 	})
 
-	err = s.B.Delete(context.TODO(), item.Key)
+	err = s.B.Delete(context.Background(), item.Key)
 	require.NoError(c, err)
 	c.Assert(err, check.IsNil)
 
-	_, err = s.B.Get(context.TODO(), item.Key)
+	_, err = s.B.Get(context.Background(), item.Key)
 	c.Assert(err, check.FitsTypeOf, trace.NotFound(""))
 
 	// keep alive on deleted or expired object should fail
-	err = s.B.KeepAlive(context.TODO(), lease, updatedAt.Add(1*time.Second))
+	err = s.B.KeepAlive(context.Background(), lease, updatedAt.Add(1*time.Second))
 	c.Assert(err, check.FitsTypeOf, trace.NotFound(""))
 }
 
@@ -531,7 +531,7 @@ func (s *BackendSuite) Locking(c *check.C, bk backend.Backend) {
 	// has probably gone bad (e.g. db server has ceased to exist), so it's
 	// probably best to bail out with a sensible error (& call stack) rather
 	// than wait for the test to time out
-	ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
 	// Manually drive the clock at ~10x speed to make sure anyone waiting on it
@@ -607,7 +607,7 @@ func (s *BackendSuite) ConcurrentOperations(c *check.C) {
 	c.Assert(l2, check.NotNil)
 
 	prefix := MakePrefix()
-	ctx := context.TODO()
+	ctx := context.Background()
 	value1 := "this first value should not be corrupted by concurrent ops"
 	value2 := "this second value should not be corrupted too"
 	const attempts = 50

@@ -11,7 +11,7 @@ HERE=$(readlink -f $0)
 cd "$(dirname $HERE)" || exit
 
 mkdir -p data
-etcd --name teleportstorage \
+etcd --name siriusecstorage \
      --data-dir data/etcd \
      --initial-cluster-state new \
      --cert-file certs/server-cert.pem \

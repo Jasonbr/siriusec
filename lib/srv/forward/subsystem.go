@@ -22,7 +22,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/events"
 	"github.com/siriusec/siriusec/lib/srv"
@@ -46,7 +46,7 @@ type remoteSubsystem struct {
 func parseRemoteSubsystem(ctx context.Context, subsytemName string, serverContext *srv.ServerContext) *remoteSubsystem {
 	return &remoteSubsystem{
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRemoteSubsystem,
+			trace.Component: siriusec.ComponentRemoteSubsystem,
 			trace.ComponentFields: map[string]string{
 				"name": subsytemName,
 			},

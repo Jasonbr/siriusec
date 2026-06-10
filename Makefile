@@ -6,7 +6,7 @@
 #  clean  : removes all buld artifacts
 #  test   : runs tests
 
-# To update the Teleport version, update VERSION variable:
+# To update the Siriusec version, update VERSION variable:
 # Naming convention:
 #   Stable releases:   "1.0.0"
 #   Pre-releases:      "1.0.0-alpha.1", "1.0.0-beta.2", "1.0.0-rc.3"
@@ -27,7 +27,7 @@ DATADIR ?= /usr/local/share/siriusec
 ADDFLAGS ?=
 PWD ?= `pwd`
 GOPKGDIR ?= `go env GOPATH`/pkg/`go env GOHOSTOS`_`go env GOARCH`/github.com/siriusec/siriusec*
-TELEPORT_DEBUG ?= no
+SIRIUSEC_DEBUG ?= no
 GITTAG=v$(VERSION)
 BUILDFLAGS ?= $(ADDFLAGS) -ldflags '-w -s'
 CGOFLAG ?= CGO_ENABLED=1
@@ -61,7 +61,7 @@ FIPS_MESSAGE := "with FIPS support"
 RELEASE = siriusec-$(GITTAG)-$(OS)-$(ARCH)-fips-bin
 endif
 
-# PAM support will only be built into Teleport if headers exist at build time.
+# PAM support will only be built into Siriusec if headers exist at build time.
 PAM_MESSAGE := "without PAM support"
 ifneq ("$(wildcard /usr/include/security/pam_appl.h)","")
 PAM_TAG := pam
@@ -75,7 +75,7 @@ PAM_MESSAGE := "with PAM support"
 endif
 endif
 
-# BPF support will only be built into Teleport if headers exist at build time.
+# BPF support will only be built into Siriusec if headers exist at build time.
 BPF_MESSAGE := "without BPF support"
 
 # We don't compile BPF for anything except regular non-FIPS linux/amd64 for now, as other builds
@@ -208,7 +208,7 @@ bpf-bytecode:
 endif
 
 #
-# make full - Builds Teleport binaries with the built-in web assets and
+# make full - Builds Siriusec binaries with the built-in web assets and
 # places them into $(BUILDDIR). On Windows, this target is skipped because
 # only tsh is built.
 #
@@ -219,7 +219,7 @@ ifneq ("$(OS)", "windows")
 endif
 
 #
-# make full-ent - Builds Teleport enterprise binaries
+# make full-ent - Builds Siriusec enterprise binaries
 #
 .PHONY:full-ent
 full-ent:
@@ -333,7 +333,7 @@ release-windows: release-windows-unsigned
 	@echo "---> Signing Windows binary."
 	@osslsigncode sign \
 		-pkcs12 "windows-signing-cert.pfx" \
-		-n "Teleport" \
+		-n "Siriusec" \
 		-i https://siriusec.com \
 		-t http://timestamp.digicert.com \
 		-h sha2 \
@@ -592,7 +592,7 @@ docker:
 docker-binaries: clean
 	make -C build.assets build-binaries
 
-# Interactively enters a Docker container (which you can build and run Teleport inside of)
+# Interactively enters a Docker container (which you can build and run Siriusec inside of)
 .PHONY:enter
 enter:
 	make -C build.assets enter
@@ -795,15 +795,15 @@ update-vendor:
 	# delete the vendored api package. In its place
 	# create a symlink to the the original api package
 	rm -r vendor/github.com/gravitational/siriusec/api
-	ln -s -r $(shell readlink -f api) vendor/github.com/gravitational/teleport
+	ln -s -r $(shell readlink -f api) vendor/github.com/gravitational/siriusec
 
 # update-webassets updates the minified code in the webassets repo using the latest webapps
 # repo and creates a PR in the siriusec repo to update webassets submodule.
 .PHONY: update-webassets
 update-webassets: WEBAPPS_BRANCH ?= 'master'
-update-webassets: TELEPORT_BRANCH ?= 'master'
+update-webassets: SIRIUSEC_BRANCH ?= 'master'
 update-webassets:
-	build.assets/webapps/update-siriusec-webassets.sh -w $(WEBAPPS_BRANCH) -t $(TELEPORT_BRANCH)
+	build.assets/webapps/update-siriusec-webassets.sh -w $(WEBAPPS_BRANCH) -t $(SIRIUSEC_BRANCH)
 
 # dronegen generates .drone.yml config
 .PHONY: dronegen

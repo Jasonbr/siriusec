@@ -1,5 +1,5 @@
 # This Dockerfile makes the FIPS "build box": the container used to build official
-# FIPS releases of Teleport and its documentation.
+# FIPS releases of Siriusec and its documentation.
 
 # Use Ubuntu 18.04 as base to get an older glibc version.
 # Using a newer base image will build against a newer glibc, which creates a

@@ -37,7 +37,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/profile"
 	"github.com/siriusec/siriusec/api/types"
@@ -84,13 +84,13 @@ type KubeSuite struct {
 
 func newKubeSuite(t *testing.T) *KubeSuite {
 
-	testEnabled := os.Getenv(teleport.KubeRunTests)
+	testEnabled := os.Getenv(siriusec.KubeRunTests)
 	if ok, _ := strconv.ParseBool(testEnabled); !ok {
 		t.Skip("Skipping Kubernetes test suite.")
 	}
 
 	suite := &KubeSuite{
-		kubeConfigPath: os.Getenv(teleport.EnvKubeConfig),
+		kubeConfigPath: os.Getenv(siriusec.EnvKubeConfig),
 	}
 	require.NotEmpty(t, suite.kubeConfigPath, "This test requires path to valid kubeconfig.")
 
@@ -533,7 +533,7 @@ func testKubeTrustedClustersClientCert(t *testing.T, suite *KubeSuite) {
 	// connect aux cluster to main cluster
 	// using trusted clusters, so remote user will be allowed to assume
 	// role specified by mapping remote role "aux-kube" to local role "main-kube"
-	auxKubeGroups := []string{teleport.TraitInternalKubeGroupsVariable}
+	auxKubeGroups := []string{siriusec.TraitInternalKubeGroupsVariable}
 	auxRole, err := types.NewRole("aux-kube", types.RoleSpecV4{
 		Allow: types.RoleConditions{
 			Logins: []string{username},
@@ -791,7 +791,7 @@ func testKubeTrustedClustersSNI(t *testing.T, suite *KubeSuite) {
 	// connect aux cluster to main cluster
 	// using trusted clusters, so remote user will be allowed to assume
 	// role specified by mapping remote role "aux-kube" to local role "main-kube"
-	auxKubeGroups := []string{teleport.TraitInternalKubeGroupsVariable}
+	auxKubeGroups := []string{siriusec.TraitInternalKubeGroupsVariable}
 	auxRole, err := types.NewRole("aux-kube", types.RoleSpecV4{
 		Allow: types.RoleConditions{
 			Logins: []string{username},
@@ -1146,7 +1146,7 @@ func tlsClientConfig(cfg *rest.Config) (*tls.Config, error) {
 }
 
 type kubeProxyConfig struct {
-	t              *TeleInstance
+	t              *SiriusecInstance
 	username       string
 	kubeUsers      []string
 	kubeGroups     []string

@@ -31,7 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -65,7 +65,7 @@ type DynamoeventsSuite struct {
 var _ = check.Suite(&DynamoeventsSuite{})
 
 func (s *DynamoeventsSuite) SetUpSuite(c *check.C) {
-	testEnabled := os.Getenv(teleport.AWSRunTests)
+	testEnabled := os.Getenv(siriusec.AWSRunTests)
 	if ok, _ := strconv.ParseBool(testEnabled); !ok {
 		c.Skip("Skipping AWS-dependent test suite.")
 	}
@@ -76,7 +76,7 @@ func (s *DynamoeventsSuite) SetUpSuite(c *check.C) {
 	fakeClock := clockwork.NewFakeClock()
 	log, err := New(context.Background(), Config{
 		Region:       "eu-north-1",
-		Tablename:    fmt.Sprintf("teleport-test-%v", uuid.New()),
+		Tablename:    fmt.Sprintf("siriusec-test-%v", uuid.New()),
 		Clock:        fakeClock,
 		UIDGenerator: utils.NewFakeUID(),
 	}, backend)

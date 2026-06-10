@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/reversetunnel/track"
@@ -155,7 +155,7 @@ func NewAgentPool(ctx context.Context, cfg AgentPoolConfig) (*AgentPool, error) 
 		cancel:       cancel,
 		spawnLimiter: retry,
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentReverseTunnelAgent,
+			trace.Component: siriusec.ComponentReverseTunnelAgent,
 			trace.ComponentFields: log.Fields{
 				"cluster": cfg.Cluster,
 			},

@@ -21,7 +21,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apiutils "github.com/siriusec/siriusec/api/utils"
 	"github.com/siriusec/siriusec/lib/backend"
@@ -465,7 +465,7 @@ func itemFromPluginData(data types.PluginData) (backend.Item, error) {
 	}
 	// enforce explicit limit on resource size in order to prevent PluginData from
 	// growing uncontrollably.
-	if len(value) > teleport.MaxResourceSize {
+	if len(value) > siriusec.MaxResourceSize {
 		return backend.Item{}, trace.BadParameter("plugin data size limit exceeded")
 	}
 	return backend.Item{

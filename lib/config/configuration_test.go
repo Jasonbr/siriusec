@@ -62,7 +62,7 @@ var testConfigs testConfigFiles
 func writeTestConfigs() error {
 	var err error
 
-	testConfigs.tempDir, err = ioutil.TempDir("", "teleport-config")
+	testConfigs.tempDir, err = ioutil.TempDir("", "siriusec-config")
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func TestConfig(t *testing.T) {
 		require.Equal(t, fc.Auth.ClusterName, ClusterName("cookie.localhost"))
 		require.Equal(t, fc.Auth.LicenseFile, "/tmp/license.pem")
 		require.Equal(t, fc.Proxy.PublicAddr, apiutils.Strings{"cookie.localhost:443"})
-		require.Equal(t, fc.Proxy.WebAddr, "0.0.0.0:443")
+		require.Equal(t, fc.Proxy.WebAddr, "127.0.0.1:443")
 
 		require.False(t, lib.IsInsecureDevMode())
 	})
@@ -265,12 +265,12 @@ func TestConfigReading(t *testing.T) {
 				EnabledFlag:    "yes",
 				ListenAddress:  "tcp://proxy_ssh_addr",
 			},
-			KeyFile:  "/etc/teleport/proxy.key",
-			CertFile: "/etc/teleport/proxy.crt",
+			KeyFile:  "/etc/siriusec/proxy.key",
+			CertFile: "/etc/siriusec/proxy.crt",
 			KeyPairs: []KeyPair{
 				KeyPair{
-					PrivateKey:  "/etc/teleport/proxy.key",
-					Certificate: "/etc/teleport/proxy.crt",
+					PrivateKey:  "/etc/siriusec/proxy.key",
+					Certificate: "/etc/siriusec/proxy.crt",
 				},
 			},
 			WebAddr: "tcp://web_addr",
@@ -683,34 +683,34 @@ func TestBackendDefaults(t *testing.T) {
 
 	// Default value is lite backend.
 	cfg := read(`teleport:
-  data_dir: /var/lib/teleport
+  data_dir: /var/lib/siriusec
 `)
 	require.Equal(t, cfg.Auth.StorageConfig.Type, lite.GetName())
-	require.Equal(t, cfg.Auth.StorageConfig.Params[defaults.BackendPath], filepath.Join("/var/lib/teleport", defaults.BackendDir))
+	require.Equal(t, cfg.Auth.StorageConfig.Params[defaults.BackendPath], filepath.Join("/var/lib/siriusec", defaults.BackendDir))
 
 	// If no path is specified, the default is picked. In addition, internally
 	// dir gets converted into lite.
 	cfg = read(`teleport:
-     data_dir: /var/lib/teleport
+     data_dir: /var/lib/siriusec
      storage:
        type: dir
 `)
 	require.Equal(t, cfg.Auth.StorageConfig.Type, lite.GetName())
-	require.Equal(t, cfg.Auth.StorageConfig.Params[defaults.BackendPath], filepath.Join("/var/lib/teleport", defaults.BackendDir))
+	require.Equal(t, cfg.Auth.StorageConfig.Params[defaults.BackendPath], filepath.Join("/var/lib/siriusec", defaults.BackendDir))
 
 	// Support custom paths for dir/lite backends.
 	cfg = read(`teleport:
-     data_dir: /var/lib/teleport
+     data_dir: /var/lib/siriusec
      storage:
        type: dir
-       path: /var/lib/teleport/mybackend
+       path: /var/lib/siriusec/mybackend
 `)
 	require.Equal(t, cfg.Auth.StorageConfig.Type, lite.GetName())
-	require.Equal(t, cfg.Auth.StorageConfig.Params[defaults.BackendPath], "/var/lib/teleport/mybackend")
+	require.Equal(t, cfg.Auth.StorageConfig.Params[defaults.BackendPath], "/var/lib/siriusec/mybackend")
 
 	// Kubernetes proxy is disabled by default.
 	cfg = read(`teleport:
-     data_dir: /var/lib/teleport
+     data_dir: /var/lib/siriusec
 `)
 	require.False(t, cfg.Proxy.Kube.Enabled)
 }
@@ -782,7 +782,7 @@ func TestParseCachePolicy(t *testing.T) {
 func checkStaticConfig(t *testing.T, conf *FileConfig) {
 	require.Equal(t, conf.AuthToken, "xxxyyy")
 	require.Equal(t, conf.AdvertiseIP, "10.10.10.1:3022")
-	require.Equal(t, conf.PIDFile, "/var/run/teleport.pid")
+	require.Equal(t, conf.PIDFile, "/var/run/siriusec.pid")
 
 	require.Empty(t, cmp.Diff(conf.Limits, ConnectionLimits{
 		MaxConnections: 90,
@@ -898,7 +898,7 @@ var (
 	}
 )
 
-// makeConfigFixture returns a valid content for teleport.yaml file
+// makeConfigFixture returns a valid content for siriusec.yaml file
 func makeConfigFixture() string {
 	conf := FileConfig{}
 
@@ -933,12 +933,12 @@ func makeConfigFixture() string {
 	// proxy-service:
 	conf.Proxy.EnabledFlag = "yes"
 	conf.Proxy.ListenAddress = "tcp://proxy"
-	conf.Proxy.KeyFile = "/etc/teleport/proxy.key"
-	conf.Proxy.CertFile = "/etc/teleport/proxy.crt"
+	conf.Proxy.KeyFile = "/etc/siriusec/proxy.key"
+	conf.Proxy.CertFile = "/etc/siriusec/proxy.crt"
 	conf.Proxy.KeyPairs = []KeyPair{
 		KeyPair{
-			PrivateKey:  "/etc/teleport/proxy.key",
-			Certificate: "/etc/teleport/proxy.crt",
+			PrivateKey:  "/etc/siriusec/proxy.key",
+			Certificate: "/etc/siriusec/proxy.crt",
 		},
 	}
 	conf.Proxy.ListenAddress = "tcp://proxy_ssh_addr"
@@ -1056,8 +1056,8 @@ func TestLicenseFile(t *testing.T) {
 		},
 		// 2 - absolute path
 		{
-			path:   "/etc/teleport/license",
-			result: "/etc/teleport/license",
+			path:   "/etc/siriusec/license",
+			result: "/etc/siriusec/license",
 		},
 	}
 

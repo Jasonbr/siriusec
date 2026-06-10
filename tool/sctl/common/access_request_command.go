@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/gravitational/kingpin"
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/asciitable"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -69,11 +69,11 @@ func (c *AccessRequestCommand) Initialize(app *kingpin.Application, config *serv
 	requests := app.Command("requests", "Manage access requests").Alias("request")
 
 	c.requestList = requests.Command("ls", "Show active access requests")
-	c.requestList.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&c.format)
+	c.requestList.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(siriusec.Text).StringVar(&c.format)
 
 	c.requestGet = requests.Command("get", "Show access request by ID")
 	c.requestGet.Arg("request-id", "ID of target request(s)").Required().StringVar(&c.reqIDs)
-	c.requestGet.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&c.format)
+	c.requestGet.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(siriusec.Text).StringVar(&c.format)
 
 	c.requestApprove = requests.Command("approve", "Approve pending access request")
 	c.requestApprove.Arg("request-id", "ID of target request(s)").Required().StringVar(&c.reqIDs)
@@ -99,7 +99,7 @@ func (c *AccessRequestCommand) Initialize(app *kingpin.Application, config *serv
 
 	c.requestCaps = requests.Command("capabilities", "Check a user's access capabilities").Alias("caps").Hidden()
 	c.requestCaps.Arg("username", "Name of target user").Required().StringVar(&c.user)
-	c.requestCaps.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&c.format)
+	c.requestCaps.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(siriusec.Text).StringVar(&c.format)
 	c.requestReview = requests.Command("review", "Review an access request")
 	c.requestReview.Arg("request-id", "ID of target request").Required().StringVar(&c.reqIDs)
 	c.requestReview.Flag("author", "Username of reviewer").Required().StringVar(&c.user)
@@ -133,7 +133,7 @@ func (c *AccessRequestCommand) TryRun(cmd string, client auth.ClientI) (match bo
 }
 
 func (c *AccessRequestCommand) List(client auth.ClientI) error {
-	reqs, err := client.GetAccessRequests(context.TODO(), types.AccessRequestFilter{})
+	reqs, err := client.GetAccessRequests(context.Background(), types.AccessRequestFilter{})
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -156,7 +156,7 @@ func (c *AccessRequestCommand) List(client auth.ClientI) error {
 }
 
 func (c *AccessRequestCommand) Get(client auth.ClientI) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	reqs := []types.AccessRequest{}
 	for _, reqID := range strings.Split(c.reqIDs, ",") {
 		req, err := client.GetAccessRequests(ctx, types.AccessRequestFilter{
@@ -212,7 +212,7 @@ func (c *AccessRequestCommand) splitRoles() []string {
 }
 
 func (c *AccessRequestCommand) Approve(client auth.ClientI) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	if c.delegator != "" {
 		ctx = auth.WithDelegator(ctx, c.delegator)
 	}
@@ -235,7 +235,7 @@ func (c *AccessRequestCommand) Approve(client auth.ClientI) error {
 }
 
 func (c *AccessRequestCommand) Deny(client auth.ClientI) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	if c.delegator != "" {
 		ctx = auth.WithDelegator(ctx, c.delegator)
 	}
@@ -270,7 +270,7 @@ func (c *AccessRequestCommand) Create(client auth.ClientI) error {
 		}
 		return trace.Wrap(printJSON(req, "request"))
 	}
-	if err := client.CreateAccessRequest(context.TODO(), req); err != nil {
+	if err := client.CreateAccessRequest(context.Background(), req); err != nil {
 		return trace.Wrap(err)
 	}
 	fmt.Printf("%s\n", req.GetName())
@@ -279,7 +279,7 @@ func (c *AccessRequestCommand) Create(client auth.ClientI) error {
 
 func (c *AccessRequestCommand) Delete(client auth.ClientI) error {
 	for _, reqID := range strings.Split(c.reqIDs, ",") {
-		if err := client.DeleteAccessRequest(context.TODO(), reqID); err != nil {
+		if err := client.DeleteAccessRequest(context.Background(), reqID); err != nil {
 			return trace.Wrap(err)
 		}
 	}
@@ -287,7 +287,7 @@ func (c *AccessRequestCommand) Delete(client auth.ClientI) error {
 }
 
 func (c *AccessRequestCommand) Caps(client auth.ClientI) error {
-	caps, err := client.GetAccessCapabilities(context.TODO(), types.AccessCapabilitiesRequest{
+	caps, err := client.GetAccessCapabilities(context.Background(), types.AccessCapabilitiesRequest{
 		User:               c.user,
 		RequestableRoles:   true,
 		SuggestedReviewers: true,
@@ -296,7 +296,7 @@ func (c *AccessRequestCommand) Caps(client auth.ClientI) error {
 		return trace.Wrap(err)
 	}
 	switch c.format {
-	case teleport.Text:
+	case siriusec.Text:
 		// represent capabilities as a simple key-value table
 		table := asciitable.MakeTable([]string{"Name", "Value"})
 
@@ -315,10 +315,10 @@ func (c *AccessRequestCommand) Caps(client auth.ClientI) error {
 
 		_, err := table.AsBuffer().WriteTo(os.Stdout)
 		return trace.Wrap(err)
-	case teleport.JSON:
+	case siriusec.JSON:
 		return printJSON(caps, "capabilities")
 	default:
-		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", c.format, teleport.Text, teleport.JSON)
+		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", c.format, siriusec.Text, siriusec.JSON)
 	}
 }
 
@@ -335,7 +335,7 @@ func (c *AccessRequestCommand) Review(client auth.ClientI) error {
 		state = types.RequestState_DENIED
 	}
 
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	req, err := client.SubmitAccessReview(ctx, types.AccessReviewSubmission{
 		RequestID: strings.Split(c.reqIDs, ",")[0],
@@ -360,7 +360,7 @@ func (c *AccessRequestCommand) Review(client auth.ClientI) error {
 // printRequestsOverview prints an overview of given access requests.
 func printRequestsOverview(reqs []types.AccessRequest, format string) error {
 	switch format {
-	case teleport.Text:
+	case siriusec.Text:
 		table := asciitable.MakeTable([]string{"Token", "Requestor", "Metadata", "Created At (UTC)", "Status"})
 		table.AddColumn(asciitable.Column{
 			Title:         "Request Reason",
@@ -389,17 +389,17 @@ func printRequestsOverview(reqs []types.AccessRequest, format string) error {
 		}
 		_, err := table.AsBuffer().WriteTo(os.Stdout)
 		return trace.Wrap(err)
-	case teleport.JSON:
+	case siriusec.JSON:
 		return printJSON(reqs, "requests")
 	default:
-		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", format, teleport.Text, teleport.JSON)
+		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", format, siriusec.Text, siriusec.JSON)
 	}
 }
 
 // printRequestsDetailed prints a detailed view of given access requests.
 func printRequestsDetailed(reqs []types.AccessRequest, format string) error {
 	switch format {
-	case teleport.Text:
+	case siriusec.Text:
 		for _, req := range reqs {
 			table := asciitable.MakeHeadlessTable(2)
 			table.AddRow([]string{"Token: ", req.GetName()})
@@ -417,10 +417,10 @@ func printRequestsDetailed(reqs []types.AccessRequest, format string) error {
 			fmt.Println()
 		}
 		return nil
-	case teleport.JSON:
+	case siriusec.JSON:
 		return printJSON(reqs, "requests")
 	default:
-		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", format, teleport.Text, teleport.JSON)
+		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", format, siriusec.Text, siriusec.JSON)
 	}
 }
 

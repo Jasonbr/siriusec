@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/session"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -107,7 +107,7 @@ func (cfg *UploaderConfig) CheckAndSetDefaults() error {
 		cfg.ScanPeriod = defaults.UploaderScanPeriod
 	}
 	if cfg.Context == nil {
-		cfg.Context = context.TODO()
+		cfg.Context = context.Background()
 	}
 	if cfg.Clock == nil {
 		cfg.Clock = clockwork.NewRealClock()
@@ -125,7 +125,7 @@ func NewUploader(cfg UploaderConfig) (*Uploader, error) {
 	uploader := &Uploader{
 		UploaderConfig: cfg,
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentAuditLog,
+			trace.Component: siriusec.ComponentAuditLog,
 		}),
 		cancel:    cancel,
 		ctx:       ctx,

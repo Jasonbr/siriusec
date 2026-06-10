@@ -43,7 +43,7 @@ func (a *EventsTestSuite) TestJSON(c *check.C) {
 	testCases := []testCase{
 		{
 			name: "session start event",
-			json: `{"ei":0,"event":"session.start","uid":"36cee9e9-9a80-4c32-9163-3d9241cdac7a","code":"T2000I","time":"2020-03-30T15:58:54.561Z","namespace":"default","sid":"5b3555dc-729f-11ea-b66a-507b9dd95841","cluster_name":"testcluster","login":"bob","user":"bob@example.com","server_id":"a7c54b0c-469c-431e-af4d-418cd3ae9694","server_hostname":"planet","server_labels":{"group":"gravitational/devc","kernel":"5.3.0-42-generic","date":"Mon Mar 30 08:58:54 PDT 2020"},"addr.local":"127.0.0.1:3022","addr.remote":"[::1]:37718","size":"80:25"}`,
+			json: `{"ei":0,"event":"session.start","uid":"36cee9e9-9a80-4c32-9163-3d9241cdac7a","code":"T2000I","time":"2020-03-30T15:58:54.561Z","namespace":"default","sid":"5b3555dc-729f-11ea-b66a-507b9dd95841","cluster_name":"testcluster","login":"bob","user":"bob@example.com","server_id":"a7c54b0c-469c-431e-af4d-418cd3ae9694","server_hostname":"planet","server_labels":{"group":"siriusec/devc","kernel":"5.3.0-42-generic","date":"Mon Mar 30 08:58:54 PDT 2020"},"addr.local":"127.0.0.1:3022","addr.remote":"[::1]:37718","size":"80:25"}`,
 			event: apievents.SessionStart{
 				Metadata: apievents.Metadata{
 					Index:       0,
@@ -58,7 +58,7 @@ func (a *EventsTestSuite) TestJSON(c *check.C) {
 					ServerLabels: map[string]string{
 						"kernel": "5.3.0-42-generic",
 						"date":   "Mon Mar 30 08:58:54 PDT 2020",
-						"group":  "gravitational/devc",
+						"group":  "siriusec/devc",
 					},
 					ServerHostname:  "planet",
 					ServerNamespace: "default",

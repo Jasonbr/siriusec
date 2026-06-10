@@ -24,12 +24,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apievents "github.com/siriusec/siriusec/api/types/events"
+	"github.com/siriusec/siriusec/lib/defaults"
 	"github.com/siriusec/siriusec/lib/session"
 	"github.com/siriusec/siriusec/lib/utils"
 
@@ -78,9 +78,9 @@ func DetectFormat(r io.ReadSeeker) (*Header, error) {
 // Export converts session files from binary/protobuf to text/JSON.
 func Export(ctx context.Context, rs io.ReadSeeker, w io.Writer, exportFormat string) error {
 	switch exportFormat {
-	case teleport.JSON:
+	case siriusec.JSON:
 	default:
-		return trace.BadParameter("unsupported format %q, %q is the only supported format", exportFormat, teleport.JSON)
+		return trace.BadParameter("unsupported format %q, %q is the only supported format", exportFormat, siriusec.JSON)
 	}
 
 	format, err := DetectFormat(rs)
@@ -103,7 +103,7 @@ func Export(ctx context.Context, rs io.ReadSeeker, w io.Writer, exportFormat str
 				return trace.Wrap(err)
 			}
 			switch exportFormat {
-			case teleport.JSON:
+			case siriusec.JSON:
 				data, err := utils.FastMarshal(event)
 				if err != nil {
 					return trace.ConvertSystemError(err)
@@ -113,12 +113,12 @@ func Export(ctx context.Context, rs io.ReadSeeker, w io.Writer, exportFormat str
 					return trace.ConvertSystemError(err)
 				}
 			default:
-				return trace.BadParameter("unsupported format %q, %q is the only supported format", exportFormat, teleport.JSON)
+				return trace.BadParameter("unsupported format %q, %q is the only supported format", exportFormat, siriusec.JSON)
 			}
 		}
 	case format.Tar == true:
 		return trace.BadParameter(
-			"to review the events in format of teleport before version 4.4, extract the tarball and look inside")
+			"to review the events in format of siriusec before version 4.4, extract the tarball and look inside")
 	default:
 		return trace.BadParameter("unsupported format %v", format)
 	}
@@ -190,7 +190,7 @@ func (w *PlaybackWriter) SessionChunks() ([]byte, error) {
 		return nil, trace.Wrap(err)
 	}
 	defer grChunk.Close()
-	stream, err = ioutil.ReadAll(grChunk)
+	stream, err = io.ReadAll(io.LimitReader(grChunk, defaults.MaxGeneralReadSize))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

@@ -239,7 +239,7 @@ func NewAnyMatcher(in []string) (Matcher, error) {
 func NewMatcher(value string) (m Matcher, err error) {
 	defer func() {
 		if err != nil {
-			err = trace.WrapWithMessage(err, "see supported syntax at https://siriusec.com/teleport/docs/enterprise/ssh-rbac/#rbac-for-hosts")
+			err = trace.WrapWithMessage(err, "see supported syntax at https://siriusec.com/siriusec/docs/enterprise/ssh-rbac/#rbac-for-hosts")
 		}
 	}()
 	match := reVariable.FindStringSubmatch(value)

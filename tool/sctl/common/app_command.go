@@ -24,7 +24,7 @@ import (
 	"github.com/gravitational/kingpin"
 	"github.com/gravitational/trace"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/service"
@@ -64,18 +64,18 @@ func (c *AppsCommand) TryRun(cmd string, client auth.ClientI) (match bool, err e
 // ListApps prints the list of applications that have recently sent heartbeats
 // to the cluster.
 func (c *AppsCommand) ListApps(client auth.ClientI) error {
-	servers, err := client.GetAppServers(context.TODO(), apidefaults.Namespace)
+	servers, err := client.GetAppServers(context.Background(), apidefaults.Namespace)
 	if err != nil {
 		return trace.Wrap(err)
 	}
 	coll := &appCollection{servers: servers}
 
 	switch c.format {
-	case teleport.Text:
+	case siriusec.Text:
 		err = coll.writeText(os.Stdout)
-	case teleport.JSON:
+	case siriusec.JSON:
 		err = coll.writeJSON(os.Stdout)
-	case teleport.YAML:
+	case siriusec.YAML:
 		err = coll.writeYAML(os.Stdout)
 	default:
 		return trace.BadParameter("unknown format %q", c.format)
@@ -91,7 +91,7 @@ This token will expire in {{.minutes}} minutes.
 
 Fill out and run this command on a node to make the application available:
 
-> teleport app start \
+> siriusec app start \
    --token={{.token}} \{{range .ca_pins}}
    --ca-pin={{.}} \{{end}}
    --auth-server={{.auth_server}} \
@@ -104,6 +104,6 @@ Please note:
 
   - This invitation token will expire in {{.minutes}} minutes.
   - {{.auth_server}} must be reachable from the new application service.
-  - Update DNS to point {{.app_public_addr}} to the Teleport proxy.
+  - Update DNS to point {{.app_public_addr}} to the Siriusec proxy.
   - Add a TLS certificate for {{.app_public_addr}} to the Sirius proxy under "https_keypairs".
 `))

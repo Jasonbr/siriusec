@@ -46,15 +46,15 @@ fi
 			// if it does, don't check out the Enterprise code.
 			`if [ "${DRONE_BUILD_EVENT}" = "pull_request" ]; then
   apk add --no-cache curl jq
-  export PR_REPO=$(curl -Ls https://api.github.com/repos/gravitational/${DRONE_REPO_NAME}/pulls/${DRONE_PULL_REQUEST} | jq -r '.head.repo.full_name')
+  export PR_REPO=$(curl -Ls https://api.github.com/repos/siriusec/${DRONE_REPO_NAME}/pulls/${DRONE_PULL_REQUEST} | jq -r '.head.repo.full_name')
   echo "---> Source repo for PR ${DRONE_PULL_REQUEST}: $${PR_REPO}"
   # if the source repo for the PR matches DRONE_REPO, then this is not a PR raised from a fork
-  if [ "$${PR_REPO}" = "${DRONE_REPO}" ] || [ "${DRONE_REPO}" = "gravitational/teleport-private" ]; then
+  if [ "$${PR_REPO}" = "${DRONE_REPO}" ] || [ "${DRONE_REPO}" = "siriusec/siriusec-private" ]; then
     mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
     ssh-keyscan -H github.com > /root/.ssh/known_hosts 2>/dev/null && chmod 600 /root/.ssh/known_hosts
     git submodule update --init e
     # do a recursive submodule checkout to get both webassets and webassets/e
-    # this is allowed to fail because pre-4.3 Teleport versions don't use the webassets submodule
+    # this is allowed to fail because pre-4.3 Siriusec versions don't use the webassets submodule
     git submodule update --init --recursive webassets || true
     rm -f /root/.ssh/id_rsa
   fi
@@ -111,7 +111,7 @@ func testCodePipeline() pipeline {
 			Commands: []string{
 				`apk add --no-cache make`,
 				`chown -R $UID:$GID /tmpfs/go`,
-				`docker pull quay.io/gravitational/teleport-buildbox:$RUNTIME || true`,
+				`docker pull quay.io/siriusec/siriusec-buildbox:$RUNTIME || true`,
 				`cd /tmpfs/go/src/github.com/siriusec/siriusec`,
 				`make -C build.assets buildbox`,
 			},

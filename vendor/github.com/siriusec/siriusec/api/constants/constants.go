@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package constants defines Teleport-specific constants
+// Package constants defines Siriusec-specific constants
 package constants
 
 const (
@@ -23,7 +23,7 @@ const (
 	DefaultImplicitRole = "default-implicit-role"
 
 	// APIDomain is a default domain name for Auth server API
-	APIDomain = "teleport.cluster.local"
+	APIDomain = "siriusec.cluster.local"
 
 	// EnhancedRecordingMinKernel is the minimum kernel version for the enhanced
 	// recording feature.
@@ -40,7 +40,7 @@ const (
 	// are captured.
 	EnhancedRecordingNetwork = "network"
 
-	// Local means authentication will happen locally within the Teleport cluster.
+	// Local means authentication will happen locally within the Siriusec cluster.
 	Local = "local"
 
 	// OIDC means authentication will happen remotely using an OIDC connector.
@@ -60,7 +60,7 @@ const (
 	// leases having already been reached.
 	MaxLeases = "err-max-leases"
 
-	// CertificateFormatStandard is used for normal Teleport operation without any
+	// CertificateFormatStandard is used for normal Siriusec operation without any
 	// compatibility modes.
 	CertificateFormatStandard = "standard"
 

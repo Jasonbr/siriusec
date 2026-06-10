@@ -25,7 +25,7 @@ import (
 	"github.com/gravitational/trace"
 )
 
-// User represents teleport embedded user or external user
+// User represents siriusec embedded user or external user
 type User interface {
 	// ResourceWithSecrets provides common resource properties
 	ResourceWithSecrets

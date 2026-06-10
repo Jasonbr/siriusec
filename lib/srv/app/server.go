@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -163,7 +163,7 @@ func New(ctx context.Context, c *Config) (*Server, error) {
 	s := &Server{
 		c: c,
 		log: logrus.WithFields(logrus.Fields{
-			trace.Component: teleport.ComponentApp,
+			trace.Component: siriusec.ComponentApp,
 		}),
 		server: c.Server,
 	}
@@ -212,7 +212,7 @@ func New(ctx context.Context, c *Config) (*Server, error) {
 	s.heartbeat, err = srv.NewHeartbeat(srv.HeartbeatConfig{
 		Mode:            srv.HeartbeatModeApp,
 		Context:         s.closeContext,
-		Component:       teleport.ComponentApp,
+		Component:       siriusec.ComponentApp,
 		Announcer:       c.AccessPoint,
 		GetServerInfo:   s.GetServerInfo,
 		KeepAlivePeriod: apidefaults.ServerKeepAliveTTL(),
@@ -480,14 +480,14 @@ func (s *Server) newHTTPServer() *http.Server {
 	// certificates that were specifically generated for applications.
 	authMiddleware := &auth.Middleware{
 		AccessPoint:   s.c.AccessPoint,
-		AcceptedUsage: []string{teleport.UsageAppsOnly},
+		AcceptedUsage: []string{siriusec.UsageAppsOnly},
 	}
 	authMiddleware.Wrap(s)
 
 	return &http.Server{
 		Handler:           authMiddleware,
 		ReadHeaderTimeout: apidefaults.DefaultDialTimeout,
-		ErrorLog:          utils.NewStdlogger(s.log.Error, teleport.ComponentApp),
+		ErrorLog:          utils.NewStdlogger(s.log.Error, siriusec.ComponentApp),
 	}
 }
 

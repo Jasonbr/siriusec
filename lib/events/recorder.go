@@ -21,7 +21,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/defaults"
@@ -119,7 +119,7 @@ func NewForwardRecorder(cfg ForwardRecorderConfig) (*ForwardRecorder, error) {
 	// Server later.
 	auditLog, err := NewForwarder(ForwarderConfig{
 		SessionID:      cfg.SessionID,
-		ServerID:       teleport.ComponentUpload,
+		ServerID:       siriusec.ComponentUpload,
 		DataDir:        cfg.DataDir,
 		RecordSessions: cfg.RecordSessions,
 		Namespace:      cfg.Namespace,
@@ -186,9 +186,9 @@ func (r *ForwardRecorder) Close() error {
 	// to release resources associated with this session.
 	// not doing so will not result in memory leak, but could result
 	// in missing playback events
-	context, cancel := context.WithTimeout(context.TODO(), defaults.ReadHeadersTimeout)
-	defer cancel() // releases resources if slowOperation completes before timeout elapses
-	err = r.AuditLog.WaitForDelivery(context)
+	ctx, cancel := context.WithTimeout(context.Background(), defaults.ReadHeadersTimeout)
+	defer cancel()
+	err = r.AuditLog.WaitForDelivery(ctx)
 	if err != nil {
 		errors = append(errors, err)
 		r.Warnf("Timeout waiting for session to flush events: %v", trace.DebugReport(err))

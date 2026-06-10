@@ -1,7 +1,7 @@
 // Dynamodb is used as a backend for auth servers,
 // and only auth servers need access to the tables
 // all other components are stateless.
-resource "aws_dynamodb_table" "teleport" {
+resource "aws_dynamodb_table" "siriusec" {
   name           = var.cluster_name
   read_capacity  = 20
   write_capacity = 20
@@ -37,12 +37,12 @@ resource "aws_dynamodb_table" "teleport" {
   }
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
 // Dynamodb events table stores events
-resource "aws_dynamodb_table" "teleport_events" {
+resource "aws_dynamodb_table" "siriusec_events" {
   name           = "${var.cluster_name}-events"
   read_capacity  = 20
   write_capacity = 20
@@ -92,7 +92,7 @@ resource "aws_dynamodb_table" "teleport_events" {
   }
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -165,7 +165,7 @@ resource "aws_appautoscaling_target" "read_target" {
   max_capacity = var.autoscale_max_read_capacity
   min_capacity = var.autoscale_min_read_capacity
 
-  resource_id        = "table/${aws_dynamodb_table.teleport.name}"
+  resource_id        = "table/${aws_dynamodb_table.siriusec.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
   service_namespace  = "dynamodb"
 }
@@ -190,7 +190,7 @@ resource "aws_appautoscaling_target" "write_target" {
   max_capacity = var.autoscale_max_write_capacity
   min_capacity = var.autoscale_min_write_capacity
 
-  resource_id        = "table/${aws_dynamodb_table.teleport.name}"
+  resource_id        = "table/${aws_dynamodb_table.siriusec.name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
   service_namespace  = "dynamodb"
 }

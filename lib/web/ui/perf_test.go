@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -79,7 +79,7 @@ func BenchmarkGetClusterDetails(b *testing.B) {
 				bk, err = memory.New(memory.Config{})
 				assert.NoError(b, err)
 			} else {
-				dir, err := ioutil.TempDir("", "teleport")
+				dir, err := ioutil.TempDir("", "siriusec")
 				assert.NoError(b, err)
 				defer os.RemoveAll(dir)
 
@@ -133,7 +133,7 @@ func insertServers(ctx context.Context, t assert.TestingT, svc services.Presence
 			Spec: types.ServerSpecV2{
 				Addr:       addr,
 				PublicAddr: addr,
-				Version:    teleport.Version,
+				Version:    siriusec.Version,
 			},
 		}
 		var err error
@@ -180,7 +180,7 @@ func (m *mockRemoteSite) GetLastConnected() time.Time {
 }
 
 func (m *mockRemoteSite) GetStatus() string {
-	return teleport.RemoteClusterStatusOnline
+	return siriusec.RemoteClusterStatusOnline
 }
 
 type mockAccessPoint struct {

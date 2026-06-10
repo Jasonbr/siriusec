@@ -100,7 +100,7 @@ This token will expire in {{.minutes}} minutes.
 
 Run this on the new node to join the cluster:
 
-> teleport start \
+> siriusec start \
    --roles={{.roles}} \
    --token={{.token}} \{{range .ca_pins}}
    --ca-pin={{.}} \{{end}}
@@ -116,11 +116,11 @@ Please note:
 // to a cluster
 func (c *NodeCommand) Invite(client auth.ClientI) error {
 	// parse --roles flag
-	roles, err := types.ParseTeleportRoles(c.roles)
+	roles, err := types.ParseSiriusecRoles(c.roles)
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	token, err := client.GenerateToken(context.TODO(), auth.GenerateTokenRequest{Roles: roles, TTL: c.ttl, Token: c.token})
+	token, err := client.GenerateToken(context.Background(), auth.GenerateTokenRequest{Roles: roles, TTL: c.ttl, Token: c.token})
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -173,7 +173,7 @@ func (c *NodeCommand) Invite(client auth.ClientI) error {
 // ListActive retreives the list of nodes who recently sent heartbeats to
 // to a cluster and prints it to stdout
 func (c *NodeCommand) ListActive(client auth.ClientI) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	nodes, err := client.GetNodes(ctx, c.namespace)
 	if err != nil {
 		return trace.Wrap(err)

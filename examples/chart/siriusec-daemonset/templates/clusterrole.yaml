@@ -1,0 +1,47 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "siriusec.fullname" . }}
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - users
+  - groups
+  - serviceaccounts
+  verbs:
+  - impersonate
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - "authorization.k8s.io"
+  resources:
+  - selfsubjectaccessreviews
+  verbs:
+  - create
+{{ if .Values.usePSP -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "siriusec.fullname" . }}-psp-clusterrole
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+rules:
+- apiGroups:
+  - "policy"
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+  resourceNames:
+  - {{ template "siriusec.fullname" . }}-daemonset-psp
+{{- end -}}
+{{- end -}}

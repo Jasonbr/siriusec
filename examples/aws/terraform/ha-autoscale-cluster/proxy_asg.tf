@@ -1,4 +1,4 @@
-// Proxy auto scaling group is for Teleport proxies
+// Proxy auto scaling group is for Siriusec proxies
 // set up in the public subnet. This is the only group of servers that are
 // accepting traffic from the internet.
 
@@ -23,13 +23,13 @@ resource "aws_autoscaling_group" "proxy" {
   count             = var.use_acm ? 0 : 1
 
   tag {
-    key                 = "TeleportCluster"
+    key                 = "SiriusecCluster"
     value               = var.cluster_name
     propagate_at_launch = true
   }
 
   tag {
-    key                 = "TeleportRole"
+    key                 = "SiriusecRole"
     value               = "proxy"
     propagate_at_launch = true
   }
@@ -67,13 +67,13 @@ resource "aws_autoscaling_group" "proxy_acm" {
   count             = var.use_acm ? 1 : 0
 
   tag {
-    key                 = "TeleportCluster"
+    key                 = "SiriusecCluster"
     value               = var.cluster_name
     propagate_at_launch = true
   }
 
   tag {
-    key                 = "TeleportRole"
+    key                 = "SiriusecRole"
     value               = "proxy"
     propagate_at_launch = true
   }

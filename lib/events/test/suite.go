@@ -18,10 +18,10 @@ limitations under the License.
 package test
 
 import (
+	"io"
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -43,21 +43,21 @@ import (
 func UploadDownload(t *testing.T, handler events.MultipartHandler) {
 	val := "hello, how is it going? this is the uploaded file"
 	id := session.NewID()
-	_, err := handler.Upload(context.TODO(), id, bytes.NewBuffer([]byte(val)))
+	_, err := handler.Upload(context.Background(), id, bytes.NewBuffer([]byte(val)))
 	require.Nil(t, err)
 
-	f, err := ioutil.TempFile("", string(id))
+	f, err := os.CreateTemp("", string(id))
 	require.Nil(t, err)
 	defer os.Remove(f.Name())
 	defer f.Close()
 
-	err = handler.Download(context.TODO(), id, f)
+	err = handler.Download(context.Background(), id, f)
 	require.Nil(t, err)
 
 	_, err = f.Seek(0, 0)
 	require.Nil(t, err)
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	require.Nil(t, err)
 	require.Equal(t, string(data), val)
 }
@@ -66,12 +66,12 @@ func UploadDownload(t *testing.T, handler events.MultipartHandler) {
 func DownloadNotFound(t *testing.T, handler events.MultipartHandler) {
 	id := session.NewID()
 
-	f, err := ioutil.TempFile("", string(id))
+	f, err := os.CreateTemp("", string(id))
 	require.Nil(t, err)
 	defer os.Remove(f.Name())
 	defer f.Close()
 
-	err = handler.Download(context.TODO(), id, f)
+	err = handler.Download(context.Background(), id, f)
 	fixtures.AssertNotFound(t, err)
 }
 

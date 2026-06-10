@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/auth/testauthority"
@@ -76,7 +76,7 @@ func (s ForwarderSuite) TestRequestCertificate(c *check.C) {
 	user, err := types.NewUser("bob")
 	c.Assert(err, check.IsNil)
 	ctx := authContext{
-		teleportCluster: teleportClusterClient{
+		siriusecCluster: siriusecClusterClient{
 			name: "site a",
 		},
 		Context: auth.Context{
@@ -94,7 +94,7 @@ func (s ForwarderSuite) TestRequestCertificate(c *check.C) {
 
 	// Check the KubeCSR fields.
 	c.Assert(cl.gotCSR.Username, check.DeepEquals, ctx.User.GetName())
-	c.Assert(cl.gotCSR.ClusterName, check.DeepEquals, ctx.teleportCluster.name)
+	c.Assert(cl.gotCSR.ClusterName, check.DeepEquals, ctx.siriusecCluster.name)
 
 	// Parse x509 CSR and check the subject.
 	csrBlock, _ := pem.Decode(cl.gotCSR.CSR)
@@ -169,9 +169,9 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:   utils.StringsSet([]string{"user-a"}),
-				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", teleport.KubeSystemAuthenticated}),
+				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", siriusec.KubeSystemAuthenticated}),
 				kubeCluster: "local",
-				teleportCluster: teleportClusterClient{
+				siriusecCluster: siriusecClusterClient{
 					name:       "local",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 				},
@@ -187,9 +187,9 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:   utils.StringsSet([]string{"user-a"}),
-				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", teleport.KubeSystemAuthenticated}),
+				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", siriusec.KubeSystemAuthenticated}),
 				kubeCluster: "local",
-				teleportCluster: teleportClusterClient{
+				siriusecCluster: siriusecClusterClient{
 					name:       "local",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 				},
@@ -205,9 +205,9 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:   utils.StringsSet([]string{"user-a"}),
-				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", teleport.KubeSystemAuthenticated}),
+				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", siriusec.KubeSystemAuthenticated}),
 				kubeCluster: "local",
-				teleportCluster: teleportClusterClient{
+				siriusecCluster: siriusecClusterClient{
 					name:       "local",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 				},
@@ -223,8 +223,8 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:  utils.StringsSet([]string{"user-a"}),
-				kubeGroups: utils.StringsSet([]string{teleport.KubeSystemAuthenticated}),
-				teleportCluster: teleportClusterClient{
+				kubeGroups: utils.StringsSet([]string{siriusec.KubeSystemAuthenticated}),
+				siriusecCluster: siriusecClusterClient{
 					name:       "remote",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 					isRemote:   true,
@@ -241,8 +241,8 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:  utils.StringsSet([]string{"user-a"}),
-				kubeGroups: utils.StringsSet([]string{teleport.KubeSystemAuthenticated}),
-				teleportCluster: teleportClusterClient{
+				kubeGroups: utils.StringsSet([]string{siriusec.KubeSystemAuthenticated}),
+				siriusecCluster: siriusecClusterClient{
 					name:       "remote",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 					isRemote:   true,
@@ -259,8 +259,8 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:  utils.StringsSet([]string{"user-a"}),
-				kubeGroups: utils.StringsSet([]string{teleport.KubeSystemAuthenticated}),
-				teleportCluster: teleportClusterClient{
+				kubeGroups: utils.StringsSet([]string{siriusec.KubeSystemAuthenticated}),
+				siriusecCluster: siriusecClusterClient{
 					name:       "remote",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 					isRemote:   true,
@@ -289,9 +289,9 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:   utils.StringsSet([]string{"kube-user-a", "kube-user-b"}),
-				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", teleport.KubeSystemAuthenticated}),
+				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", siriusec.KubeSystemAuthenticated}),
 				kubeCluster: "local",
-				teleportCluster: teleportClusterClient{
+				siriusecCluster: siriusecClusterClient{
 					name:       "local",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 				},
@@ -323,9 +323,9 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:   utils.StringsSet([]string{"user-a"}),
-				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", teleport.KubeSystemAuthenticated}),
+				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", siriusec.KubeSystemAuthenticated}),
 				kubeCluster: "local",
-				teleportCluster: teleportClusterClient{
+				siriusecCluster: siriusecClusterClient{
 					name:       "local",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 				},
@@ -369,9 +369,9 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:   utils.StringsSet([]string{"user-a"}),
-				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", teleport.KubeSystemAuthenticated}),
+				kubeGroups:  utils.StringsSet([]string{"kube-group-a", "kube-group-b", siriusec.KubeSystemAuthenticated}),
 				kubeCluster: "foo",
-				teleportCluster: teleportClusterClient{
+				siriusecCluster: siriusecClusterClient{
 					name:       "local",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 				},
@@ -388,9 +388,9 @@ func TestAuthenticate(t *testing.T) {
 
 			wantCtx: &authContext{
 				kubeUsers:   utils.StringsSet([]string{"user-a"}),
-				kubeGroups:  utils.StringsSet([]string{teleport.KubeSystemAuthenticated}),
+				kubeGroups:  utils.StringsSet([]string{siriusec.KubeSystemAuthenticated}),
 				kubeCluster: "foo",
-				teleportCluster: teleportClusterClient{
+				siriusecCluster: siriusecClusterClient{
 					name:       "remote",
 					remoteAddr: *utils.MustParseAddr(remoteAddr),
 					isRemote:   true,
@@ -450,9 +450,9 @@ func TestAuthenticate(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Empty(t, cmp.Diff(gotCtx, tt.wantCtx,
-				cmp.AllowUnexported(authContext{}, teleportClusterClient{}),
+				cmp.AllowUnexported(authContext{}, siriusecClusterClient{}),
 				cmpopts.IgnoreFields(authContext{}, "clientIdleTimeout", "sessionTTL", "Context", "recordingConfig", "disconnectExpiredCert"),
-				cmpopts.IgnoreFields(teleportClusterClient{}, "dial", "isRemoteClosed"),
+				cmpopts.IgnoreFields(siriusecClusterClient{}, "dial", "isRemoteClosed"),
 			))
 		})
 	}
@@ -561,7 +561,7 @@ func (s ForwarderSuite) TestSetupImpersonationHeaders(c *check.C) {
 			authContext{
 				kubeUsers:       utils.StringsSet(tt.kubeUsers),
 				kubeGroups:      utils.StringsSet(tt.kubeGroups),
-				teleportCluster: teleportClusterClient{isRemote: tt.remoteCluster},
+				siriusecCluster: siriusecClusterClient{isRemote: tt.remoteCluster},
 			},
 			tt.inHeaders,
 		)
@@ -588,7 +588,7 @@ func mockAuthCtx(ctx context.Context, t *testing.T, kubeCluster string, isRemote
 			Identity:         identity,
 			UnmappedIdentity: unmappedIdentity,
 		},
-		teleportCluster: teleportClusterClient{
+		siriusecCluster: siriusecClusterClient{
 			name:     "kube-cluster",
 			isRemote: isRemote,
 		},
@@ -680,7 +680,7 @@ func TestNewClusterSessionDirect(t *testing.T) {
 		require.NoError(t, err)
 		kubeServiceEndpoint := kubeClusterEndpoint{
 			addr:     addr,
-			serverID: fmt.Sprintf("%s.%s", name, authCtx.teleportCluster.name),
+			serverID: fmt.Sprintf("%s.%s", name, authCtx.siriusecCluster.name),
 		}
 		return kubeService, kubeServiceEndpoint
 	}
@@ -714,7 +714,7 @@ func TestClusterSessionDial(t *testing.T) {
 	ctx := context.Background()
 	sess := &clusterSession{
 		authContext: authContext{
-			teleportCluster: teleportClusterClient{
+			siriusecCluster: siriusecClusterClient{
 				dial: func(_ context.Context, _, addr, _ string) (net.Conn, error) {
 					if addr == "" {
 						return nil, trace.BadParameter("no addr")

@@ -47,7 +47,7 @@ type DynamoDBSuite struct {
 var _ = check.Suite(&DynamoDBSuite{})
 
 func (s *DynamoDBSuite) SetUpSuite(c *check.C) {
-	s.tableName = "teleport.dynamo.test"
+	s.tableName = "siriusec.dynamo.test"
 	newBackend := func() (backend.Backend, error) {
 		return New(context.Background(), map[string]interface{}{
 			"table_name":         s.tableName,

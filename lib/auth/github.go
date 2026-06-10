@@ -24,7 +24,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -41,7 +41,8 @@ import (
 
 // CreateGithubAuthRequest creates a new request for Github OAuth2 flow
 func (a *Server) CreateGithubAuthRequest(req services.GithubAuthRequest) (*services.GithubAuthRequest, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	connector, err := a.Identity.GetGithubConnector(ctx, req.ConnectorID, true)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -190,7 +191,8 @@ type githubAuthResponse struct {
 
 // ValidateGithubAuthCallback validates Github auth callback redirect
 func (a *Server) validateGithubAuthCallback(q url.Values) (*githubAuthResponse, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	logger := log.WithFields(logrus.Fields{trace.Component: "github"})
 	error := q.Get("error")
 	if error != "" {
@@ -269,7 +271,7 @@ func (a *Server) validateGithubAuthCallback(q url.Values) (*githubAuthResponse, 
 
 	// If the request is coming from a browser, create a web session.
 	if req.CreateWebSession {
-		session, err := a.createWebSession(context.TODO(), types.NewWebSessionRequest{
+		session, err := a.createWebSession(context.Background(), types.NewWebSessionRequest{
 			User:       user.GetName(),
 			Roles:      user.GetRoles(),
 			Traits:     user.GetTraits(),
@@ -355,9 +357,9 @@ func (a *Server) calculateGithubUser(connector types.GithubConnector, claims *ty
 	}
 	p.roles = p.logins
 	p.traits = map[string][]string{
-		teleport.TraitLogins:     []string{p.username},
-		teleport.TraitKubeGroups: p.kubeGroups,
-		teleport.TraitKubeUsers:  p.kubeUsers,
+		siriusec.TraitLogins:     []string{p.username},
+		siriusec.TraitKubeGroups: p.kubeGroups,
+		siriusec.TraitKubeUsers:  p.kubeUsers,
 	}
 
 	// Pick smaller for role: session TTL from role or requested TTL.
@@ -395,7 +397,7 @@ func (a *Server) createGithubUser(p *createUserParams) (types.User, error) {
 				Username:    p.username,
 			}},
 			CreatedBy: types.CreatedBy{
-				User: types.UserRef{Name: teleport.UserSystem},
+				User: types.UserRef{Name: siriusec.UserSystem},
 				Time: a.GetClock().Now().UTC(),
 				Connector: &types.ConnectorRef{
 					Type:     constants.Github,
@@ -411,7 +413,8 @@ func (a *Server) createGithubUser(p *createUserParams) (types.User, error) {
 		return nil, trace.Wrap(err)
 	}
 
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 
 	if existingUser != nil {
 		ref := user.GetCreatedBy().Connector
@@ -630,7 +633,7 @@ func (c *githubAPIClient) get(url string) ([]byte, string, error) {
 		return nil, "", trace.Wrap(err)
 	}
 	defer response.Body.Close()
-	bytes, err := utils.ReadAtMost(response.Body, teleport.MaxHTTPResponseSize)
+	bytes, err := utils.ReadAtMost(response.Body, siriusec.MaxHTTPResponseSize)
 	if err != nil {
 		return nil, "", trace.Wrap(err)
 	}

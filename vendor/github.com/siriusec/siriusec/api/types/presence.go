@@ -25,7 +25,7 @@ import (
 	"github.com/gravitational/trace"
 )
 
-// Site represents a cluster of teleport nodes who collectively trust the same
+// Site represents a cluster of siriusec nodes who collectively trust the same
 // certificate authority (CA) and have a common name.
 //
 // The CA is represented by an auth server (or multiple auth servers, if running

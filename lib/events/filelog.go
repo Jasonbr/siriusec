@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
 	"github.com/siriusec/siriusec/lib/defaults"
@@ -96,7 +96,7 @@ func NewFileLog(cfg FileLogConfig) (*FileLog, error) {
 	f := &FileLog{
 		FileLogConfig: cfg,
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentAuditLog,
+			trace.Component: siriusec.ComponentAuditLog,
 		}),
 	}
 	return f, nil
@@ -467,7 +467,16 @@ func (l *FileLog) mightNeedRotation() bool {
 	// determine the timestamp for the current log file rounded to the day.
 	fileTime := l.Clock.Now().UTC().Truncate(24 * time.Hour)
 
-	return l.fileTime.Before(fileTime)
+	if l.fileTime.Before(fileTime) {
+		return true
+	}
+
+	// Also rotate if the file exceeds the maximum size.
+	if fi, err := l.file.Stat(); err == nil && fi.Size() > defaults.AuditLogMaxSize {
+		return true
+	}
+
+	return false
 }
 
 // rotateLog checks if the current log file is older than a given duration,

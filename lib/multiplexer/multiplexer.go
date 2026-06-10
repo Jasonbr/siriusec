@@ -32,7 +32,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/defaults"
 
 	"github.com/gravitational/trace"
@@ -70,7 +70,7 @@ func (c *Config) CheckAndSetDefaults() error {
 		return trace.BadParameter("missing parameter Listener")
 	}
 	if c.Context == nil {
-		c.Context = context.TODO()
+		c.Context = context.Background()
 	}
 	if c.ReadDeadline == 0 {
 		c.ReadDeadline = defaults.ReadHeadersTimeout
@@ -88,10 +88,10 @@ func New(cfg Config) (*Mux, error) {
 	}
 
 	ctx, cancel := context.WithCancel(cfg.Context)
-	waitContext, waitCancel := context.WithCancel(context.TODO())
+	waitContext, waitCancel := context.WithCancel(context.Background())
 	return &Mux{
 		Entry: log.WithFields(log.Fields{
-			trace.Component: teleport.Component("mx", cfg.ID),
+			trace.Component: siriusec.Component("mx", cfg.ID),
 		}),
 		Config:      cfg,
 		context:     ctx,

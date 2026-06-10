@@ -34,7 +34,7 @@ import (
 func TestProfileBasics(t *testing.T) {
 	t.Parallel()
 
-	dir, err := ioutil.TempDir("", "teleport")
+	dir, err := ioutil.TempDir("", "siriusec")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 

@@ -55,7 +55,7 @@ func UnmarshalNamespace(data []byte, opts ...MarshalOption) (*types.Namespace, e
 	}
 
 	// always skip schema validation on namespaces unmarshal
-	// the namespace is always created by teleport now
+	// the namespace is always created by siriusec now
 	var namespace types.Namespace
 	if err := utils.FastUnmarshal(data, &namespace); err != nil {
 		return nil, trace.BadParameter(err.Error())

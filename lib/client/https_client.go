@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apiutils "github.com/siriusec/siriusec/api/utils"
 	"github.com/siriusec/siriusec/lib/httplib"
 	"github.com/siriusec/siriusec/lib/utils"
@@ -60,7 +60,7 @@ func newClientWithPool(pool *x509.CertPool) *http.Client {
 
 func NewWebClient(url string, opts ...roundtrip.ClientParam) (*WebClient, error) {
 	opts = append(opts, roundtrip.SanitizerEnabled(true))
-	clt, err := roundtrip.NewClient(url, teleport.WebAPIVersion, opts...)
+	clt, err := roundtrip.NewClient(url, siriusec.WebAPIVersion, opts...)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}

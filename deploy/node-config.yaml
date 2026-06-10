@@ -59,7 +59,7 @@ auth_service:
     second_factor: "off"  # 测试环境关闭,生产环境建议开启
   # 令牌配置 - 用于其他节点加入集群
   tokens:
-    - "node,proxy,app:join-token-2024"
+    - "node,proxy,app:${SIRIUSEC_JOIN_TOKEN}"
 
 # Proxy 服务 - 启用 Web UI 和代理
 proxy_service:

@@ -1,6 +1,6 @@
 # Siriusec 部署与使用手册
 
-> 基于 Teleport 架构的企业级身份感知访问代理平台
+> 基于 Siriusec 架构的企业级身份感知访问代理平台
 
 ---
 
@@ -171,7 +171,7 @@ services:
   one:
     image: siriusec:latest
     container_name: one
-    command: ${CONTAINERHOME}/build/teleport start -d -c ${CONTAINERHOME}/docker/one.yaml
+    command: ${CONTAINERHOME}/build/siriusec start -d -c ${CONTAINERHOME}/docker/one.yaml
     mem_limit: 300m
     ports:
       - "3080:3080"
@@ -179,8 +179,8 @@ services:
       - "3025:3025"
     env_file: env.file
     volumes:
-      - ./data/one:/var/lib/teleport
-      - ../:/root/go/src/github.com/gravitational/teleport
+      - ./data/one:/var/lib/siriusec
+      - ../:/root/go/src/github.com/siriusec/siriusec
       - certs:/mnt/shared/certs
     networks:
       siriusec:
@@ -294,7 +294,7 @@ Siriusec 使用 YAML 格式配置文件,主要结构如下:
 
 ```yaml
 # 全局配置
-teleport:
+siriusec:
   nodename: <节点名称>
   advertise_ip: <广播 IP>
   data_dir: <数据目录>
@@ -348,7 +348,7 @@ db_service:
 
 ```yaml
 # /etc/siriusec/siriusec.yaml
-teleport:
+siriusec:
   nodename: siriusec-node-01
   data_dir: /var/lib/siriusec
   log:
@@ -363,7 +363,7 @@ auth_service:
     type: local
     second_factor: "off"  # 测试环境,生产建议开启
   tokens:
-    - "node,proxy,app,db:join-token-2024"
+    - "node,proxy,app,db:${SIRIUSEC_JOIN_TOKEN}"
 
 ssh_service:
   enabled: yes
@@ -413,10 +413,10 @@ db_service:
 #### Auth 节点配置 (two-auth.yaml)
 
 ```yaml
-teleport:
+siriusec:
   nodename: two-auth
   advertise_ip: 172.10.1.2
-  data_dir: /var/lib/teleport
+  data_dir: /var/lib/siriusec
 
 auth_service:
   enabled: yes
@@ -429,10 +429,10 @@ auth_service:
 #### Proxy 节点配置 (two-proxy.yaml)
 
 ```yaml
-teleport:
+siriusec:
   nodename: two-proxy
   advertise_ip: 172.10.1.3
-  data_dir: /var/lib/teleport
+  data_dir: /var/lib/siriusec
 
 auth_service:
   enabled: no
@@ -446,10 +446,10 @@ proxy_service:
 #### Node 节点配置 (two-node.yaml)
 
 ```yaml
-teleport:
+siriusec:
   nodename: two-node
   advertise_ip: 172.10.1.4
-  data_dir: /var/lib/teleport
+  data_dir: /var/lib/siriusec
 
 auth_service:
   enabled: no
@@ -462,7 +462,7 @@ ssh_service:
 
 ### 4.4 关键配置参数说明
 
-#### teleport 全局配置
+#### siriusec 全局配置
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
@@ -526,7 +526,7 @@ ssh_service:
 
 ```yaml
 # /etc/siriusec/node-config.yaml
-teleport:
+siriusec:
   nodename: ubuntu-node-01
   advertise_ip: 0.0.0.0
   data_dir: /var/lib/siriusec
@@ -570,7 +570,7 @@ auth_service:
     type: local
     second_factor: "off"
   tokens:
-    - "node,proxy,app:join-token-2024"
+    - "node,proxy,app:${SIRIUSEC_JOIN_TOKEN}"
 
 proxy_service:
   enabled: yes
@@ -614,7 +614,7 @@ CGO_ENABLED=1 go build -tags "pam" -ldflags '-w -s' -o /usr/local/bin/siriusec .
 
 ```yaml
 # /etc/siriusec/node-config.yaml (在目标主机上)
-teleport:
+siriusec:
   nodename: remote-node-01
   data_dir: /var/lib/siriusec
   log:
@@ -640,7 +640,7 @@ proxy_service:
 
 ```bash
 # 使用令牌加入集群
-sudo siriusec start --token=join-token-2024 --auth-server=main-server-ip:3025
+sudo siriusec start --token=${SIRIUSEC_JOIN_TOKEN} --auth-server=main-server-ip:3025
 ```
 
 ### 5.3 验证节点添加
@@ -666,7 +666,7 @@ tsh ls
 
 ```yaml
 # /etc/siriusec/db-config.yaml
-teleport:
+siriusec:
   nodename: db-proxy-01
   data_dir: /var/lib/siriusec
   log:
@@ -681,7 +681,7 @@ auth_service:
     type: local
     second_factor: "off"
   tokens:
-    - "node,proxy,db:join-token-2024"
+    - "node,proxy,db:${SIRIUSEC_JOIN_TOKEN}"
 
 proxy_service:
   enabled: yes
@@ -720,7 +720,7 @@ db_service:
           command:
             - /bin/bash
             - -c
-            - "mysql -h 123.57.11.100 -P 3506 -u sample -p'sample' -e 'SELECT VERSION()' 2>/dev/null || echo 'unknown'"
+            - "mysql -h 123.57.11.100 -P 3506 -u ${DB_USER} -p'${DB_PASSWORD}' -e 'SELECT VERSION()' 2>/dev/null || echo 'unknown'"
           period: 10m
 
     - name: mysql-business
@@ -776,7 +776,7 @@ tsh db login --database=sample mysql-sample
 tsh db connect mysql-sample
 
 # 这会启动本地代理并自动连接 mysql
-# 等效于: mysql -h 127.0.0.1 -P <local_port> -u sample -p'sample'
+# 等效于: mysql -h 127.0.0.1 -P <local_port> -u ${DB_USER} -p'${DB_PASSWORD}'
 
 # 4. 在 mysql 中执行 SQL
 SHOW DATABASES;
@@ -792,7 +792,7 @@ EXIT;
 
 ```yaml
 # /etc/siriusec/app-config.yaml
-teleport:
+siriusec:
   nodename: app-proxy-01
   data_dir: /var/lib/siriusec
 
@@ -1107,7 +1107,7 @@ openssl x509 -in /etc/siriusec/tls/server.crt -text -noout
 
 ```bash
 # 测试直连 MySQL
-mysql -h 123.57.11.100 -P 3506 -u sample -p'sample' -e "SELECT 1"
+mysql -h 123.57.11.100 -P 3506 -u ${DB_USER} -p'${DB_PASSWORD}' -e "SELECT 1"
 
 # 检查 Siriusec 日志
 grep -i "database\|mysql" /var/log/siriusec/siriusec.log
@@ -1126,7 +1126,7 @@ systemctl status siriusec | grep db_service
 telnet auth-server-ip 3025
 
 # 查看详细错误
-siriusec start --token=join-token-2024 --auth-server=auth-server-ip:3025 --debug
+siriusec start --token=${SIRIUSEC_JOIN_TOKEN} --auth-server=auth-server-ip:3025 --debug
 ```
 
 ### 11.6 常见错误码
@@ -1261,4 +1261,4 @@ netstat -tlnp | grep siriusec
 
 > **文档版本**: 1.0
 > **更新日期**: 2026-05-26
-> **基于版本**: Siriusec 1.0.0 (Teleport 架构)
+> **基于版本**: Siriusec 1.0.0 (Siriusec 架构)

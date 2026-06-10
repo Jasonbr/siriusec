@@ -18,7 +18,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -55,7 +55,7 @@ steps:
   - |
     if [ "${DRONE_BUILD_EVENT}" = "pull_request" ]; then
       apk add --no-cache curl jq
-      export PR_REPO=$(curl -Ls https://api.github.com/repos/gravitational/${DRONE_REPO_NAME}/pulls/${DRONE_PULL_REQUEST} | jq -r '.head.repo.full_name')
+      export PR_REPO=$(curl -Ls https://api.github.com/repos/siriusec/${DRONE_REPO_NAME}/pulls/${DRONE_PULL_REQUEST} | jq -r '.head.repo.full_name')
       echo "---> Source repo for PR ${DRONE_PULL_REQUEST}: $${PR_REPO}"
       # if the source repo for the PR matches DRONE_REPO, then this is not a PR raised from a fork
       if [ "$${PR_REPO}" = "${DRONE_REPO}" ] || [ "${DRONE_REPO}" = "siriusec/siriusec-private" ]; then
@@ -223,7 +223,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -365,7 +365,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
   branch:
     include:
     - master
@@ -421,7 +421,7 @@ steps:
   image: plugins/slack
   settings:
     webhook:
-      from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+      from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
   template:
   - |
     *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
@@ -467,7 +467,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
   branch:
     include:
     - master
@@ -523,7 +523,7 @@ steps:
   image: plugins/slack
   settings:
     webhook:
-      from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+      from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
   template:
   - |
     *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
@@ -569,7 +569,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
   branch:
     include:
     - master
@@ -629,7 +629,7 @@ steps:
   image: plugins/slack
   settings:
     webhook:
-      from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+      from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
   template:
   - |
     *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
@@ -675,7 +675,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
   branch:
     include:
     - master
@@ -731,7 +731,7 @@ steps:
   image: plugins/slack
   settings:
     webhook:
-      from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+      from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
   template:
   - |
     *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
@@ -773,7 +773,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
   branch:
     include:
     - master
@@ -801,7 +801,7 @@ steps:
   - set -u
   - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
     && chmod 600 $WORKSPACE_DIR/.ssh/id_rsa
@@ -844,10 +844,10 @@ steps:
     export GOARCH=$(go env GOARCH)
   - |2-
 
-    curl -sL -X POST -H 'Content-type: application/json' --data "{\"text\":\"Warning: \`${GOOS}-${GOARCH}\` artifact build failed for [\`${DRONE_REPO_NAME}\`] - please investigate immediately!\nBranch: \`${DRONE_BRANCH}\`\nCommit: \`${DRONE_COMMIT_SHA}\`\nLink: $DRONE_BUILD_LINK\"}" $SLACK_WEBHOOK_DEV_TELEPORT
+    curl -sL -X POST -H 'Content-type: application/json' --data "{\"text\":\"Warning: \`${GOOS}-${GOARCH}\` artifact build failed for [\`${DRONE_REPO_NAME}\`] - please investigate immediately!\nBranch: \`${DRONE_BRANCH}\`\nCommit: \`${DRONE_COMMIT_SHA}\`\nLink: $DRONE_BUILD_LINK\"}" $SLACK_WEBHOOK_DEV_SIRIUSEC
   environment:
-    SLACK_WEBHOOK_DEV_TELEPORT:
-      from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+    SLACK_WEBHOOK_DEV_SIRIUSEC:
+      from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
   when:
     status:
     - failure
@@ -874,7 +874,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
   branch:
     include:
     - master
@@ -930,7 +930,7 @@ steps:
   image: plugins/slack
   settings:
     webhook:
-      from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+      from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
   template:
   - |
     *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
@@ -976,7 +976,7 @@ trigger:
     - pull_request
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
   branch:
     include:
     - master
@@ -1032,7 +1032,7 @@ steps:
   image: plugins/slack
   settings:
     webhook:
-      from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+      from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
   template:
   - |
     *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
@@ -1123,7 +1123,7 @@ steps:
       - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/CURRENT_VERSION_TAG_GENERIC.txt)-fips"
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
       # OSS
-      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $OSS_IMAGE_NAME
       # Enterprise
       - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
@@ -1152,7 +1152,7 @@ steps:
       - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/PREVIOUS_VERSION_ONE_TAG_GENERIC.txt)-fips"
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
       # OSS
-      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $OSS_IMAGE_NAME
       # Enterprise
       - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
@@ -1181,7 +1181,7 @@ steps:
       - export ENT_FIPS_IMAGE_NAME="registry.siriusec.com/siriusec-ent:$(cat /go/build/PREVIOUS_VERSION_TWO_TAG_GENERIC.txt)-fips"
       - docker login -u="$PLUGIN_USERNAME" -p="$PLUGIN_PASSWORD" quay.io
       # OSS
-      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=teleport --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
+      - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH -t $OSS_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
       - docker push $OSS_IMAGE_NAME
       # Enterprise
       - docker build --target siriusec --build-arg DOWNLOAD_TYPE=siriusec-ent --build-arg VERSION_TAG=$VERSION_TAG --build-arg OS=$OS --build-arg ARCH=$ARCH  -t $ENT_IMAGE_NAME -f /go/build/Dockerfile-cron /go/build
@@ -1229,11 +1229,11 @@ volumes:
 ---
 kind: pipeline
 type: kubernetes
-name: teleport-helm-cron
+name: siriusec-helm-cron
 
 trigger:
   cron:
-    - teleport-helm-cron
+    - siriusec-helm-cron
   repo:
     include:
       - siriusec/siriusec
@@ -1250,7 +1250,7 @@ steps:
     commands:
       - mkdir -p /go/src/github.com/siriusec/siriusec
       - cd /go/src/github.com/siriusec/siriusec
-      - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+      - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_COMMIT}
       - mkdir -p /go/chart
       - cd /go/chart
@@ -1273,8 +1273,8 @@ steps:
     image: alpine/helm:latest
     commands:
       - cd /go/chart
-      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-cluster
-      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-kube-agent
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/siriusec-cluster
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/siriusec-kube-agent
       # copy index.html to root of the S3 bucket
       - cp /go/src/github.com/siriusec/siriusec/examples/chart/index.html /go/chart
       # this will index all previous versions of the charts downloaded from the S3 bucket,
@@ -1300,10 +1300,10 @@ steps:
     image: plugins/slack
     settings:
       webhook:
-        from_secret: SLACK_WEBHOOK_DEV_TELEPORT
+        from_secret: SLACK_WEBHOOK_DEV_SIRIUSEC
       template: |
         *{{#success build.status}}✔{{ else }}✘{{/success}} {{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
-        Details: The `teleport-helm-cron` job in Drone failed to publish Helm charts to S3. This is unusual and should be investigated.
+        Details: The `siriusec-helm-cron` job in Drone failed to publish Helm charts to S3. This is unusual and should be investigated.
         Commit: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
         Branch: <https://github.com/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
         Author: <https://github.com/{{ build.author }}|{{ build.author }}>
@@ -1332,7 +1332,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -1343,7 +1343,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -1385,11 +1385,11 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find . -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find e/ -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
+  - cd /go/artifacts && for FILE in siriusec*.tar.gz; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
   image: plugins/s3
@@ -1403,7 +1403,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -1436,7 +1436,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -1447,7 +1447,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -1491,9 +1491,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find e/ -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
+  - cd /go/artifacts && for FILE in siriusec*.tar.gz; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
   image: plugins/s3
@@ -1507,7 +1507,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -1540,7 +1540,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -1551,7 +1551,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -1593,14 +1593,14 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find . -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find e/ -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
   - export VERSION=$(cat /go/.version.txt)
-  - mv /go/artifacts/teleport-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/teleport-v$${VERSION}-linux-amd64-centos6-bin.tar.gz
+  - mv /go/artifacts/siriusec-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/siriusec-v$${VERSION}-linux-amd64-centos6-bin.tar.gz
   - mv /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/artifacts/siriusec-ent-v$${VERSION}-linux-amd64-centos6-bin.tar.gz
-  - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
+  - cd /go/artifacts && for FILE in siriusec*.tar.gz; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
   image: plugins/s3
@@ -1614,7 +1614,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -1645,7 +1645,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -1658,7 +1658,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -1685,9 +1685,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -1725,9 +1725,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -1741,7 +1741,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -1777,7 +1777,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -1790,7 +1790,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -1817,7 +1817,7 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -1856,7 +1856,7 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -1870,7 +1870,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -1906,7 +1906,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -1919,7 +1919,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -1946,9 +1946,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -1977,9 +1977,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -1993,7 +1993,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -2024,7 +2024,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -2037,7 +2037,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -2064,7 +2064,7 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2094,7 +2094,7 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -2108,7 +2108,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -2141,7 +2141,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -2152,7 +2152,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -2194,11 +2194,11 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find . -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find e/ -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
+  - cd /go/artifacts && for FILE in siriusec*.tar.gz; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
   image: plugins/s3
@@ -2212,7 +2212,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -2243,7 +2243,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -2256,7 +2256,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -2283,9 +2283,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-386-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-386-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2323,9 +2323,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -2339,7 +2339,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -2375,7 +2375,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -2388,7 +2388,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -2415,9 +2415,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-386-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-386-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-386-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2446,9 +2446,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -2462,7 +2462,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -2493,7 +2493,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /tmp/build-darwin-amd64
 platform:
@@ -2517,7 +2517,7 @@ steps:
   - set -u
   - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
     && chmod 600 $WORKSPACE_DIR/.ssh/id_rsa
@@ -2551,9 +2551,9 @@ steps:
   commands:
   - set -u
   - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
-  - cp teleport*.tar.gz $WORKSPACE_DIR/go/artifacts
+  - cp siriusec*.tar.gz $WORKSPACE_DIR/go/artifacts
   - cp e/siriusec-ent*.tar.gz $WORKSPACE_DIR/go/artifacts
-  - cd $WORKSPACE_DIR/go/artifacts && for FILE in teleport*.tar.gz; do shasum -a 256
+  - cd $WORKSPACE_DIR/go/artifacts && for FILE in siriusec*.tar.gz; do shasum -a 256
     $FILE > $FILE.sha256; done && ls -l
   environment:
     WORKSPACE_DIR: /tmp/build-darwin-amd64
@@ -2561,7 +2561,7 @@ steps:
   commands:
   - set -u
   - cd $WORKSPACE_DIR/go/artifacts
-  - aws s3 sync . s3://$AWS_S3_BUCKET/teleport/tag/${DRONE_TAG##v}
+  - aws s3 sync . s3://$AWS_S3_BUCKET/siriusec/tag/${DRONE_TAG##v}
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
@@ -2598,7 +2598,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /tmp/build-darwin-amd64-pkg
 platform:
@@ -2624,7 +2624,7 @@ steps:
   - set -u
   - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
     && chmod 600 $WORKSPACE_DIR/.ssh/id_rsa
@@ -2648,9 +2648,9 @@ steps:
   - set -u
   - export VERSION=$(cat $WORKSPACE_DIR/go/.version.txt)
   - export S3_PATH="tag/$${DRONE_TAG##v}/"
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-darwin-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2689,7 +2689,7 @@ steps:
   - set -u
   - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - rm -rf $WORKSPACE_DIR/go/artifacts/*.tar.gz
-  - cp build/teleport*.pkg e/build/siriusec-ent*.pkg $WORKSPACE_DIR/go/artifacts/
+  - cp build/siriusec*.pkg e/build/siriusec-ent*.pkg $WORKSPACE_DIR/go/artifacts/
   - cd $WORKSPACE_DIR/go/artifacts && for FILE in *.pkg; do shasum -a 256 $FILE >
     $FILE.sha256; done && ls -l
   environment:
@@ -2698,7 +2698,7 @@ steps:
   commands:
   - set -u
   - cd $WORKSPACE_DIR/go/artifacts
-  - aws s3 sync . s3://$AWS_S3_BUCKET/teleport/tag/${DRONE_TAG##v}
+  - aws s3 sync . s3://$AWS_S3_BUCKET/siriusec/tag/${DRONE_TAG##v}
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
@@ -2735,7 +2735,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /tmp/build-darwin-amd64-pkg-tsh
 platform:
@@ -2761,7 +2761,7 @@ steps:
   - set -u
   - mkdir -p $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
   - cd $WORKSPACE_DIR/go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 $WORKSPACE_DIR/.ssh && echo "$GITHUB_PRIVATE_KEY" > $WORKSPACE_DIR/.ssh/id_rsa
     && chmod 600 $WORKSPACE_DIR/.ssh/id_rsa
@@ -2785,9 +2785,9 @@ steps:
   - set -u
   - export VERSION=$(cat $WORKSPACE_DIR/go/.version.txt)
   - export S3_PATH="tag/$${DRONE_TAG##v}/"
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-darwin-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-darwin-amd64-bin.tar.gz
     $WORKSPACE_DIR/go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -2835,7 +2835,7 @@ steps:
   commands:
   - set -u
   - cd $WORKSPACE_DIR/go/artifacts
-  - aws s3 sync . s3://$AWS_S3_BUCKET/teleport/tag/${DRONE_TAG##v}
+  - aws s3 sync . s3://$AWS_S3_BUCKET/siriusec/tag/${DRONE_TAG##v}
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
@@ -2874,7 +2874,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -2885,7 +2885,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -2927,11 +2927,11 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find . -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find e/ -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
+  - cd /go/artifacts && for FILE in siriusec*.tar.gz; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
   image: plugins/s3
@@ -2945,7 +2945,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -2978,7 +2978,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -2989,7 +2989,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -3031,11 +3031,11 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find . -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find . -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - find e/ -maxdepth 1 -iname "teleport*.tar.gz" -print -exec cp {} /go/artifacts
+  - find e/ -maxdepth 1 -iname "siriusec*.tar.gz" -print -exec cp {} /go/artifacts
     \;
-  - cd /go/artifacts && for FILE in teleport*.tar.gz; do sha256sum $FILE > $FILE.sha256;
+  - cd /go/artifacts && for FILE in siriusec*.tar.gz; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
   image: plugins/s3
@@ -3049,7 +3049,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -3080,7 +3080,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -3093,7 +3093,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -3120,9 +3120,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3151,9 +3151,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -3167,7 +3167,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -3198,7 +3198,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -3211,7 +3211,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -3238,9 +3238,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3269,9 +3269,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.deb*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.deb*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -3285,7 +3285,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -3316,7 +3316,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -3329,7 +3329,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -3356,9 +3356,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm64-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm64-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3396,9 +3396,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -3412,7 +3412,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -3448,7 +3448,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -3461,7 +3461,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -3488,9 +3488,9 @@ steps:
   - export VERSION=$(cat /go/.version.txt)
   - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else
     export S3_PATH="tag/"; fi
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-arm-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
-  - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm-bin.tar.gz
+  - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-arm-bin.tar.gz
     /go/artifacts/
   environment:
     AWS_ACCESS_KEY_ID:
@@ -3528,9 +3528,9 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
-  - find e/build -maxdepth 1 -iname "teleport*.rpm*" -print -exec cp {} /go/artifacts
+  - find e/build -maxdepth 1 -iname "siriusec*.rpm*" -print -exec cp {} /go/artifacts
     \;
 - name: Upload to S3
   image: plugins/s3
@@ -3544,7 +3544,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -3582,7 +3582,7 @@ trigger:
     - refs/tags/v*
   repo:
     include:
-    - gravitational/*
+    - siriusec/*
 workspace:
   path: /go
 clone:
@@ -3593,7 +3593,7 @@ steps:
   commands:
   - mkdir -p /go/src/github.com/siriusec/siriusec
   - cd /go/src/github.com/siriusec/siriusec
-  - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+  - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
   - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
   - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa
     && chmod 600 /root/.ssh/id_rsa
@@ -3639,10 +3639,10 @@ steps:
   image: docker
   commands:
   - cd /go/src/github.com/siriusec/siriusec
-  - find . -maxdepth 1 -iname "teleport*.zip" -print -exec cp {} /go/artifacts \;
+  - find . -maxdepth 1 -iname "siriusec*.zip" -print -exec cp {} /go/artifacts \;
   - export VERSION=$(cat /go/.version.txt)
-  - cp /go/artifacts/teleport-v$${VERSION}-windows-amd64-bin.zip /go/artifacts/siriusec-ent-v$${VERSION}-windows-amd64-bin.zip
-  - cd /go/artifacts && for FILE in teleport*.zip; do sha256sum $FILE > $FILE.sha256;
+  - cp /go/artifacts/siriusec-v$${VERSION}-windows-amd64-bin.zip /go/artifacts/siriusec-ent-v$${VERSION}-windows-amd64-bin.zip
+  - cd /go/artifacts && for FILE in siriusec*.zip; do sha256sum $FILE > $FILE.sha256;
     done && ls -l
 - name: Upload to S3
   image: plugins/s3
@@ -3656,7 +3656,7 @@ steps:
       from_secret: AWS_SECRET_ACCESS_KEY
     source: /go/artifacts/*
     strip_prefix: /go/artifacts/
-    target: teleport/tag/${DRONE_TAG##v}
+    target: siriusec/tag/${DRONE_TAG##v}
 services:
 - name: Start Docker
   image: docker:dind
@@ -3684,7 +3684,7 @@ trigger:
       - refs/tags/v*
   repo:
     include:
-      - gravitational/*
+      - siriusec/*
 
 workspace:
   path: /go
@@ -3702,7 +3702,7 @@ steps:
     commands:
       - mkdir -p /go/src/github.com/siriusec/siriusec
       - cd /go/src/github.com/siriusec/siriusec
-      - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+      - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
       # fetch enterprise submodules
       - mkdir -m 0700 /root/.ssh && echo -n "$GITHUB_PRIVATE_KEY" > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
@@ -3795,7 +3795,7 @@ trigger:
       - refs/tags/v*
   repo:
     include:
-      - gravitational/*
+      - siriusec/*
 
 depends_on:
   - build-linux-amd64
@@ -3812,7 +3812,7 @@ steps:
     commands:
       - mkdir -p /go/src/github.com/siriusec/siriusec
       - cd /go/src/github.com/siriusec/siriusec
-      - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+      - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
       # set version
       - if [[ "${DRONE_TAG}" != "" ]]; then echo "${DRONE_TAG##v}" > /go/.version.txt; else egrep ^VERSION Makefile | cut -d= -f2 > /go/.version.txt; fi; cat /go/.version.txt
@@ -3830,7 +3830,7 @@ steps:
     commands:
       - export VERSION=$(cat /go/.version.txt)
       - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else export S3_PATH="tag/"; fi
-      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}teleport-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
+      - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
 
   - name: Build OSS AMIs
     image: hashicorp/packer:1.7.6
@@ -3845,8 +3845,8 @@ steps:
     commands:
       - apk add --no-cache aws-cli jq make
       - cd /go/src/github.com/siriusec/siriusec/assets/aws
-      - export TELEPORT_VERSION=$(cat /go/.version.txt)
-      - export PUBLIC_AMI_NAME=gravitational-teleport-ami-oss-$TELEPORT_VERSION
+      - export SIRIUSEC_VERSION=$(cat /go/.version.txt)
+      - export PUBLIC_AMI_NAME=siriusec-ami-oss-$SIRIUSEC_VERSION
       - |
         if [ "${DRONE_BUILD_EVENT}" = "tag" ]; then
           echo "---> Building production OSS AMIs"
@@ -3869,7 +3869,7 @@ steps:
       AWS_REGION: us-west-2
     commands:
       - export VERSION=$(cat /go/.version.txt)
-      - aws s3 cp /go/src/github.com/siriusec/siriusec/assets/aws/files/build/oss_build_timestamp.txt s3://$AWS_S3_BUCKET/teleport/ami/$${VERSION}/
+      - aws s3 cp /go/src/github.com/siriusec/siriusec/assets/aws/files/build/oss_build_timestamp.txt s3://$AWS_S3_BUCKET/siriusec/ami/$${VERSION}/
 
 services:
   - name: Start Docker
@@ -3896,7 +3896,7 @@ trigger:
       - refs/tags/v*
   repo:
     include:
-      - gravitational/*
+      - siriusec/*
 
 depends_on:
   - build-linux-amd64
@@ -3914,7 +3914,7 @@ steps:
     commands:
       - mkdir -p /go/src/github.com/siriusec/siriusec
       - cd /go/src/github.com/siriusec/siriusec
-      - git clone https://github.com/gravitational/${DRONE_REPO_NAME}.git .
+      - git clone https://github.com/siriusec/${DRONE_REPO_NAME}.git .
       - git checkout ${DRONE_TAG:-$DRONE_COMMIT}
       # set version
       - if [[ "${DRONE_TAG}" != "" ]]; then echo "${DRONE_TAG##v}" > /go/.version.txt; else egrep ^VERSION Makefile | cut -d= -f2 > /go/.version.txt; fi; cat /go/.version.txt
@@ -3932,8 +3932,8 @@ steps:
     commands:
       - export VERSION=$(cat /go/.version.txt)
       - if [[ "${DRONE_TAG}" != "" ]]; then export S3_PATH="tag/$${DRONE_TAG##v}/"; else export S3_PATH="tag/"; fi
-      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
-      - aws s3 cp s3://$AWS_S3_BUCKET/teleport/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
+      - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
+      - aws s3 cp s3://$AWS_S3_BUCKET/siriusec/$${S3_PATH}siriusec-ent-v$${VERSION}-linux-amd64-fips-bin.tar.gz /go/src/github.com/siriusec/siriusec/assets/aws/files
 
   - name: Build Enterprise AMIs
     image: hashicorp/packer:1.7.6
@@ -3948,9 +3948,9 @@ steps:
     commands:
       - apk add --no-cache aws-cli jq make
       - cd /go/src/github.com/siriusec/siriusec/assets/aws
-      - export TELEPORT_VERSION=$(cat /go/.version.txt)
-      - export PUBLIC_AMI_NAME=gravitational-teleport-ami-ent-$TELEPORT_VERSION
-      - export FIPS_AMI_NAME=gravitational-teleport-ami-ent-$TELEPORT_VERSION-fips
+      - export SIRIUSEC_VERSION=$(cat /go/.version.txt)
+      - export PUBLIC_AMI_NAME=siriusec-ami-ent-$SIRIUSEC_VERSION
+      - export FIPS_AMI_NAME=siriusec-ami-ent-$SIRIUSEC_VERSION-fips
       - |
         if [ "${DRONE_BUILD_EVENT}" = "tag" ]; then
           echo "---> Building production Enterprise AMIs"
@@ -3973,7 +3973,7 @@ steps:
       AWS_REGION: us-west-2
     commands:
       - export VERSION=$(cat /go/.version.txt)
-      - aws s3 cp /go/src/github.com/siriusec/siriusec/assets/aws/files/build/ent_build_timestamp.txt s3://$AWS_S3_BUCKET/teleport/ami/$${VERSION}/
+      - aws s3 cp /go/src/github.com/siriusec/siriusec/assets/aws/files/build/ent_build_timestamp.txt s3://$AWS_S3_BUCKET/siriusec/ami/$${VERSION}/
 
 services:
   - name: Start Docker
@@ -4019,7 +4019,7 @@ steps:
 - name: Check out code
   image: docker:git
   commands:
-  - git clone --depth 1 --single-branch --branch ${DRONE_SOURCE_BRANCH:-master} https://github.com/gravitational/${DRONE_REPO_NAME}.git
+  - git clone --depth 1 --single-branch --branch ${DRONE_SOURCE_BRANCH:-master} https://github.com/siriusec/${DRONE_REPO_NAME}.git
     .
   - git checkout ${DRONE_COMMIT}
 - name: Wait for docker
@@ -4116,7 +4116,7 @@ trigger:
     - production
   repo:
     include:
-      - gravitational/*
+      - siriusec/*
 
 workspace:
   path: /go
@@ -4137,7 +4137,7 @@ steps:
       AWS_REGION: us-west-2
     commands:
       - mkdir -p /go/artifacts
-      - aws s3 sync s3://$AWS_S3_BUCKET/teleport/tag/${DRONE_TAG##v}/ /go/artifacts/
+      - aws s3 sync s3://$AWS_S3_BUCKET/siriusec/tag/${DRONE_TAG##v}/ /go/artifacts/
 
   - name: Upload artifacts to production S3
     image: plugins/s3
@@ -4151,7 +4151,7 @@ steps:
       region: us-east-1
       acl: public-read
       source: /go/artifacts/*
-      target: teleport/${DRONE_TAG##v}/
+      target: siriusec/${DRONE_TAG##v}/
       strip_prefix: /go/artifacts/
 
   - name: Pull/retag Docker images
@@ -4176,12 +4176,12 @@ steps:
       - docker login -u="$PLUGIN_DOCKER_STAGING_USERNAME" -p="$PLUGIN_DOCKER_STAGING_PASSWORD" quay.io
       # pull 'temporary' CI-built images
       - echo "---> Pulling images for $${VERSION}"
-      - docker pull registry.siriusec.com/teleport-ci:$${VERSION}
+      - docker pull registry.siriusec.com/siriusec-ci:$${VERSION}
       - docker pull registry.siriusec.com/siriusec-ent-ci:$${VERSION}
       - docker pull registry.siriusec.com/siriusec-ent-ci:$${VERSION}-fips
       # retag images to production naming
       - echo "---> Tagging images for $${VERSION}"
-      - docker tag registry.siriusec.com/teleport-ci:$${VERSION} registry.siriusec.com/siriusec:$${VERSION}
+      - docker tag registry.siriusec.com/siriusec-ci:$${VERSION} registry.siriusec.com/siriusec:$${VERSION}
       - docker tag registry.siriusec.com/siriusec-ent-ci:$${VERSION} registry.siriusec.com/siriusec-ent:$${VERSION}
       - docker tag registry.siriusec.com/siriusec-ent-ci:$${VERSION}-fips registry.siriusec.com/siriusec-ent:$${VERSION}-fips
       # reauthenticate with production credentials
@@ -4215,7 +4215,7 @@ steps:
     commands:
       - apk add --no-cache aws-cli
       - mkdir -p /go/src/github.com/siriusec/siriusec/assets/aws/files/build
-      - aws s3 sync s3://$AWS_S3_BUCKET/teleport/ami/${DRONE_TAG##v}/ /go/src/github.com/siriusec/siriusec/assets/aws/files/build
+      - aws s3 sync s3://$AWS_S3_BUCKET/siriusec/ami/${DRONE_TAG##v}/ /go/src/github.com/siriusec/siriusec/assets/aws/files/build
 
   - name: Make AMIs public
     image: docker
@@ -4251,8 +4251,8 @@ steps:
     image: alpine/helm:latest
     commands:
       - cd /go/chart
-      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-cluster
-      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/teleport-kube-agent
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/siriusec-cluster
+      - helm package /go/src/github.com/siriusec/siriusec/examples/chart/siriusec-kube-agent
       # copy index.html to root of the S3 bucket.
       - cp /go/src/github.com/siriusec/siriusec/examples/chart/index.html /go/chart
       # this will index all previous versions of the charts downloaded from the S3 bucket,
@@ -4311,12 +4311,12 @@ steps:
       - name: rpmrepo
         path: /rpmrepo
     commands:
-    - mkdir -p /rpmrepo/teleport/cache
+    - mkdir -p /rpmrepo/siriusec/cache
     # we explicitly want to delete anything present locally which has been deleted
     # from the upstream S3 bucket
-    - aws s3 sync s3://$AWS_S3_BUCKET/teleport/ /rpmrepo/teleport/ --delete
-    - mkdir -p /rpmrepo/teleport/${DRONE_TAG##v}
-    - cp -a /go/artifacts/*.rpm /rpmrepo/teleport/${DRONE_TAG##v}/
+    - aws s3 sync s3://$AWS_S3_BUCKET/siriusec/ /rpmrepo/siriusec/ --delete
+    - mkdir -p /rpmrepo/siriusec/${DRONE_TAG##v}
+    - cp -a /go/artifacts/*.rpm /rpmrepo/siriusec/${DRONE_TAG##v}/
 
   # we do this using a CentOS 7 container to make sure that the repo files are
   # compatible with older versions, also there's no createrepo package in alpine main
@@ -4327,7 +4327,7 @@ steps:
         path: /rpmrepo
     commands:
     - yum -y install createrepo
-    - createrepo --cachedir /rpmrepo/teleport/cache --update /rpmrepo/teleport
+    - createrepo --cachedir /rpmrepo/siriusec/cache --update /rpmrepo/siriusec
 
   - name: Sync RPM repo changes to S3
     image: amazon/aws-cli
@@ -4342,7 +4342,7 @@ steps:
       - name: rpmrepo
         path: /rpmrepo
     commands:
-    - aws s3 sync /rpmrepo/teleport/ s3://$AWS_S3_BUCKET/teleport/
+    - aws s3 sync /rpmrepo/siriusec/ s3://$AWS_S3_BUCKET/siriusec/
 
   - name: Download DEB repo contents
     image: amazon/aws-cli
@@ -4359,8 +4359,8 @@ steps:
     commands:
     # we explicitly want to delete anything present locally which has been deleted
     # from the upstream S3 bucket
-    - mkdir -p /debrepo/teleport
-    - aws s3 sync s3://$AWS_S3_BUCKET/teleport /debrepo/teleport --delete
+    - mkdir -p /debrepo/siriusec
+    - aws s3 sync s3://$AWS_S3_BUCKET/siriusec /debrepo/siriusec --delete
 
   - name: Build DEB repo
     image: ubuntu:20.04
@@ -4383,19 +4383,19 @@ steps:
         apt-get -y update && apt-get -y install curl gzip gnupg2 reprepro tar
       - |
         # write config files
-        mkdir -p /go/reprepro/teleport/conf /go/reprepro/teleport/public
-        cat << EOF > /go/reprepro/teleport/conf/distributions
-        Origin: teleport
-        Label: teleport
+        mkdir -p /go/reprepro/siriusec/conf /go/reprepro/siriusec/public
+        cat << EOF > /go/reprepro/siriusec/conf/distributions
+        Origin: siriusec
+        Label: siriusec
         Codename: stable
         Architectures: i386 amd64 arm arm64
         Components: main
-        Description: apt repository for teleport
+        Description: apt repository for siriusec
         SignWith: 6282C411
         EOF
-        cat << EOF > /go/reprepro/teleport/conf/options
+        cat << EOF > /go/reprepro/siriusec/conf/options
         verbose
-        basedir /go/reprepro/teleport
+        basedir /go/reprepro/siriusec
         EOF
       - |
         # extract signing key
@@ -4404,14 +4404,14 @@ steps:
         chown -R root:root $GNUPGHOME
       - |
         # create repo
-        cd /go/reprepro/teleport
-        reprepro --outdir /go/reprepro/teleport/public includedeb stable /go/artifacts/teleport*.deb
+        cd /go/reprepro/siriusec
+        reprepro --outdir /go/reprepro/siriusec/public includedeb stable /go/artifacts/siriusec*.deb
       - |
         # clean up gnupg
         rm -rf $GNUPGHOME
       - |
         # copy artifacts to PVC
-        cp -r /go/reprepro/teleport /debrepo/
+        cp -r /go/reprepro/siriusec /debrepo/
 
   # Deb repo publish disabled for https://github.com/siriusec/siriusec/issues/8166
 

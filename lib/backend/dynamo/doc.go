@@ -1,6 +1,6 @@
 /*
 Package dynamodbDynamoDBBackend implements DynamoDB storage backend
-for Teleport auth service, similar to etcd backend.
+for Siriusec auth service, similar to etcd backend.
 
 dynamo package implements the DynamoDB storage back-end for the
 auth server. Originally contributed by https://github.com/apestel

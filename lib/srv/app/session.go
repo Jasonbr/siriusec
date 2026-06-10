@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	apievents "github.com/siriusec/siriusec/api/types/events"
@@ -133,7 +133,7 @@ func (s *Server) newStreamWriter(identity *tlsca.Identity, app *types.App) (even
 		Namespace:    apidefaults.Namespace,
 		ServerID:     s.c.Server.GetName(),
 		RecordOutput: recConfig.GetMode() != types.RecordOff,
-		Component:    teleport.ComponentApp,
+		Component:    siriusec.ComponentApp,
 		ClusterName:  clusterName.GetClusterName(),
 	})
 	if err != nil {
@@ -185,7 +185,7 @@ func (s *Server) newStreamer(ctx context.Context, sessionID string, recConfig ty
 
 	s.log.Debugf("Using async streamer for session %v.", sessionID)
 	uploadDir := filepath.Join(
-		s.c.DataDir, teleport.LogsDir, teleport.ComponentUpload,
+		s.c.DataDir, siriusec.LogsDir, siriusec.ComponentUpload,
 		events.StreamingLogsDir, apidefaults.Namespace,
 	)
 	fileStreamer, err := filesessions.NewStreamer(uploadDir)

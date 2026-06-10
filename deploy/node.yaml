@@ -1,7 +1,7 @@
 teleport:
   nodename: siriusec-node
   auth_servers: ["auth:3025"]
-  auth_token: siriusec-join-token-2026
+  auth_token: ${SIRIUSEC_JOIN_TOKEN}
   log:
     output: stdout
     severity: INFO

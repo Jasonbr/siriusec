@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2018 Gravitational, Inc.
+# Copyright 2020-2024 Siriusec, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@
 # and does not require any extra binaries. It produces kubeconfig to build/kubeconfig
 
 # This script can be used to retreive x509 certificate from a GKE cluster
-# which can be used for accessing the CSR API with Teleport
+# which can be used for accessing the CSR API with Siriusec
 #
 # For more information see:
-# https://gravitational.com/blog/kubectl-gke/
+# https://siriusec.com/blog/kubectl-gke/
 #
 # Produce CSR request first
 
@@ -31,13 +31,13 @@ set -eu -o pipefail
 
 echo "---"
 echo "This script is obsolete!"
-echo "Please use https://github.com/gravitational/teleport/blob/master/examples/k8s-auth/get-kubeconfig.sh instead."
+echo "Please use https://github.com/siriusec/siriusec/blob/master/examples/k8s-auth/get-kubeconfig.sh instead."
 echo "---"
 
 # Allow passing in common name and username in environment. If not provided,
 # use default.
-CN=${CN:-teleport}
-USER=${USER:-teleport}
+CN=${CN:-siriusec}
+USER=${USER:-siriusec}
 
 # Set OS specific values.
 if [[ "$OSTYPE" == "linux-gnu" ]]; then

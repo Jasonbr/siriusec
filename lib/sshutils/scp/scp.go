@@ -210,14 +210,14 @@ func CreateCommand(cfg Config) (Command, error) {
 }
 
 // Command mimics behavior of SCP command line tool
-// to teleport can pretend it launches real SCP behind the scenes
+// to siriusec can pretend it launches real SCP behind the scenes
 type command struct {
 	Config
 	log log.FieldLogger
 }
 
 // Execute implements SSH file copy (SCP). It is called on both tsh (client)
-// and teleport (server) side.
+// and siriusec (server) side.
 func (cmd *command) Execute(ch io.ReadWriter) (err error) {
 	if cmd.Flags.Source {
 		return trace.Wrap(cmd.serveSource(ch))

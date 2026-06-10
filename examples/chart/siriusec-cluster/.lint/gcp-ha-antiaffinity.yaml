@@ -1,0 +1,12 @@
+clusterName: test-gcp-cluster
+chartMode: gcp
+gcp:
+  projectId: gcpproj-123456
+  backendTable: test-siriusec-firestore-storage-collection
+  auditLogTable: test-siriusec-firestore-auditlog-collection
+  sessionRecordingBucket: test-gcp-session-storage-bucket
+highAvailability:
+  replicaCount: 3
+  requireAntiAffinity: true
+labels:
+  env: gcp

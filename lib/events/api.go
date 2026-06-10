@@ -41,7 +41,7 @@ const (
 	EventTime = "time"
 	// EventLogin is OS login
 	EventLogin = "login"
-	// EventUser is teleport user name
+	// EventUser is siriusec user name
 	EventUser = "user"
 	// EventProtocol specifies protocol that was captured
 	EventProtocol = "proto"
@@ -195,7 +195,7 @@ const (
 	AccessRequestUpdateEvent = "access_request.update"
 	// AccessRequestReviewEvent is emitted when a review is applied to a request.
 	AccessRequestReviewEvent = "access_request.review"
-	// AccessRequestDelegator is used by teleport plugins to indicate the identity
+	// AccessRequestDelegator is used by siriusec plugins to indicate the identity
 	// which caused them to update state.
 	AccessRequestDelegator = "delegator"
 	// AccessRequestState is the state of a request.
@@ -431,7 +431,7 @@ type ServerMetadataGetter interface {
 	// GetServerNamespace returns event server namespace
 	GetServerNamespace() string
 
-	// GetClusterName returns the originating teleport cluster name
+	// GetClusterName returns the originating siriusec cluster name
 	GetClusterName() string
 }
 
@@ -458,7 +458,7 @@ type SessionMetadataSetter interface {
 	// SetSessionID sets event session ID
 	SetSessionID(string)
 
-	// SetClusterName sets teleport cluster name
+	// SetClusterName sets siriusec cluster name
 	SetClusterName(string)
 }
 

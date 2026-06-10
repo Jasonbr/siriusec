@@ -20,7 +20,7 @@ import (
 	"context"
 	"crypto/x509"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib"
@@ -165,7 +165,7 @@ func authServerIsProxy(servers []utils.NetAddr) bool {
 		return false
 	}
 	port := servers[0].Port(0)
-	return port == defaults.HTTPListenPort || port == teleport.StandardHTTPSPort
+	return port == defaults.HTTPListenPort || port == siriusec.StandardHTTPSPort
 }
 
 // registerThroughProxy is used to register through the proxy server.

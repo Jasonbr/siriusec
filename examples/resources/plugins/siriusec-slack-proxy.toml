@@ -1,0 +1,14 @@
+# example slack plugin configuration TOML file
+
+[siriusec]
+addr = "siriusec.example.com:443"           # Siriusec Auth Server GRPC API address
+identity = "/var/lib/siriusec-plugin/access-plugin-slack.pem"
+
+[slack]
+token = "xoxb-11xx"             # Slack Bot OAuth token
+# Optional Slack Rooms
+recipients = ["team","devops"]
+
+[log]
+output = "stderr" # Logger output. Could be "stdout", "stderr" or "/var/lib/siriusec/slack.log"
+severity = "INFO" # Logger severity. Could be "INFO", "ERROR", "DEBUG" or "WARN".

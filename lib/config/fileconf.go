@@ -21,17 +21,17 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/types"
 	apiutils "github.com/siriusec/siriusec/api/utils"
@@ -56,8 +56,8 @@ var validCASigAlgos = []string{
 	ssh.SigAlgoRSASHA2512,
 }
 
-// FileConfig structre represents the teleport configuration stored in a config file
-// in YAML format (usually /etc/teleport.yaml)
+// FileConfig structre represents the siriusec configuration stored in a config file
+// in YAML format (usually /etc/siriusec.yaml)
 //
 // Use config.ReadFromFile() to read the parsed FileConfig from a YAML file.
 type FileConfig struct {
@@ -100,10 +100,16 @@ func ReadFromString(configString string) (*FileConfig, error) {
 // ReadConfig reads Siriusec configuration from reader in YAML format
 func ReadConfig(reader io.Reader) (*FileConfig, error) {
 	// read & parse YAML config:
-	bytes, err := ioutil.ReadAll(reader)
+	bytes, err := io.ReadAll(io.LimitReader(reader, defaults.MaxHTTPRequestSize))
 	if err != nil {
 		return nil, trace.Wrap(err, "failed reading Siriusec configuration")
 	}
+
+	// Support both "siriusec:" and "teleport:" as the top-level YAML key.
+	// The struct tag uses yaml:"teleport" for backward compatibility, so we
+	// normalize "siriusec:" → "teleport:" before unmarshaling.
+	bytes = normalizeTopLevelKey(bytes)
+
 	var fc FileConfig
 
 	if err := yaml.UnmarshalStrict(bytes, &fc); err != nil {
@@ -114,6 +120,20 @@ func ReadConfig(reader io.Reader) (*FileConfig, error) {
 		return nil, trace.BadParameter("failed to parse Siriusec configuration: %v", err)
 	}
 	return &fc, nil
+}
+
+// normalizeTopLevelKey replaces a top-level "siriusec:" YAML key with "teleport:"
+// so the FileConfig struct tag (yaml:"teleport,omitempty") can parse both formats.
+func normalizeTopLevelKey(data []byte) []byte {
+	// Match "siriusec:" at the start of a line with only whitespace before it,
+	// ensuring it's a top-level mapping key (not nested).
+	return regexp.MustCompile(`(?m)^(\s*)siriusec:`).ReplaceAllFunc(data, func(match []byte) []byte {
+		prefix := regexp.MustCompile(`^(\s*)siriusec:`).FindSubmatch(match)
+		if len(prefix) < 2 {
+			return match
+		}
+		return append(prefix[1], []byte("teleport:")...)
+	})
 }
 
 // SampleFlags specifies standalone configuration parameters
@@ -178,8 +198,8 @@ func MakeSampleFileConfig(flags SampleFlags) (fc *FileConfig, err error) {
 		p.ACME.Email = flags.ACMEEmail
 		// ACME uses TLS-ALPN-01 challenge that requires port 443
 		// https://letsencrypt.org/docs/challenge-types/#tls-alpn-01
-		p.PublicAddr = apiutils.Strings{net.JoinHostPort(flags.ClusterName, fmt.Sprintf("%d", teleport.StandardHTTPSPort))}
-		p.WebAddr = net.JoinHostPort(defaults.BindIP, fmt.Sprintf("%d", teleport.StandardHTTPSPort))
+		p.PublicAddr = apiutils.Strings{net.JoinHostPort(flags.ClusterName, fmt.Sprintf("%d", siriusec.StandardHTTPSPort))}
+		p.WebAddr = net.JoinHostPort(defaults.BindIP, fmt.Sprintf("%d", siriusec.StandardHTTPSPort))
 	}
 
 	fc = &FileConfig{
@@ -268,7 +288,7 @@ type LegacyLog struct {
 	Format []string `yaml:"format,omitempty"`
 }
 
-// Log configures teleport logging
+// Log configures siriusec logging
 type Log struct {
 	// Output defines where logs go. It can be one of the following: "stderr", "stdout" or
 	// a path to a log file
@@ -313,7 +333,7 @@ func (l *Log) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-// Global is 'teleport' (global) section of the config file
+// Global is 'siriusec' (global) section of the config file
 type Global struct {
 	NodeName    string           `yaml:"nodename,omitempty"`
 	DataDir     string           `yaml:"data_dir,omitempty"`
@@ -388,7 +408,7 @@ func (c *CachePolicy) Parse() (*service.CachePolicy, error) {
 	return &out, nil
 }
 
-// Service is a common configuration of a teleport service
+// Service is a common configuration of a siriusec service
 type Service struct {
 	defaultEnabled bool
 	EnabledFlag    string `yaml:"enabled,omitempty"`
@@ -489,7 +509,7 @@ type Auth struct {
 	SessionControlTimeout types.Duration `yaml:"session_control_timeout,omitempty"`
 
 	// KubeconfigFile is an optional path to kubeconfig file,
-	// if specified, teleport will use API server address and
+	// if specified, siriusec will use API server address and
 	// trusted certificate authority information from it
 	KubeconfigFile string `yaml:"kubeconfig_file,omitempty"`
 
@@ -598,7 +618,7 @@ func (t StaticToken) Parse() (*types.ProvisionTokenV1, error) {
 		return nil, trace.BadParameter("invalid static token spec: %q", t)
 	}
 
-	roles, err := types.ParseTeleportRoles(parts[0])
+	roles, err := types.ParseSiriusecRoles(parts[0])
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -615,7 +635,7 @@ func (t StaticToken) Parse() (*types.ProvisionTokenV1, error) {
 	}, nil
 }
 
-// AuthenticationConfig describes the auth_service/authentication section of teleport.yaml
+// AuthenticationConfig describes the auth_service/authentication section of siriusec.yaml
 type AuthenticationConfig struct {
 	Type              string                     `yaml:"type"`
 	SecondFactor      constants.SecondFactorType `yaml:"second_factor,omitempty"`
@@ -672,7 +692,7 @@ func (u *UniversalSecondFactor) Parse() (types.U2F, error) {
 		}
 
 		// Try reading as a file and parsing that.
-		data, err := ioutil.ReadFile(ca)
+		data, err := os.ReadFile(ca)
 		if err != nil {
 			return res, trace.BadParameter("device_attestation_cas value %q is not a valid x509 certificate (%v) and can't be read as a file (%v)", ca, parseErr, err)
 		}
@@ -1024,7 +1044,7 @@ type KubeProxy struct {
 	// PublicAddr is a publicly advertised address of the kubernetes proxy
 	PublicAddr apiutils.Strings `yaml:"public_addr,omitempty"`
 	// KubeconfigFile is an optional path to kubeconfig file,
-	// if specified, teleport will use API server address and
+	// if specified, siriusec will use API server address and
 	// trusted certificate authority information from it
 	KubeconfigFile string `yaml:"kubeconfig_file,omitempty"`
 	// ClusterName is the name of a kubernetes cluster this proxy is running
@@ -1039,7 +1059,7 @@ type Kube struct {
 	// PublicAddr is a publicly advertised address of the kubernetes service
 	PublicAddr apiutils.Strings `yaml:"public_addr,omitempty"`
 	// KubeconfigFile is an optional path to kubeconfig file,
-	// if specified, teleport will use API server address and
+	// if specified, siriusec will use API server address and
 	// trusted certificate authority information from it
 	KubeconfigFile string `yaml:"kubeconfig_file,omitempty"`
 	// KubeClusterName is the name of a kubernetes cluster this service is
@@ -1079,13 +1099,13 @@ func (t *ReverseTunnel) ConvertAndValidate() (types.ReverseTunnel, error) {
 }
 
 // ClaimMapping is OIDC claim mapping that maps
-// claim name to teleport roles
+// claim name to siriusec roles
 type ClaimMapping struct {
 	// Claim is OIDC claim name
 	Claim string `yaml:"claim"`
 	// Value is claim value to match
 	Value string `yaml:"value"`
-	// Roles is a list of teleport roles to match
+	// Roles is a list of siriusec roles to match
 	Roles []string `yaml:"roles,omitempty"`
 }
 

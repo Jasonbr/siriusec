@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/x509/pkix"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -97,11 +96,11 @@ func (a *AuthCommand) Initialize(app *kingpin.Application, config *service.Confi
 		Default(fmt.Sprintf("%v", apidefaults.CertDuration)).
 		DurationVar(&a.genTTL)
 	a.authSign.Flag("compat", "OpenSSH compatibility flag").StringVar(&a.compatibility)
-	a.authSign.Flag("proxy", `Address of the teleport proxy. When --format is set to "kubernetes", this address will be set as cluster address in the generated kubeconfig file`).StringVar(&a.proxyAddr)
+	a.authSign.Flag("proxy", `Address of the siriusec proxy. When --format is set to "kubernetes", this address will be set as cluster address in the generated kubeconfig file`).StringVar(&a.proxyAddr)
 	a.authSign.Flag("overwrite", "Whether to overwrite existing destination files. When not set, user will be prompted before overwriting any existing file.").BoolVar(&a.signOverwrite)
-	// --kube-cluster was an unfortunately chosen flag name, before teleport
+	// --kube-cluster was an unfortunately chosen flag name, before siriusec
 	// supported kubernetes_service and registered kubernetes clusters that are
-	// not trusted teleport clusters.
+	// not trusted siriusec clusters.
 	// It's kept as an alias for --leaf-cluster for backwards-compatibility,
 	// but hidden.
 	a.authSign.Flag("kube-cluster", `Leaf cluster to generate identity file for when --format is set to "kubernetes"`).Hidden().StringVar(&a.leafCluster)
@@ -254,18 +253,18 @@ func (a *AuthCommand) ExportAuthorities(client auth.ClientI) error {
 
 // GenerateKeys generates a new keypair
 func (a *AuthCommand) GenerateKeys() error {
-	keygen := native.New(context.TODO(), native.PrecomputeKeys(0))
+	keygen := native.New(context.Background(), native.PrecomputeKeys(0))
 	defer keygen.Close()
 	privBytes, pubBytes, err := keygen.GenerateKeyPair("")
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	err = ioutil.WriteFile(a.genPubPath, pubBytes, 0600)
+	err = os.WriteFile(a.genPubPath, pubBytes, 0600)
 	if err != nil {
 		return trace.Wrap(err)
 	}
 
-	err = ioutil.WriteFile(a.genPrivPath, privBytes, 0600)
+	err = os.WriteFile(a.genPrivPath, privBytes, 0600)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -401,7 +400,7 @@ func (a *AuthCommand) generateDatabaseKeysForKey(clusterAPI auth.ClientI, key *c
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	resp, err := clusterAPI.GenerateDatabaseCert(context.TODO(),
+	resp, err := clusterAPI.GenerateDatabaseCert(context.Background(),
 		&proto.DatabaseCertRequest{
 			CSR: csr,
 			// Important to include server name as SAN since CommonName has
@@ -509,7 +508,7 @@ func (a *AuthCommand) generateUserKeys(clusterAPI auth.ClientI) error {
 	}
 
 	// Request signed certs from `auth` server.
-	certs, err := clusterAPI.GenerateUserCerts(context.TODO(), proto.UserCertsRequest{
+	certs, err := clusterAPI.GenerateUserCerts(context.Background(), proto.UserCertsRequest{
 		PublicKey:         key.Pub,
 		Username:          a.genUser,
 		Expires:           time.Now().UTC().Add(a.genTTL),
@@ -590,7 +589,7 @@ func (a *AuthCommand) checkKubeCluster(clusterAPI auth.ClientI) error {
 		return nil
 	}
 
-	a.kubeCluster, err = kubeutils.CheckOrSetKubeCluster(context.TODO(), clusterAPI, a.kubeCluster, a.leafCluster)
+	a.kubeCluster, err = kubeutils.CheckOrSetKubeCluster(context.Background(), clusterAPI, a.kubeCluster, a.leafCluster)
 	if err != nil && !trace.IsNotFound(err) {
 		return trace.Wrap(err)
 	}

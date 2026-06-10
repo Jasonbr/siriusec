@@ -58,7 +58,7 @@ func (c *StatusCommand) TryRun(cmd string, client auth.ClientI) (match bool, err
 
 // Status is called to execute "status" CLI command.
 func (c *StatusCommand) Status(client auth.ClientI) error {
-	pingRsp, err := client.Ping(context.TODO())
+	pingRsp, err := client.Ping(context.Background())
 	if err != nil {
 		return trace.Wrap(err)
 	}

@@ -155,7 +155,7 @@ type keyLookup struct {
 const (
 	// hashKey is actually the name of the partition. This backend
 	// places all objects in the same DynamoDB partition
-	hashKey = "teleport"
+	hashKey = "siriusec"
 
 	// obsolete schema key. if a table contains "Key" column it means
 	// such table needs to be migrated
@@ -181,7 +181,7 @@ const (
 
 	// keyPrefix is a prefix that is added to every dynamodb key
 	// for backwards compatibility
-	keyPrefix = "teleport"
+	keyPrefix = "siriusec"
 )
 
 // GetName is a part of backend API and it returns DynamoDB backend type
@@ -774,13 +774,13 @@ const (
 	modeUpdate
 )
 
-// prependPrefix adds leading 'teleport/' to the key for backwards compatibility
+// prependPrefix adds leading 'siriusec/' to the key for backwards compatibility
 // with previous implementation of DynamoDB backend
 func prependPrefix(key []byte) string {
 	return keyPrefix + string(key)
 }
 
-// trimPrefix removes leading 'teleport' from the key
+// trimPrefix removes leading 'siriusec' from the key
 func trimPrefix(key string) []byte {
 	return []byte(strings.TrimPrefix(key, keyPrefix))
 }

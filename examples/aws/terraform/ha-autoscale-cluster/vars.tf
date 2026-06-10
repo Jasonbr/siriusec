@@ -9,13 +9,13 @@ variable "vpc_cidr" {
   default = "172.31.0.0/16"
 }
 
-// Teleport cluster name to set up
+// Siriusec cluster name to set up
 variable "cluster_name" {
   type = string
 }
 
-// Teleport UID is a UID for teleport user provisioned on the hosts
-variable "teleport_uid" {
+// Siriusec UID is a UID for siriusec user provisioned on the hosts
+variable "siriusec_uid" {
   type    = string
   default = "1007"
 }
@@ -32,7 +32,7 @@ variable "proxy_instance_type" {
   default = "m4.large"
 }
 
-// Instance types used for teleport nodes auto scale groups
+// Instance types used for siriusec nodes auto scale groups
 variable "node_instance_type" {
   type    = string
   default = "t2.medium"
@@ -55,7 +55,7 @@ variable "route53_zone" {
   type = string
 }
 
-// Domain name to use for Teleport proxies,
+// Domain name to use for Siriusec proxies,
 // e.g. proxy.example.com
 variable "route53_domain" {
   type = string
@@ -77,7 +77,7 @@ variable "kms_alias_name" {
   default = "alias/aws/ssm"
 }
 
-// path to teleport enterprise/pro license file
+// path to siriusec enterprise/pro license file
 variable "license_path" {
   type    = string
   default = ""
@@ -147,13 +147,13 @@ variable "use_acm" {
   default = "false"
 }
 
-// Optional domain name to use for Teleport proxy NLB alias
+// Optional domain name to use for Siriusec proxy NLB alias
 // Only applied when using ACM, it will do nothing when ACM is disabled
 // When using ACM we have one ALB (for port 443 with TLS termination) and one NLB
 // (for all other traffic - 3023/3024/3026 etc)
 // As this NLB is at a different address, we add an alias record in Route 53 so that
 // it can be used by applications which connect to it directly (like kubectl) rather
-// than discovering the NLB's address through the Teleport API (like tsh does)
+// than discovering the NLB's address through the Siriusec API (like tsh does)
 variable "route53_domain_acm_nlb_alias" {
   type = string
   default = ""

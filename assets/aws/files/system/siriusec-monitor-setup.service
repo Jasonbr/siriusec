@@ -1,0 +1,14 @@
+[Unit]
+Description=Siriusec Monitor Setup Service
+After=network.target cloud-final.service siriusec-generate-config.service
+ConditionPathExists=/etc/siriusec.d/role.monitor
+
+[Service]
+User=root
+Group=adm
+Type=oneshot
+RuntimeDirectory=siriusec
+ExecStart=/usr/local/bin/siriusec-monitor-setup
+
+[Install]
+WantedBy=multi-user.target

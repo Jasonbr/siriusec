@@ -33,8 +33,8 @@ import (
 type Server interface {
 	// Resource provides common resource headers
 	Resource
-	// GetSiriusecVersion returns the teleport version the server is running on
-	GetTeleportVersion() string
+	// GetSiriusecVersion returns the siriusec version the server is running on
+	GetSiriusecVersion() string
 	// GetAddr return server address
 	GetAddr() string
 	// GetHostname returns server hostname
@@ -115,8 +115,8 @@ func (s *ServerV2) GetVersion() string {
 	return s.Version
 }
 
-// GetSiriusecVersion returns the teleport version the server is running on
-func (s *ServerV2) GetTeleportVersion() string {
+// GetSiriusecVersion returns the siriusec version the server is running on
+func (s *ServerV2) GetSiriusecVersion() string {
 	return s.Spec.Version
 }
 

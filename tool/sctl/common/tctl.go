@@ -23,7 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apiclient "github.com/siriusec/siriusec/api/client"
 	"github.com/siriusec/siriusec/api/client/webclient"
 	"github.com/siriusec/siriusec/api/types"
@@ -85,7 +85,7 @@ func Run(commands []CLICommand) {
 	// app is the command line parser
 	app := utils.InitCLIParser("tctl", GlobalHelpString)
 
-	// cfg (teleport auth server configuration) is going to be shared by all
+	// cfg (siriusec auth server configuration) is going to be shared by all
 	// commands
 	cfg := service.MakeDefaultConfig()
 
@@ -153,7 +153,7 @@ func Run(commands []CLICommand) {
 
 	client, err := connectToAuthService(ctx, cfg, clientConfig)
 	if err != nil {
-		utils.Consolef(os.Stderr, log.WithField(trace.Component, teleport.ComponentClient), teleport.ComponentClient,
+		utils.Consolef(os.Stderr, log.WithField(trace.Component, siriusec.ComponentClient), siriusec.ComponentClient,
 			"Cannot connect to the auth server: %v.\nIs the auth server running on %q?",
 			err, cfg.AuthServers[0].Addr)
 		os.Exit(1)
@@ -356,7 +356,7 @@ func applyConfig(ccf *GlobalCLIFlags, cfg *service.Config) (*AuthServiceClientCo
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
-		identity, err := auth.ReadLocalIdentity(filepath.Join(cfg.DataDir, teleport.ComponentProcess), auth.IdentityID{Role: types.RoleAdmin, HostUUID: cfg.HostUUID})
+		identity, err := auth.ReadLocalIdentity(filepath.Join(cfg.DataDir, siriusec.ComponentProcess), auth.IdentityID{Role: types.RoleAdmin, HostUUID: cfg.HostUUID})
 		if err != nil {
 			// The "admin" identity is not present? This means the tctl is running
 			// NOT on the auth server

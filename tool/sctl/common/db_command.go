@@ -21,7 +21,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/lib/auth"
 	"github.com/siriusec/siriusec/lib/service"
@@ -64,17 +64,17 @@ func (c *DBCommand) TryRun(cmd string, client auth.ClientI) (match bool, err err
 // ListDatabases prints the list of database proxies that have recently sent
 // heartbeats to the cluster.
 func (c *DBCommand) ListDatabases(client auth.ClientI) error {
-	servers, err := client.GetDatabaseServers(context.TODO(), apidefaults.Namespace)
+	servers, err := client.GetDatabaseServers(context.Background(), apidefaults.Namespace)
 	if err != nil {
 		return trace.Wrap(err)
 	}
 	coll := &dbCollection{servers: servers}
 	switch c.format {
-	case teleport.Text:
+	case siriusec.Text:
 		err = coll.writeText(os.Stdout)
-	case teleport.JSON:
+	case siriusec.JSON:
 		err = coll.writeJSON(os.Stdout)
-	case teleport.YAML:
+	case siriusec.YAML:
 		err = coll.writeYAML(os.Stdout)
 	default:
 		return trace.BadParameter("unknown format %q", c.format)
@@ -90,7 +90,7 @@ This token will expire in {{.minutes}} minutes.
 
 Fill out and run this command on a node to start proxying the database:
 
-> teleport db start \
+> siriusec db start \
    --token={{.token}} \{{range .ca_pins}}
    --ca-pin={{.}} \{{end}}
    --auth-server={{.auth_server}} \
@@ -103,7 +103,7 @@ Please note:
   - This invitation token will expire in {{.minutes}} minutes.
   - Database address {{.db_uri}} must be reachable from the new database
     service.
-  - When proxying an on-prem database, it must be configured with Teleport CA
+  - When proxying an on-prem database, it must be configured with Siriusec CA
     and key pair issued by "tctl auth sign --format=db" command.
   - When proxying an AWS RDS or Aurora database, the region must also be
     specified with --db-aws-region flag.

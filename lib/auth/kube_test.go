@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/tlsca"
 	"github.com/gravitational/trace"
 	"gopkg.in/check.v1"
@@ -67,7 +67,7 @@ func (s *AuthSuite) TestProcessKubeCSR(c *check.C) {
 
 	wantUserID := userID
 	// Auth server should overwrite the Usage field and enforce UsageKubeOnly.
-	wantUserID.Usage = []string{teleport.UsageKubeOnly}
+	wantUserID.Usage = []string{siriusec.UsageKubeOnly}
 	c.Assert(*gotUserID, check.DeepEquals, wantUserID)
 }
 

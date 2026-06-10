@@ -193,7 +193,7 @@ func (r *ResourceSuite) TestGithubConnectorResource(c *check.C) {
 			Display:      "Github",
 			TeamsToLogins: []types.TeamMapping{
 				{
-					Organization: "gravitational",
+					Organization: "siriusec",
 					Team:         "admins",
 					Logins:       []string{"admin"},
 					KubeGroups:   []string{"system:masters"},

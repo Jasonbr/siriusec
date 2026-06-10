@@ -1,0 +1,14 @@
+[Unit]
+Description=Siriusec SSH Service FIPS 
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+EnvironmentFile=-/etc/default/siriusec
+ExecStart=/usr/local/bin/siriusec start --fips --pid-file=/run/siriusec.pid
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/siriusec.pid
+
+[Install]
+WantedBy=multi-user.target

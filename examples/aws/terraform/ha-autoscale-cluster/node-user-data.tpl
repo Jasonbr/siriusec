@@ -1,9 +1,9 @@
 #!/bin/bash
-cat >/etc/teleport.d/conf <<EOF
-TELEPORT_ROLE=node
+cat >/etc/siriusec.d/conf <<EOF
+SIRIUSEC_ROLE=node
 EC2_REGION=${region}
-TELEPORT_AUTH_SERVER_LB=${auth_server_addr}
-TELEPORT_CLUSTER_NAME=${cluster_name}
-TELEPORT_INFLUXDB_ADDRESS=${influxdb_addr}
+SIRIUSEC_AUTH_SERVER_LB=${auth_server_addr}
+SIRIUSEC_CLUSTER_NAME=${cluster_name}
+SIRIUSEC_INFLUXDB_ADDRESS=${influxdb_addr}
 USE_ACM=${use_acm}
 EOF

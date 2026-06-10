@@ -45,7 +45,7 @@ import (
 	"golang.org/x/net/websocket"
 	"golang.org/x/text/encoding/unicode"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/webclient"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -117,14 +117,14 @@ type WebSuite struct {
 
 var _ = Suite(&WebSuite{})
 
-// TestMain will re-execute Teleport to run a command if "exec" is passed to
+// TestMain will re-execute Siriusec to run a command if "exec" is passed to
 // it as an argument. Otherwise it will run tests as normal.
 func TestMain(m *testing.M) {
 	utils.InitLoggerForTests()
 	// If the test is re-executing itself, execute the command that comes over
 	// the pipe.
 	if len(os.Args) == 2 &&
-		(os.Args[1] == teleport.ExecSubCommand || os.Args[1] == teleport.ForwardSubCommand) {
+		(os.Args[1] == siriusec.ExecSubCommand || os.Args[1] == siriusec.ForwardSubCommand) {
 		srv.RunAndExit(os.Args[1])
 		return
 	}
@@ -135,7 +135,7 @@ func TestMain(m *testing.M) {
 }
 
 func (s *WebSuite) SetUpSuite(c *C) {
-	os.Unsetenv(teleport.DebugEnvVar)
+	os.Unsetenv(siriusec.DebugEnvVar)
 
 	var err error
 	s.mockU2F, err = mocku2f.Create()
@@ -172,7 +172,7 @@ func (s *WebSuite) SetUpTest(c *C) {
 		Spec: types.ServerSpecV2{
 			Addr:     s.server.TLS.Listener.Addr().String(),
 			Hostname: "localhost",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 		},
 	})
 	c.Assert(err, IsNil)
@@ -199,7 +199,7 @@ func (s *WebSuite) SetUpTest(c *C) {
 
 	nodeLockWatcher, err := services.NewLockWatcher(s.ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentNode,
+			Component: siriusec.ComponentNode,
 			Client:    nodeClient,
 		},
 	})
@@ -248,7 +248,7 @@ func (s *WebSuite) SetUpTest(c *C) {
 
 	proxyLockWatcher, err := services.NewLockWatcher(s.ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentProxy,
+			Component: siriusec.ComponentProxy,
 			Client:    s.proxyClient,
 		},
 	})
@@ -294,7 +294,7 @@ func (s *WebSuite) SetUpTest(c *C) {
 
 	// Expired sessions are purged immediately
 	var sessionLingeringThreshold time.Duration = 0
-	fs, err := NewDebugFileSystem("../../webassets/teleport")
+	fs, err := NewDebugFileSystem("../../webassets/siriusec")
 	c.Assert(err, IsNil)
 	handler, err := NewHandler(Config{
 		Proxy:                           revTunServer,
@@ -1653,7 +1653,7 @@ func (s *WebSuite) TestEmptyMotD(c *C) {
 // TestMotD ensures that a response is returned by both /webapi/ping and /webapi/motd
 // and that that the response bodies contain their MOTD components
 func (s *WebSuite) TestMotD(c *C) {
-	const motd = "Hello. I'm a Teleport cluster!"
+	const motd = "Hello. I'm a Siriusec cluster!"
 
 	ctx := context.Background()
 	wc := s.client()
@@ -1979,11 +1979,11 @@ func (s *WebSuite) TestGetClusterDetails(c *C) {
 	cluster, err := ui.GetClusterDetails(s.ctx, site)
 	c.Assert(err, IsNil)
 	c.Assert(cluster.Name, Equals, s.server.ClusterName())
-	c.Assert(cluster.ProxyVersion, Equals, teleport.Version)
+	c.Assert(cluster.ProxyVersion, Equals, siriusec.Version)
 	c.Assert(cluster.PublicURL, Equals, fmt.Sprintf("%v:%v", s.server.ClusterName(), defaults.HTTPListenPort))
-	c.Assert(cluster.Status, Equals, teleport.RemoteClusterStatusOnline)
+	c.Assert(cluster.Status, Equals, siriusec.RemoteClusterStatusOnline)
 	c.Assert(cluster.LastConnected, NotNil)
-	c.Assert(cluster.AuthVersion, Equals, teleport.Version)
+	c.Assert(cluster.AuthVersion, Equals, siriusec.Version)
 
 	nodes, err := s.proxyClient.GetNodes(s.ctx, apidefaults.Namespace)
 	c.Assert(err, IsNil)
@@ -2111,7 +2111,7 @@ func TestApplicationAccessDisabled(t *testing.T) {
 			Name:      uuid.New(),
 		},
 		Spec: types.ServerSpecV2{
-			Version: teleport.Version,
+			Version: siriusec.Version,
 			Apps: []*types.App{
 				{
 					Name:       "panel",
@@ -2131,7 +2131,7 @@ func TestApplicationAccessDisabled(t *testing.T) {
 		ClusterName: "localhost",
 	})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "this Teleport cluster is not licensed for application access")
+	require.Contains(t, err.Error(), "this Siriusec cluster is not licensed for application access")
 }
 
 // TestCreateAppSession verifies that an existing session to the Web UI can
@@ -2148,7 +2148,7 @@ func (s *WebSuite) TestCreateAppSession(c *C) {
 			Name:      uuid.New(),
 		},
 		Spec: types.ServerSpecV2{
-			Version: teleport.Version,
+			Version: siriusec.Version,
 			Apps: []*types.App{
 				{
 					Name:       "panel",
@@ -2696,7 +2696,7 @@ func newWebPack(t *testing.T, numProxies int) *webPack {
 		Spec: types.ServerSpecV2{
 			Addr:     server.TLS.Listener.Addr().String(),
 			Hostname: "localhost",
-			Version:  teleport.Version,
+			Version:  siriusec.Version,
 		},
 	})
 	require.NoError(t, err)
@@ -2725,7 +2725,7 @@ func newWebPack(t *testing.T, numProxies int) *webPack {
 
 	nodeLockWatcher, err := services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentNode,
+			Component: siriusec.ComponentNode,
 			Client:    nodeClient,
 		},
 	})
@@ -2804,7 +2804,7 @@ func createProxy(ctx context.Context, t *testing.T, proxyID string, node *regula
 
 	proxyLockWatcher, err := services.NewLockWatcher(ctx, services.LockWatcherConfig{
 		ResourceWatcherConfig: services.ResourceWatcherConfig{
-			Component: teleport.ComponentProxy,
+			Component: siriusec.ComponentProxy,
 			Client:    client,
 		},
 	})
@@ -2849,7 +2849,7 @@ func createProxy(ctx context.Context, t *testing.T, proxyID string, node *regula
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, proxyServer.Close()) })
 
-	fs, err := NewDebugFileSystem("../../webassets/teleport")
+	fs, err := NewDebugFileSystem("../../webassets/siriusec")
 	require.NoError(t, err)
 	handler, err := NewHandler(Config{
 		Proxy:            revTunServer,

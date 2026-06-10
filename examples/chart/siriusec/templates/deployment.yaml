@@ -1,0 +1,230 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "siriusec.fullname" . }}
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
+spec:
+{{- if not .Values.config.highAvailability }}
+  replicas: {{ .Values.replicaCount }}
+{{- else }}
+  replicas: {{ .Values.config.proxyCount }}
+{{- end }}
+  strategy:
+    type: {{ .Values.strategy }}
+  selector:
+    matchLabels:
+      app: {{ template "siriusec.name" . }}
+{{- if .Values.config.highAvailability }}
+      auth: noauth
+{{- end}}
+  template:
+    metadata:
+      labels:
+        app: {{ template "siriusec.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+{{- if .Values.config.highAvailability }}
+        auth: noauth
+{{- end}}
+      annotations:
+        checksum/config: {{ toYaml .Values.config | sha256sum }}
+{{- if .Values.annotations }}
+{{ toYaml .Values.annotations | indent 8 }}
+{{- end }}
+    spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      containers:
+      - name: {{ .Chart.Name }}
+{{- if .Values.license.enabled }}
+        image: "{{ .Values.image.enterpriseRepository }}:{{ .Values.image.tag }}"
+{{- else }}
+        image: "{{ .Values.image.communityRepository }}:{{ .Values.image.tag }}"
+{{- end }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+{{- if .Values.extraArgs }}
+{{ toYaml .Values.extraArgs | indent 8 }}
+{{- end }}
+{{- if not .Values.proxy.tls.enabled }}
+        - --insecure-no-tls
+{{- end }}
+        env:
+{{- range $key, $value := .Values.extraVars }}
+        - name: {{ $key }}
+          value: {{ $value }}
+{{- end }}
+        # See https://siriusec.com/docs/docs/admin-guide/#ports
+        ports:
+{{- range $key, $port := .Values.ports }}
+{{ if or ( not $.Values.config.highAvailability) (and ($.Values.config.highAvailability) (not (eq $key "authssh") ) ) }}
+        - name: {{ $key }}
+{{ toYaml $port | indent 10 }}
+{{ end }}
+{{- end }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        volumeMounts:
+{{- if .Values.proxy.tls.usetlssecret }}
+        - mountPath: /var/lib/certs
+          name: {{ template "siriusec.fullname" . }}-tls-web
+          readOnly: true
+{{- end }}
+        - mountPath: /etc/siriusec
+          name: {{ template "siriusec.fullname" . }}-config
+          readOnly: true
+{{- if .Values.license.enabled }}
+        - mountPath: {{ .Values.license.mountPath }}
+          name: {{ template "siriusec.fullname" . }}-license
+          readOnly: true
+{{- end }}
+        - mountPath: /var/lib/siriusec
+          name: {{ template "siriusec.fullname" . }}-storage
+{{- if .Values.extraVolumeMounts }}
+{{ toYaml .Values.extraVolumeMounts | indent 8 }}
+{{- end }}
+      volumes:
+{{- if .Values.proxy.tls.usetlssecret }}
+      - name: {{ template "siriusec.fullname" . }}-tls-web
+        secret:
+          secretName: {{ .Values.proxy.tls.secretName }}
+{{- end }}
+{{- if .Values.license.enabled }}
+      - name: {{ template "siriusec.fullname" . }}-license
+        secret:
+          secretName: {{ .Values.license.secretName }}
+{{- end }}
+      - name: {{ template "siriusec.fullname" . }}-config
+        configMap:
+          name: {{ template "siriusec.fullname" . }}
+      - name: {{ template "siriusec.fullname" . }}-storage
+        {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (printf "%s-%s" (include "siriusec.fullname" .) "storage") }}
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+{{- if .Values.extraVolumes }}
+{{ toYaml .Values.extraVolumes | indent 6 }}
+{{- end }}
+{{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.image.pullSecrets | indent 6 }}
+{{- end }}
+{{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+{{- end }}
+{{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 6 }}
+{{- end }}
+      serviceAccountName: {{ template "siriusec.serviceAccountName" . }}
+{{- if .Values.config.highAvailability }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "siriusec.fullname" . }}auth
+  labels:
+{{ include "siriusec.labels" . | indent 4 }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
+
+spec:
+  replicas: {{ .Values.config.authCount }}
+  strategy:
+    type: {{ .Values.strategy }}
+  selector:
+    matchLabels:
+      app: {{ template "siriusec.name" . }}
+      auth: hasauth
+  template:
+    metadata:
+      labels:
+        app: {{ template "siriusec.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+        auth: hasauth
+      annotations:
+        checksum/config: {{ toYaml .Values.config.auth_public_address | sha256sum }}
+{{- if .Values.annotations }}
+{{ toYaml .Values.annotations | indent 8 }}
+{{- end }}
+    spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      containers:
+      - name: {{ .Chart.Name }}
+{{- if .Values.license.enabled }}
+        image: "{{ .Values.image.enterpriseRepository }}:{{ .Values.image.tag }}"
+{{- else }}
+        image: "{{ .Values.image.communityRepository }}:{{ .Values.image.tag }}"
+{{- end }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+{{- if .Values.config.authExtraArgs }}
+{{ toYaml .Values.config.authExtraArgs | indent 8 }}
+{{- end }}
+        env:
+{{- range $key, $value := .Values.extraVars }}
+        - name: {{ $key }}
+          value: {{ $value }}
+{{- end }}
+        # See https://siriusec.com/docs/docs/admin-guide/#ports
+        ports:
+        - name: authssh
+          containerPort: {{ .Values.ports.authssh.containerPort }}
+{{- include "siriusec.diagPort" . | indent 8 }}
+        resources:
+{{ toYaml .Values.authresources | indent 10 }}
+        volumeMounts:
+        - mountPath: /etc/siriusec
+          name: {{ template "siriusec.fullname" . }}-config
+          readOnly: true
+{{- if .Values.license.enabled }}
+        - mountPath: {{ .Values.license.mountPath }}
+          name: {{ template "siriusec.fullname" . }}-license
+          readOnly: true
+{{- end }}
+        - mountPath: /var/lib/siriusec
+          name: {{ template "siriusec.fullname" . }}-storage
+{{- if .Values.extraVolumeMounts }}
+{{ toYaml .Values.extraVolumeMounts | indent 8 }}
+{{- end }}
+{{- if .Values.extraAuthVolumeMounts }}
+{{ toYaml .Values.extraAuthVolumeMounts | indent 8 }}
+{{- end }}
+      volumes:
+{{- if .Values.license.enabled }}
+      - name: {{ template "siriusec.fullname" . }}-license
+        secret:
+          secretName: {{ .Values.license.secretName }}
+{{- end }}
+      - name: {{ template "siriusec.fullname" . }}-config
+        configMap:
+          name: {{ template "siriusec.fullname" . }}auth
+      - name: {{ template "siriusec.fullname" . }}-storage
+{{- if .Values.extraVolumes }}
+{{ toYaml .Values.extraVolumes | indent 6 }}
+{{- end }}
+{{- if .Values.extraAuthVolumes }}
+{{ toYaml .Values.extraAuthVolumes | indent 6 }}
+{{- end }}
+{{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.image.pullSecrets | indent 6 }}
+{{- end }}
+{{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+{{- end }}
+{{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 6 }}
+{{- end }}
+      serviceAccountName: {{ template "siriusec.serviceAccountName" . }}
+{{- end }}

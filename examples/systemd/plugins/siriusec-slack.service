@@ -1,0 +1,13 @@
+[Unit]
+Description=Siriusec Slack Plugin
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/siriusec-slack start --config=/etc/siriusec-slack.toml
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/siriusec-slack.pid
+
+[Install]
+WantedBy=multi-user.target

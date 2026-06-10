@@ -22,7 +22,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
 	"github.com/siriusec/siriusec/lib/auth"
@@ -160,14 +160,14 @@ func New(ctx context.Context, config Config) (*Server, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	server := &Server{
 		cfg:           config,
-		log:           logrus.WithField(trace.Component, teleport.ComponentDatabase),
+		log:           logrus.WithField(trace.Component, siriusec.ComponentDatabase),
 		closeContext:  ctx,
 		closeFunc:     cancel,
 		dynamicLabels: make(map[string]*labels.Dynamic),
 		heartbeats:    make(map[string]*srv.Heartbeat),
 		middleware: &auth.Middleware{
 			AccessPoint:   config.AccessPoint,
-			AcceptedUsage: []string{teleport.UsageDatabaseOnly},
+			AcceptedUsage: []string{siriusec.UsageDatabaseOnly},
 		},
 	}
 
@@ -220,7 +220,7 @@ func (s *Server) initDynamicLabels(ctx context.Context, server types.DatabaseSer
 func (s *Server) initHeartbeat(ctx context.Context, server types.DatabaseServer) error {
 	heartbeat, err := srv.NewHeartbeat(srv.HeartbeatConfig{
 		Context:         s.closeContext,
-		Component:       teleport.ComponentDatabase,
+		Component:       siriusec.ComponentDatabase,
 		Mode:            srv.HeartbeatModeDB,
 		Announcer:       s.cfg.AccessPoint,
 		GetServerInfo:   s.getServerInfoFunc(server),
@@ -374,7 +374,7 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) error {
 		clock:        s.cfg.Clock,
 		serverID:     sessionCtx.Server.GetHostID(),
 		authClient:   s.cfg.AuthClient,
-		teleportUser: sessionCtx.Identity.Username,
+		siriusecUser: sessionCtx.Identity.Username,
 		emitter:      s.cfg.AuthClient,
 		log:          s.log,
 		ctx:          s.closeContext,

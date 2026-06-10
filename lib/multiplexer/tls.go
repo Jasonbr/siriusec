@@ -24,7 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/lib/defaults"
 
 	"github.com/gravitational/trace"
@@ -68,10 +68,10 @@ func NewTLSListener(cfg TLSListenerConfig) (*TLSListener, error) {
 	if err := cfg.CheckAndSetDefaults(); err != nil {
 		return nil, trace.Wrap(err)
 	}
-	context, cancel := context.WithCancel(context.TODO())
+	context, cancel := context.WithCancel(context.Background())
 	return &TLSListener{
 		log: log.WithFields(log.Fields{
-			trace.Component: teleport.Component("mxtls", cfg.ID),
+			trace.Component: siriusec.Component("mxtls", cfg.ID),
 		}),
 		cfg:           cfg,
 		http2Listener: newListener(context, cfg.Listener.Addr()),
@@ -170,7 +170,7 @@ func (l *TLSListener) detectAndForward(conn *tls.Conn) {
 			conn.Close()
 			return
 		}
-	case teleport.HTTPNextProtoTLS, "":
+	case siriusec.HTTPNextProtoTLS, "":
 		select {
 		case l.httpListener.connC <- conn:
 		case <-l.context.Done():

@@ -17,7 +17,7 @@ limitations under the License.
 package web
 
 import (
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	"github.com/gravitational/trace"
 
@@ -30,5 +30,5 @@ var log = newPackageLogger()
 // configured for the package
 func newPackageLogger(subcomponents ...string) logrus.FieldLogger {
 	return logrus.WithField(trace.Component,
-		teleport.Component(append([]string{teleport.ComponentWeb}, subcomponents...)...))
+		siriusec.Component(append([]string{siriusec.ComponentWeb}, subcomponents...)...))
 }

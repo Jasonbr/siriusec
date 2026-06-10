@@ -1,4 +1,4 @@
-# First stage downloads pre-compiled Teleport archive from get.siriusec.com
+# First stage downloads pre-compiled Siriusec archive from get.siriusec.com
 # and extracts binaries from the archive.
 FROM alpine AS download
 
@@ -34,7 +34,7 @@ COPY --from=download /tmp/build/siriusec /usr/local/bin/siriusec
 COPY --from=download /tmp/build/tctl /usr/local/bin/tctl
 COPY --from=download /tmp/build/tsh /usr/local/bin/tsh
 
-# Run Teleport inside the image with a default config file location.
+# Run Siriusec inside the image with a default config file location.
 ENTRYPOINT ["/usr/bin/dumb-init", "siriusec", "start", "-c", "/etc/siriusec/siriusec.yaml"]
 
 # Optional third stage which is only run when building the FIPS image.

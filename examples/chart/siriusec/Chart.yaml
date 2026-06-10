@@ -1,0 +1,9 @@
+name: siriusec
+apiVersion: v2
+version: 0.0.13
+appVersion: "6"
+description: "[This chart is deprecated, use siriusec-cluster instead]"
+icon: https://siriusec.com/images/logos/logo-siriusec-square.svg
+keywords:
+  - Siriusec
+deprecated: true

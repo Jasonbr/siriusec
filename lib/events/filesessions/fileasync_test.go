@@ -458,7 +458,7 @@ func (u *uploaderPack) Close(t *testing.T) {
 }
 
 func newUploaderPack(t *testing.T, wrapStreamer wrapStreamerFn) uploaderPack {
-	scanDir, err := ioutil.TempDir("", "teleport-streams")
+	scanDir, err := ioutil.TempDir("", "siriusec-streams")
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -518,7 +518,7 @@ func runResume(t *testing.T, testCase resumeTestCase) {
 
 	test := testCase.newTest(streamer)
 
-	scanDir, err := ioutil.TempDir("", "teleport-streams")
+	scanDir, err := ioutil.TempDir("", "siriusec-streams")
 	require.Nil(t, err)
 	defer os.RemoveAll(scanDir)
 

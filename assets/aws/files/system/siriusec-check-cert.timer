@@ -1,0 +1,8 @@
+[Unit]
+Description=Timer checking if siriusec cert has been updated
+ConditionPathExists=/etc/siriusec.d/use-letsencrypt
+
+[Timer]
+OnBootSec=20min
+OnCalendar=hourly
+Persistent=true

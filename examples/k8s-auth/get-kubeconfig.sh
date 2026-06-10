@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2020 Gravitational, Inc.
+# Copyright 2020-2024 Siriusec, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,25 +16,25 @@
 
 # This script creates a new k8s Service Account and generates a kubeconfig with
 # its credentials. This Service Account has all the necessary permissions for
-# Teleport. The kubeconfig is written in the current directory.
+# Siriusec. The kubeconfig is written in the current directory.
 #
 # You must configure your local kubectl to point to the right k8s cluster and
 # have admin-level access.
 #
-# Note: all of the k8s resources are created in namespace "teleport". If you
-# delete any of these objects, Teleport will stop working.
+# Note: all of the k8s resources are created in namespace "siriusec". If you
+# delete any of these objects, Siriusec will stop working.
 #
-# You can override the default namespace "teleport" using the
-# TELEPORT_NAMESPACE environment variable.
-# You can override the default service account name "teleport-sa" using the
-# TELEPORT_SA_NAME environment variable.
+# You can override the default namespace "siriusec" using the
+# SIRIUSEC_NAMESPACE environment variable.
+# You can override the default service account name "siriusec-sa" using the
+# SIRIUSEC_SA_NAME environment variable.
 
 set -eu -o pipefail
 
 # Allow passing in common name and username in environment. If not provided,
 # use default.
-TELEPORT_SA=${TELEPORT_SA_NAME:-teleport-sa}
-NAMESPACE=${TELEPORT_NAMESPACE:-teleport}
+SIRIUSEC_SA=${SIRIUSEC_SA_NAME:-siriusec-sa}
+NAMESPACE=${SIRIUSEC_NAMESPACE:-siriusec}
 
 # Set OS specific values.
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
@@ -58,13 +58,13 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ${TELEPORT_SA}
+  name: ${SIRIUSEC_SA}
   namespace: ${NAMESPACE}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: teleport-role
+  name: siriusec-role
 rules:
 - apiGroups:
   - ""
@@ -91,18 +91,18 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: teleport-crb
+  name: siriusec-crb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: teleport-role
+  name: siriusec-role
 subjects:
 - kind: ServiceAccount
-  name: ${TELEPORT_SA}
+  name: ${SIRIUSEC_SA}
   namespace: ${NAMESPACE}
 EOF
 # Get the service account token and CA cert.
-SA_SECRET_NAME=$(kubectl get -n ${NAMESPACE} sa/${TELEPORT_SA} -o "jsonpath={.secrets[0]..name}")
+SA_SECRET_NAME=$(kubectl get -n ${NAMESPACE} sa/${SIRIUSEC_SA} -o "jsonpath={.secrets[0]..name}")
 # Note: service account token is stored base64-encoded in the secret but must
 # be plaintext in kubeconfig.
 SA_TOKEN=$(kubectl get -n ${NAMESPACE} secrets/${SA_SECRET_NAME} -o "jsonpath={.data['token']}" | base64 ${BASE64_DECODE_FLAG})
@@ -124,13 +124,13 @@ clusters:
 contexts:
 - context:
     cluster: ${CURRENT_CLUSTER}
-    user: ${CURRENT_CLUSTER}-${TELEPORT_SA}
+    user: ${CURRENT_CLUSTER}-${SIRIUSEC_SA}
   name: ${CURRENT_CONTEXT}
 current-context: ${CURRENT_CONTEXT}
 kind: Config
 preferences: {}
 users:
-- name: ${CURRENT_CLUSTER}-${TELEPORT_SA}
+- name: ${CURRENT_CLUSTER}-${SIRIUSEC_SA}
   user:
     token: ${SA_TOKEN}
 EOF
@@ -138,11 +138,11 @@ EOF
 echo "---
 Done!
 
-Copy the generated kubeconfig file to your Teleport Proxy server, and set the
-kubeconfig_file parameter in your teleport.yaml config file to point to this
+Copy the generated kubeconfig file to your Siriusec Proxy server, and set the
+kubeconfig_file parameter in your siriusec.yaml config file to point to this
 kubeconfig file.
 
 If you need access to multiple kubernetes clusters, you can generate additional
 kubeconfig files using this script and then merge them using merge-kubeconfigs.sh.
 
-Note: Kubernetes RBAC rules for Teleport were created, you won't need to create them manually."
+Note: Kubernetes RBAC rules for Siriusec were created, you won't need to create them manually."

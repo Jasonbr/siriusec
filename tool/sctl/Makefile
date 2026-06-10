@@ -15,4 +15,4 @@ sloccount:
 	 find . -name "*.go" -print0 | xargs -0 wc -l
 
 install: clean
-	go install github.com/gravitational/teleport/tctl
+	go install github.com/gravitational/siriusec/tctl

@@ -4,7 +4,7 @@ resource "aws_route_table" "auth" {
   vpc_id = local.vpc_id
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -26,7 +26,7 @@ resource "aws_subnet" "auth" {
   cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index)
   availability_zone = element(local.azs, count.index)
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -42,7 +42,7 @@ resource "aws_security_group" "auth" {
   name   = "${var.cluster_name}-auth"
   vpc_id = local.vpc_id
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -82,7 +82,7 @@ resource "aws_security_group_rule" "auth_ingress_allow_cidr_traffic" {
 }
 
 // Allow traffic from nodes to auth servers.
-// Teleport nodes heartbeat presence to auth server.
+// Siriusec nodes heartbeat presence to auth server.
 // This rule uses CIDR as opposed to security group ip becasue traffic coming from NLB
 // (network load balancer from Amazon)
 // is not marked with security group ID and rules using the security group ids do not work,
@@ -125,7 +125,7 @@ resource "aws_lb" "auth" {
   idle_timeout       = 3600
 
   tags = {
-    TeleportCluster = var.cluster_name
+    SiriusecCluster = var.cluster_name
   }
 }
 
@@ -133,7 +133,7 @@ resource "aws_lb" "auth" {
 resource "aws_lb_target_group" "auth" {
   name     = "${var.cluster_name}-auth"
   port     = 3025
-  vpc_id   = aws_vpc.teleport.id
+  vpc_id   = aws_vpc.siriusec.id
   protocol = "TCP"
 }
 

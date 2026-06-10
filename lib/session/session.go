@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package session is used for bookeeping of SSH interactive sessions
-// that happen in realtime across the teleport cluster
+// that happen in realtime across the siriusec cluster
 package session
 
 import (
@@ -80,7 +80,7 @@ func NewLegacyID() ID {
 }
 
 // Session is an interactive collaboration session that represents one
-// or many SSH session started by teleport user
+// or many SSH session started by siriusec user
 type Session struct {
 	// ID is a unique session identifier
 	ID ID `json:"id"`
@@ -127,7 +127,7 @@ type Party struct {
 	ID ID `json:"id"`
 	// Site is a remote address?
 	RemoteAddr string `json:"remote_addr"`
-	// User is a teleport user using this session
+	// User is a siriusec user using this session
 	User string `json:"user"`
 	// ServerID is an address of the server
 	ServerID string `json:"server_id"`
@@ -279,7 +279,7 @@ func activeKey(namespace string, key string) []byte {
 func (s *server) GetSessions(namespace string) ([]Session, error) {
 	prefix := activePrefix(namespace)
 
-	result, err := s.bk.GetRange(context.TODO(), prefix, backend.RangeEnd(prefix), MaxSessionSliceLength)
+	result, err := s.bk.GetRange(context.Background(), prefix, backend.RangeEnd(prefix), MaxSessionSliceLength)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -320,7 +320,7 @@ func (slice Sessions) Len() int {
 // GetSession returns the session by it's id. Returns NotFound if a session
 // is not found
 func (s *server) GetSession(namespace string, id ID) (*Session, error) {
-	item, err := s.bk.Get(context.TODO(), activeKey(namespace, string(id)))
+	item, err := s.bk.Get(context.Background(), activeKey(namespace, string(id)))
 	if err != nil {
 		if trace.IsNotFound(err) {
 			return nil, trace.NotFound("session(%v, %v) is not found", namespace, id)
@@ -367,7 +367,7 @@ func (s *server) CreateSession(sess Session) error {
 		Value:   data,
 		Expires: s.clock.Now().UTC().Add(s.activeSessionTTL),
 	}
-	_, err = s.bk.Create(context.TODO(), item)
+	_, err = s.bk.Create(context.Background(), item)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -389,7 +389,7 @@ func (s *server) UpdateSession(req UpdateRequest) error {
 
 	// Try several times, then give up
 	for i := 0; i < sessionUpdateAttempts; i++ {
-		item, err := s.bk.Get(context.TODO(), key)
+		item, err := s.bk.Get(context.Background(), key)
 		if err != nil {
 			return trace.Wrap(err)
 		}
@@ -415,7 +415,7 @@ func (s *server) UpdateSession(req UpdateRequest) error {
 			Expires: s.clock.Now().UTC().Add(s.activeSessionTTL),
 		}
 
-		_, err = s.bk.CompareAndSwap(context.TODO(), *item, newItem)
+		_, err = s.bk.CompareAndSwap(context.Background(), *item, newItem)
 		if err != nil {
 			if trace.IsCompareFailed(err) || trace.IsConnectionProblem(err) {
 				s.clock.Sleep(sessionUpdateRetryPeriod)
@@ -438,7 +438,7 @@ func (s *server) DeleteSession(namespace string, id ID) error {
 		return trace.Wrap(err)
 	}
 
-	err = s.bk.Delete(context.TODO(), activeKey(namespace, string(id)))
+	err = s.bk.Delete(context.Background(), activeKey(namespace, string(id)))
 	if err != nil {
 		return trace.Wrap(err)
 	}

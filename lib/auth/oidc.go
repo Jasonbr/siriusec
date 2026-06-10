@@ -17,14 +17,14 @@ limitations under the License.
 package auth
 
 import (
+	"os"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -178,7 +178,8 @@ func (a *Server) DeleteOIDCConnector(ctx context.Context, connectorName string) 
 }
 
 func (a *Server) CreateOIDCAuthRequest(req services.OIDCAuthRequest) (*services.OIDCAuthRequest, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	connector, err := a.Identity.GetOIDCConnector(ctx, req.ConnectorID, true)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -200,7 +201,7 @@ func (a *Server) CreateOIDCAuthRequest(req services.OIDCAuthRequest) (*services.
 	req.StateToken = stateToken
 
 	// online indicates that this login should only work online
-	req.RedirectURL = oauthClient.AuthCodeURL(req.StateToken, teleport.OIDCAccessTypeOnline, connector.GetPrompt())
+	req.RedirectURL = oauthClient.AuthCodeURL(req.StateToken, siriusec.OIDCAccessTypeOnline, connector.GetPrompt())
 
 	// if the connector has an Authentication Context Class Reference (ACR) value set,
 	// update redirect url and add it as a query value.
@@ -276,7 +277,8 @@ type oidcAuthResponse struct {
 }
 
 func (a *Server) validateOIDCAuthCallback(q url.Values) (*oidcAuthResponse, error) {
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 	if error := q.Get("error"); error != "" {
 		return nil, trace.OAuth2(oauth2.ErrorInvalidRequest, error, q)
 	}
@@ -373,7 +375,7 @@ func (a *Server) validateOIDCAuthCallback(q url.Values) (*oidcAuthResponse, erro
 
 	// If the request is coming from a browser, create a web session.
 	if req.CreateWebSession {
-		session, err := a.createWebSession(context.TODO(), types.NewWebSessionRequest{
+		session, err := a.createWebSession(context.Background(), types.NewWebSessionRequest{
 			User:       user.GetName(),
 			Roles:      user.GetRoles(),
 			Traits:     user.GetTraits(),
@@ -413,7 +415,7 @@ func (a *Server) validateOIDCAuthCallback(q url.Values) (*oidcAuthResponse, erro
 // OIDCAuthResponse is returned when auth server validated callback parameters
 // returned from OIDC provider
 type OIDCAuthResponse struct {
-	// Username is authenticated teleport username
+	// Username is authenticated siriusec username
 	Username string `json:"username"`
 	// Identity contains validated OIDC identity
 	Identity types.ExternalIdentity `json:"identity"`
@@ -482,7 +484,7 @@ func (a *Server) createOIDCUser(p *createUserParams) (types.User, error) {
 				},
 			},
 			CreatedBy: types.CreatedBy{
-				User: types.UserRef{Name: teleport.UserSystem},
+				User: types.UserRef{Name: siriusec.UserSystem},
 				Time: a.clock.Now().UTC(),
 				Connector: &types.ConnectorRef{
 					Type:     constants.OIDC,
@@ -499,7 +501,8 @@ func (a *Server) createOIDCUser(p *createUserParams) (types.User, error) {
 		return nil, trace.Wrap(err)
 	}
 
-	ctx := context.TODO()
+	ctx, ctxCancel := context.WithTimeout(context.Background(), defaults.AuthRPCTimeout)
+	defer ctxCancel()
 
 	// Overwrite exisiting user if it was created from an external identity provider.
 	if existingUser != nil {
@@ -628,7 +631,7 @@ func (a *Server) newGsuiteClient(config *jwt.Config, issuerURL string, userEmail
 		return nil, trace.Wrap(err)
 	}
 
-	u, err := url.Parse(teleport.GSuiteGroupsEndpoint)
+	u, err := url.Parse(siriusec.GSuiteGroupsEndpoint)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -723,7 +726,7 @@ func (g *gsuiteClient) fetchGroupsPage(pageToken string) (*gsuiteGroups, error) 
 	}
 	defer resp.Body.Close()
 
-	bytes, err := utils.ReadAtMost(resp.Body, teleport.MaxHTTPResponseSize)
+	bytes, err := utils.ReadAtMost(resp.Body, siriusec.MaxHTTPResponseSize)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -834,7 +837,7 @@ func (a *Server) getClaims(oidcClient *oidc.Client, connector types.OIDCConnecto
 	// assume that this is a non-GWorkspace OIDC provider using the same
 	// issuer URL as Google Workspace (e.g.
 	// https://developers.google.com/identity/protocols/oauth2/openid-connect).
-	if connector.GetIssuerURL() == teleport.GSuiteIssuerURL && (connector.GetGoogleServiceAccountURI() != "" || connector.GetGoogleServiceAccount() != "") {
+	if connector.GetIssuerURL() == siriusec.GSuiteIssuerURL && (connector.GetGoogleServiceAccountURI() != "" || connector.GetGoogleServiceAccount() != "") {
 		email, _, err := claims.StringClaim("email")
 		if err != nil {
 			return nil, trace.Wrap(err)
@@ -850,7 +853,7 @@ func (a *Server) getClaims(oidcClient *oidc.Client, connector types.OIDCConnecto
 			if err != nil {
 				return nil, trace.BadParameter("failed to parse google_service_account_uri: %v", err)
 			}
-			jsonCredentials, err = ioutil.ReadFile(uri.Path)
+			jsonCredentials, err = os.ReadFile(uri.Path)
 			if err != nil {
 				return nil, trace.Wrap(err)
 			}
@@ -860,7 +863,7 @@ func (a *Server) getClaims(oidcClient *oidc.Client, connector types.OIDCConnecto
 			jsonCredentials = []byte(connector.GetGoogleServiceAccount())
 		}
 
-		config, err := google.JWTConfigFromJSON(jsonCredentials, teleport.GSuiteGroupsScope)
+		config, err := google.JWTConfigFromJSON(jsonCredentials, siriusec.GSuiteGroupsScope)
 		if err != nil {
 			return nil, trace.BadParameter("unable to parse google service account from %v: %v", credentialLoadingMethod, err)
 		}
@@ -877,7 +880,7 @@ func (a *Server) getClaims(oidcClient *oidc.Client, connector types.OIDCConnecto
 		//
 		// "Note: Only users with access to the Admin APIs can access the Admin SDK Directory API, therefore your service account needs to impersonate one of those users to access the Admin SDK Directory API. Additionally, the user must have logged in at least once and accepted the G Suite Terms of Service."
 		//
-		domain, exists, err := userInfoClaims.StringClaim(teleport.GSuiteDomainClaim)
+		domain, exists, err := userInfoClaims.StringClaim(siriusec.GSuiteDomainClaim)
 		if err != nil || !exists {
 			return nil, trace.BadParameter("hd is the required claim for Google Workspace")
 		}
@@ -916,7 +919,7 @@ func (a *Server) getOAuthClient(oidcClient *oidc.Client, connector types.OIDCCon
 	// will throw an error of multiple client credentials.  Even if you set in Ping
 	// to use Client Secret Post it will return to use client secret basic.
 	// Issue https://github.com/siriusec/siriusec/issues/8374
-	if connector.GetProvider() == teleport.Ping {
+	if connector.GetProvider() == siriusec.Ping {
 		oac.SetAuthMethod(oauth2.AuthMethodClientSecretPost)
 	}
 	return oac, err
@@ -927,7 +930,7 @@ func (a *Server) getOAuthClient(oidcClient *oidc.Client, connector types.OIDCCon
 // forms of validation.
 func (a *Server) validateACRValues(acrValue string, identityProvider string, claims jose.Claims) error {
 	switch identityProvider {
-	case teleport.NetIQ:
+	case siriusec.NetIQ:
 		log.Debugf("Validating OIDC ACR values with '%v' rules.", identityProvider)
 
 		tokenAcr, ok := claims["acr"]

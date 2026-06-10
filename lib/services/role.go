@@ -26,7 +26,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/constants"
 	"github.com/siriusec/siriusec/api/defaults"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
@@ -115,7 +115,7 @@ func RoleNameForCertAuthority(name string) string {
 // is not explicitly assigned (this role applies to all users in OSS version).
 func NewAdminRole() types.Role {
 	adminRules := getExtendedAdminUserRules(modules.GetModules().Features())
-	role, _ := types.NewRole(teleport.AdminRoleName, types.RoleSpecV4{
+	role, _ := types.NewRole(siriusec.AdminRoleName, types.RoleSpecV4{
 		Options: types.RoleOptions{
 			CertificateFormat: constants.CertificateFormatStandard,
 			MaxSessionTTL:     types.NewDuration(defaults.MaxCertDuration),
@@ -129,21 +129,21 @@ func NewAdminRole() types.Role {
 			AppLabels:        types.Labels{types.Wildcard: []string{types.Wildcard}},
 			KubernetesLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
 			DatabaseLabels:   types.Labels{types.Wildcard: []string{types.Wildcard}},
-			DatabaseNames:    []string{teleport.TraitInternalDBNamesVariable},
-			DatabaseUsers:    []string{teleport.TraitInternalDBUsersVariable},
+			DatabaseNames:    []string{siriusec.TraitInternalDBNamesVariable},
+			DatabaseUsers:    []string{siriusec.TraitInternalDBUsersVariable},
 			Rules:            adminRules,
 		},
 	})
-	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable, teleport.Root})
-	role.SetKubeUsers(Allow, []string{teleport.TraitInternalKubeUsersVariable})
-	role.SetKubeGroups(Allow, []string{teleport.TraitInternalKubeGroupsVariable})
+	role.SetLogins(Allow, []string{siriusec.TraitInternalLoginsVariable, siriusec.Root})
+	role.SetKubeUsers(Allow, []string{siriusec.TraitInternalKubeUsersVariable})
+	role.SetKubeGroups(Allow, []string{siriusec.TraitInternalKubeGroupsVariable})
 	return role
 }
 
 // NewEditorRole creates a preset editor role that can modify cluster
 // configuration but cannot delete core resources.
 func NewEditorRole() types.Role {
-	role, _ := types.NewRole(teleport.PresetEditorRoleName, types.RoleSpecV4{
+	role, _ := types.NewRole(siriusec.PresetEditorRoleName, types.RoleSpecV4{
 		Options: types.RoleOptions{
 			CertificateFormat: constants.CertificateFormatStandard,
 			MaxSessionTTL:     types.NewDuration(defaults.MaxCertDuration),
@@ -170,16 +170,16 @@ func NewEditorRole() types.Role {
 			},
 		},
 	})
-	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable, teleport.Root})
-	role.SetKubeUsers(Allow, []string{teleport.TraitInternalKubeUsersVariable})
-	role.SetKubeGroups(Allow, []string{teleport.TraitInternalKubeGroupsVariable})
+	role.SetLogins(Allow, []string{siriusec.TraitInternalLoginsVariable, siriusec.Root})
+	role.SetKubeUsers(Allow, []string{siriusec.TraitInternalKubeUsersVariable})
+	role.SetKubeGroups(Allow, []string{siriusec.TraitInternalKubeGroupsVariable})
 	return role
 }
 
 // NewViewerRole creates a preset viewer role with read-only access to
 // cluster resources.
 func NewViewerRole() types.Role {
-	role, _ := types.NewRole(teleport.PresetViewerRoleName, types.RoleSpecV4{
+	role, _ := types.NewRole(siriusec.PresetViewerRoleName, types.RoleSpecV4{
 		Options: types.RoleOptions{
 			CertificateFormat: constants.CertificateFormatStandard,
 			MaxSessionTTL:     types.NewDuration(defaults.MaxCertDuration),
@@ -206,9 +206,9 @@ func NewViewerRole() types.Role {
 			},
 		},
 	})
-	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable, teleport.Root})
-	role.SetKubeUsers(Allow, []string{teleport.TraitInternalKubeUsersVariable})
-	role.SetKubeGroups(Allow, []string{teleport.TraitInternalKubeGroupsVariable})
+	role.SetLogins(Allow, []string{siriusec.TraitInternalLoginsVariable, siriusec.Root})
+	role.SetKubeUsers(Allow, []string{siriusec.TraitInternalKubeUsersVariable})
+	role.SetKubeGroups(Allow, []string{siriusec.TraitInternalKubeGroupsVariable})
 	return role
 }
 
@@ -278,9 +278,9 @@ func NewDowngradedOSSAdminRole() types.Role {
 		Kind:    types.KindRole,
 		Version: types.V3,
 		Metadata: types.Metadata{
-			Name:      teleport.AdminRoleName,
+			Name:      siriusec.AdminRoleName,
 			Namespace: defaults.Namespace,
-			Labels:    map[string]string{teleport.OSSMigratedV6: types.True},
+			Labels:    map[string]string{siriusec.OSSMigratedV6: types.True},
 		},
 		Spec: types.RoleSpecV4{
 			Options: types.RoleOptions{
@@ -296,8 +296,8 @@ func NewDowngradedOSSAdminRole() types.Role {
 				AppLabels:        types.Labels{types.Wildcard: []string{types.Wildcard}},
 				KubernetesLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
 				DatabaseLabels:   types.Labels{types.Wildcard: []string{types.Wildcard}},
-				DatabaseNames:    []string{teleport.TraitInternalDBNamesVariable},
-				DatabaseUsers:    []string{teleport.TraitInternalDBUsersVariable},
+				DatabaseNames:    []string{siriusec.TraitInternalDBNamesVariable},
+				DatabaseUsers:    []string{siriusec.TraitInternalDBUsersVariable},
 				Rules: []types.Rule{
 					types.NewRule(types.KindEvent, RO()),
 					types.NewRule(types.KindSession, RO()),
@@ -305,9 +305,9 @@ func NewDowngradedOSSAdminRole() types.Role {
 			},
 		},
 	}
-	role.SetLogins(Allow, []string{teleport.TraitInternalLoginsVariable})
-	role.SetKubeUsers(Allow, []string{teleport.TraitInternalKubeUsersVariable})
-	role.SetKubeGroups(Allow, []string{teleport.TraitInternalKubeGroupsVariable})
+	role.SetLogins(Allow, []string{siriusec.TraitInternalLoginsVariable})
+	role.SetKubeUsers(Allow, []string{siriusec.TraitInternalKubeUsersVariable})
+	role.SetKubeGroups(Allow, []string{siriusec.TraitInternalKubeGroupsVariable})
 	return role
 }
 
@@ -327,8 +327,8 @@ func NewOSSGithubRole(logins []string, kubeUsers []string, kubeGroups []string) 
 			AppLabels:        types.Labels{types.Wildcard: []string{types.Wildcard}},
 			KubernetesLabels: types.Labels{types.Wildcard: []string{types.Wildcard}},
 			DatabaseLabels:   types.Labels{types.Wildcard: []string{types.Wildcard}},
-			DatabaseNames:    []string{teleport.TraitInternalDBNamesVariable},
-			DatabaseUsers:    []string{teleport.TraitInternalDBUsersVariable},
+			DatabaseNames:    []string{siriusec.TraitInternalDBNamesVariable},
+			DatabaseUsers:    []string{siriusec.TraitInternalDBUsersVariable},
 			Rules: []types.Rule{
 				types.NewRule(types.KindEvent, RO()),
 			},
@@ -640,9 +640,9 @@ func ApplyValueTraits(val string, traits map[string][]string) ([]string, error) 
 
 	// For internal traits, only internal.logins, internal.kubernetes_users and
 	// internal.kubernetes_groups are supported at the moment.
-	if variable.Namespace() == teleport.TraitInternalPrefix {
+	if variable.Namespace() == siriusec.TraitInternalPrefix {
 		switch variable.Name() {
-		case teleport.TraitLogins, teleport.TraitKubeGroups, teleport.TraitKubeUsers, teleport.TraitDBNames, teleport.TraitDBUsers:
+		case siriusec.TraitLogins, siriusec.TraitKubeGroups, siriusec.TraitKubeUsers, siriusec.TraitDBNames, siriusec.TraitDBUsers:
 		default:
 			return nil, trace.BadParameter("unsupported variable %q", variable.Name())
 		}
@@ -998,7 +998,7 @@ func FetchRoleList(roleNames []string, access RoleGetter, traits map[string][]st
 	var roles []types.Role
 
 	for _, roleName := range roleNames {
-		role, err := access.GetRole(context.TODO(), roleName)
+		role, err := access.GetRole(context.Background(), roleName)
 		if err != nil {
 			return nil, trace.Wrap(err)
 		}
@@ -1022,8 +1022,8 @@ func FetchRoles(roleNames []string, access RoleGetter, traits map[string][]strin
 // isFormatOld returns true if roles and traits were not found in the
 // *ssh.Certificate.
 func isFormatOld(cert *ssh.Certificate) bool {
-	_, hasRoles := cert.Extensions[teleport.CertExtensionTeleportRoles]
-	_, hasTraits := cert.Extensions[teleport.CertExtensionTeleportTraits]
+	_, hasRoles := cert.Extensions[siriusec.CertExtensionTeleportRoles]
+	_, hasTraits := cert.Extensions[siriusec.CertExtensionTeleportTraits]
 
 	if hasRoles || hasTraits {
 		return false
@@ -1042,7 +1042,7 @@ func missingIdentity(identity tlsca.Identity) bool {
 
 // ExtractRolesFromCert extracts roles from certificate metadata extensions.
 func ExtractRolesFromCert(cert *ssh.Certificate) ([]string, error) {
-	data, ok := cert.Extensions[teleport.CertExtensionTeleportRoles]
+	data, ok := cert.Extensions[siriusec.CertExtensionTeleportRoles]
 	if !ok {
 		return nil, trace.NotFound("no roles found")
 	}
@@ -1051,7 +1051,7 @@ func ExtractRolesFromCert(cert *ssh.Certificate) ([]string, error) {
 
 // ExtractTraitsFromCert extracts traits from the certificate extensions.
 func ExtractTraitsFromCert(cert *ssh.Certificate) (wrappers.Traits, error) {
-	rawTraits, ok := cert.Extensions[teleport.CertExtensionTeleportTraits]
+	rawTraits, ok := cert.Extensions[siriusec.CertExtensionTeleportTraits]
 	if !ok {
 		return nil, trace.NotFound("no traits found")
 	}
@@ -1381,7 +1381,7 @@ func (set RoleSet) CheckLoginDuration(ttl time.Duration) ([]string, error) {
 		// but ssh certificates must contain at least one valid principal.
 		// we add a single distinctive value which should be unique, and
 		// will never be a valid unix login (due to leading '-').
-		logins = []string{"-teleport-nologin-" + uuid.New()}
+		logins = []string{"-siriusec-nologin-" + uuid.New()}
 	}
 
 	if len(logins) == 0 {
@@ -1435,7 +1435,7 @@ func (set RoleSet) CheckAccessToRemoteCluster(rc types.RemoteCluster) error {
 	if usesLabels == false && len(rcLabels) == 0 {
 		if log.GetLevel() == log.DebugLevel {
 			log.WithFields(log.Fields{
-				trace.Component: teleport.ComponentRBAC,
+				trace.Component: siriusec.ComponentRBAC,
 			}).Debugf("Grant access to cluster %v - no role in %v uses cluster labels and the cluster is not labeled.",
 				rc.GetName(), set.RoleNames())
 		}
@@ -1453,7 +1453,7 @@ func (set RoleSet) CheckAccessToRemoteCluster(rc types.RemoteCluster) error {
 			// This condition avoids formatting calls on large scale.
 			if log.GetLevel() == log.DebugLevel {
 				log.WithFields(log.Fields{
-					trace.Component: teleport.ComponentRBAC,
+					trace.Component: siriusec.ComponentRBAC,
 				}).Debugf("Access to cluster %v denied, deny rule in %v matched; match(label=%v)",
 					rc.GetName(), role.GetName(), labelsMessage)
 			}
@@ -1465,7 +1465,7 @@ func (set RoleSet) CheckAccessToRemoteCluster(rc types.RemoteCluster) error {
 	for _, role := range set {
 		matchLabels, labelsMessage, err := MatchLabels(role.GetClusterLabels(Allow), rcLabels)
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Check access to role(%v) rc(%v, labels=%v) matchLabels=%v, msg=%v, err=%v allow=%v rcLabels=%v",
 			role.GetName(), rc.GetName(), rcLabels, matchLabels, labelsMessage, err, role.GetClusterLabels(Allow), rcLabels)
 		if err != nil {
@@ -1483,7 +1483,7 @@ func (set RoleSet) CheckAccessToRemoteCluster(rc types.RemoteCluster) error {
 
 	if log.GetLevel() == log.DebugLevel {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Access to cluster %v denied, no allow rule matched; %v", rc.GetName(), errs)
 	}
 	return trace.AccessDenied("access to cluster denied")
@@ -1511,7 +1511,7 @@ func (set RoleSet) hasPossibleLogins() bool {
 func (set RoleSet) CheckAccessToServer(login string, s types.Server, mfa AccessMFAParams) error {
 	if mfa.AlwaysRequired && !mfa.Verified {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Access to node %q denied, cluster requires per-session MFA", s.GetHostname())
 		return ErrSessionMFARequired
 	}
@@ -1529,7 +1529,7 @@ func (set RoleSet) CheckAccessToServer(login string, s types.Server, mfa AccessM
 		if matchNamespace && (matchLabels || matchLogin) {
 			if log.GetLevel() == log.DebugLevel {
 				log.WithFields(log.Fields{
-					trace.Component: teleport.ComponentRBAC,
+					trace.Component: siriusec.ComponentRBAC,
 				}).Debugf("Access to node %v denied, deny rule in %v matched; match(namespace=%v, label=%v, login=%v)",
 					s.GetHostname(), role.GetName(), namespaceMessage, labelsMessage, loginMessage)
 			}
@@ -1553,7 +1553,7 @@ func (set RoleSet) CheckAccessToServer(login string, s types.Server, mfa AccessM
 			}
 			if role.GetOptions().RequireSessionMFA {
 				log.WithFields(log.Fields{
-					trace.Component: teleport.ComponentRBAC,
+					trace.Component: siriusec.ComponentRBAC,
 				}).Debugf("Access to node %q denied, role %q requires per-session MFA; match(namespace=%v, label=%v, login=%v)",
 					s.GetHostname(), role.GetName(), namespaceMessage, labelsMessage, loginMessage)
 				return ErrSessionMFARequired
@@ -1576,7 +1576,7 @@ func (set RoleSet) CheckAccessToServer(login string, s types.Server, mfa AccessM
 
 	if log.GetLevel() == log.DebugLevel {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Access to node %v denied, no allow rule matched; %v", s.GetHostname(), errs)
 	}
 	return trace.AccessDenied("access to server denied")
@@ -1604,7 +1604,7 @@ func (m *AWSRoleARNMatcher) String() string {
 func (set RoleSet) CheckAccessToApp(namespace string, app *types.App, mfa AccessMFAParams, matchers ...RoleMatcher) error {
 	if mfa.AlwaysRequired && !mfa.Verified {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Access to app %q denied, cluster requires per-session MFA", app.Name)
 		return ErrSessionMFARequired
 	}
@@ -1625,7 +1625,7 @@ func (set RoleSet) CheckAccessToApp(namespace string, app *types.App, mfa Access
 		if matchNamespace && (matchLabels || matchMatchers) {
 			if log.GetLevel() == log.DebugLevel {
 				log.WithFields(log.Fields{
-					trace.Component: teleport.ComponentRBAC,
+					trace.Component: siriusec.ComponentRBAC,
 				}).Debugf("Access to app %v denied, deny rule in %v matched; match(namespace=%v, label=%v)",
 					app.Name, role.GetName(), namespaceMessage, labelsMessage)
 			}
@@ -1651,7 +1651,7 @@ func (set RoleSet) CheckAccessToApp(namespace string, app *types.App, mfa Access
 			}
 			if role.GetOptions().RequireSessionMFA {
 				log.WithFields(log.Fields{
-					trace.Component: teleport.ComponentRBAC,
+					trace.Component: siriusec.ComponentRBAC,
 				}).Debugf("Access to app %q denied, role %q requires per-session MFA; match(namespace=%v, label=%v)",
 					app.Name, role.GetName(), namespaceMessage, labelsMessage)
 				return ErrSessionMFARequired
@@ -1674,7 +1674,7 @@ func (set RoleSet) CheckAccessToApp(namespace string, app *types.App, mfa Access
 
 	if log.GetLevel() == log.DebugLevel {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Access to app %v denied, no allow rule matched; %v", app.Name, errs)
 	}
 	return trace.AccessDenied("access to app denied")
@@ -1686,7 +1686,7 @@ func (set RoleSet) CheckAccessToApp(namespace string, app *types.App, mfa Access
 func (set RoleSet) CheckAccessToKubernetes(namespace string, kube *types.KubernetesCluster, mfa AccessMFAParams) error {
 	if mfa.AlwaysRequired && !mfa.Verified {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Access to kubernetes cluster %q denied, cluster requires per-session MFA", kube.Name)
 		return ErrSessionMFARequired
 	}
@@ -1703,7 +1703,7 @@ func (set RoleSet) CheckAccessToKubernetes(namespace string, kube *types.Kuberne
 		if matchNamespace && matchLabels {
 			if log.GetLevel() == log.DebugLevel {
 				log.WithFields(log.Fields{
-					trace.Component: teleport.ComponentRBAC,
+					trace.Component: siriusec.ComponentRBAC,
 				}).Debugf("Access to kubernetes cluster %v denied, deny rule in %v matched; match(namespace=%v, label=%v)",
 					kube.Name, role.GetName(), namespaceMessage, labelsMessage)
 			}
@@ -1725,7 +1725,7 @@ func (set RoleSet) CheckAccessToKubernetes(namespace string, kube *types.Kuberne
 			}
 			if role.GetOptions().RequireSessionMFA {
 				log.WithFields(log.Fields{
-					trace.Component: teleport.ComponentRBAC,
+					trace.Component: siriusec.ComponentRBAC,
 				}).Debugf("Access to kubernetes cluster %q denied, role %q requires per-session MFA; match(namespace=%v, label=%v)",
 					kube.Name, role.GetName(), namespaceMessage, labelsMessage)
 				return ErrSessionMFARequired
@@ -1748,7 +1748,7 @@ func (set RoleSet) CheckAccessToKubernetes(namespace string, kube *types.Kuberne
 
 	if log.GetLevel() == log.DebugLevel {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Debugf("Access to kubernetes cluster %v denied, no allow rule matched; %v", kube.Name, errs)
 	}
 	return trace.AccessDenied("access to kubernetes cluster denied")
@@ -2002,7 +2002,7 @@ func (m *DatabaseNameMatcher) String() string {
 // The checker always checks the server namespace, other matchers are supplied
 // by the caller.
 func (set RoleSet) CheckAccessToDatabase(server types.DatabaseServer, mfa AccessMFAParams, matchers ...RoleMatcher) error {
-	log := log.WithField(trace.Component, teleport.ComponentRBAC)
+	log := log.WithField(trace.Component, siriusec.ComponentRBAC)
 	if mfa.AlwaysRequired && !mfa.Verified {
 		log.Debugf("Access to database %q denied, cluster requires per-session MFA", server.GetName())
 		return ErrSessionMFARequired
@@ -2154,7 +2154,7 @@ func (set RoleSet) EnhancedRecordingSet() map[string]bool {
 // most permissive has lowest value.
 func certificatePriority(s string) int {
 	switch s {
-	case teleport.CertificateFormatOldSSH:
+	case siriusec.CertificateFormatOldSSH:
 		return 0
 	case constants.CertificateFormatStandard:
 		return 1
@@ -2213,7 +2213,7 @@ func (set RoleSet) CheckAccessToRule(ctx RuleContext, namespace string, resource
 			if matched {
 				if !silent {
 					log.WithFields(log.Fields{
-						trace.Component: teleport.ComponentRBAC,
+						trace.Component: siriusec.ComponentRBAC,
 					}).Infof("Access to %v %v in namespace %v denied to %v: deny rule matched.",
 						verb, resource, namespace, role.GetName())
 				}
@@ -2238,7 +2238,7 @@ func (set RoleSet) CheckAccessToRule(ctx RuleContext, namespace string, resource
 
 	if !silent {
 		log.WithFields(log.Fields{
-			trace.Component: teleport.ComponentRBAC,
+			trace.Component: siriusec.ComponentRBAC,
 		}).Infof("Access to %v %v in namespace %v denied to %v: no allow rule matched.",
 			verb, resource, namespace, set)
 	}
@@ -2353,7 +2353,7 @@ func DowngradeRoleToV3(r *types.RoleV4) (*types.RoleV4, error) {
 		// V3 roles will set the default labels to wildcard allow if they are
 		// empty. To prevent this for roles which are created as V4 and
 		// downgraded, set a placeholder label
-		const labelKey = "__teleport_no_labels"
+		const labelKey = "__siriusec_no_labels"
 		labelVal := uuid.New()
 		if len(r.Spec.Allow.NodeLabels) == 0 {
 			downgraded.Spec.Allow.NodeLabels = types.Labels{labelKey: []string{labelVal}}

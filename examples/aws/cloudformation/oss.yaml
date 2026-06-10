@@ -41,7 +41,7 @@ Parameters:
 
   HostedZoneID:
     ConstraintDescription: ID of the hosted zone with Siriusec domain
-    Description: ID of the hosted zone of teleport domain
+    Description: ID of the hosted zone of siriusec domain
     Type: String
 
   # Any existing VPC used must have both DNS support and DNS hostnames enabled
@@ -97,7 +97,7 @@ Mappings:
     t2.xlarge: {Arch: HVM64}
 
   AWSRegionArch2AMI:
-    # All AMIs from AWS - gravitational-teleport-ami-oss-6.2.0
+    # All AMIs from AWS - siriusec-ami-oss-6.2.0
     eu-north-1: {HVM64: ami-0eef7480d85b07d78}
     ap-south-1: {HVM64 : ami-0d6449bf7fc103c8f}
     eu-west-1: {HVM64 : ami-02030ad502e2e822b}
@@ -243,38 +243,38 @@ Resources:
             #!/bin/bash -xe
 
             # Indicate that this ami is auth for all systemd units
-            echo "auth" >> /etc/teleport.d/role.auth
+            echo "auth" >> /etc/siriusec.d/role.auth
 
             # Set some instance specific environment variables configurations for systemd configuration file
-            cat >> /etc/teleport.d/conf <<EOF
+            cat >> /etc/siriusec.d/conf <<EOF
             EC2_REGION=${AWS::Region}
-            TELEPORT_AUTH_SERVER_LB=${LocalAuthServerLB}
-            TELEPORT_CLUSTER_NAME=${DomainName}
-            TELEPORT_DOMAIN_ADMIN_EMAIL=${DomainAdminEmail}
-            TELEPORT_DOMAIN_NAME=${DomainName}
-            TELEPORT_DYNAMO_TABLE_NAME=${LocalMainTableName}
-            TELEPORT_DYNAMO_EVENTS_TABLE_NAME=${LocalEventsTableName}
-            TELEPORT_LOCKS_TABLE_NAME=${LocalLocksTableName}
-            TELEPORT_S3_BUCKET=${LocalBucketName}
-            TELEPORT_ROLE=auth
-            TELEPORT_SSM_KEY_ARN=${LocalKeyARN}
+            SIRIUSEC_AUTH_SERVER_LB=${LocalAuthServerLB}
+            SIRIUSEC_CLUSTER_NAME=${DomainName}
+            SIRIUSEC_DOMAIN_ADMIN_EMAIL=${DomainAdminEmail}
+            SIRIUSEC_DOMAIN_NAME=${DomainName}
+            SIRIUSEC_DYNAMO_TABLE_NAME=${LocalMainTableName}
+            SIRIUSEC_DYNAMO_EVENTS_TABLE_NAME=${LocalEventsTableName}
+            SIRIUSEC_LOCKS_TABLE_NAME=${LocalLocksTableName}
+            SIRIUSEC_S3_BUCKET=${LocalBucketName}
+            SIRIUSEC_ROLE=auth
+            SIRIUSEC_SSM_KEY_ARN=${LocalKeyARN}
             EOF
 
             # Generate config and start proxy service
-            /usr/local/bin/teleport-generate-config
-            systemctl enable teleport-ssm-publish-tokens.service teleport-ssm-publish-tokens.timer teleport-get-cert.service teleport-get-cert.timer teleport-renew-cert.service teleport-renew-cert.timer
-            systemctl start --no-block teleport-auth teleport-ssm-publish-tokens.timer teleport-get-cert.timer teleport-renew-cert.timer
+            /usr/local/bin/siriusec-generate-config
+            systemctl enable siriusec-ssm-publish-tokens.service siriusec-ssm-publish-tokens.timer siriusec-get-cert.service siriusec-get-cert.timer siriusec-renew-cert.service siriusec-renew-cert.timer
+            systemctl start --no-block siriusec-auth siriusec-ssm-publish-tokens.timer siriusec-get-cert.timer siriusec-renew-cert.timer
 
             # Write out healthcheck script
-            cat >> /usr/local/bin/teleport-cfn-signal-done <<EOF
+            cat >> /usr/local/bin/siriusec-cfn-signal-done <<EOF
             #!/bin/bash
-            for i in {1..10}; do systemctl status teleport-auth && break || sleep 10; done
-            systemctl status teleport-auth
+            for i in {1..10}; do systemctl status siriusec-auth && break || sleep 10; done
+            systemctl status siriusec-auth
             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource AuthASG --region ${AWS::Region}
             EOF
 
             # Make healthcheck script executable
-            chmod +x /usr/local/bin/teleport-cfn-signal-done
+            chmod +x /usr/local/bin/siriusec-cfn-signal-done
 
             # Write out healthcheck systemd unit file
             cat >> /etc/systemd/system/cfn-signal-done.service <<EOF
@@ -286,7 +286,7 @@ Resources:
             User=root
             Group=adm
             Type=oneshot
-            ExecStart=/usr/local/bin/teleport-cfn-signal-done
+            ExecStart=/usr/local/bin/siriusec-cfn-signal-done
             EOF
 
             # Make systemd healthcheck unit run
@@ -450,35 +450,35 @@ Resources:
             #!/bin/bash -xe
 
             # Indicate that this ami is proxy for all systemd units
-            echo "proxy" >> /etc/teleport.d/role.proxy
+            echo "proxy" >> /etc/siriusec.d/role.proxy
 
             # Set some instance specific environment variables configurations for systemd configuration file
-            cat >> /etc/teleport.d/conf <<EOF
+            cat >> /etc/siriusec.d/conf <<EOF
             EC2_REGION=${AWS::Region}
-            TELEPORT_AUTH_SERVER_LB=${LocalAuthServerLB}
-            TELEPORT_CLUSTER_NAME=${DomainName}
-            TELEPORT_DOMAIN_NAME=${DomainName}
-            TELEPORT_PROXY_SERVER_LB=${LocalProxyServerLB}
-            TELEPORT_ROLE=proxy
-            TELEPORT_S3_BUCKET=${LocalBucketName}
-            TELEPORT_SSM_KEY_ARN=${LocalKeyARN}
+            SIRIUSEC_AUTH_SERVER_LB=${LocalAuthServerLB}
+            SIRIUSEC_CLUSTER_NAME=${DomainName}
+            SIRIUSEC_DOMAIN_NAME=${DomainName}
+            SIRIUSEC_PROXY_SERVER_LB=${LocalProxyServerLB}
+            SIRIUSEC_ROLE=proxy
+            SIRIUSEC_S3_BUCKET=${LocalBucketName}
+            SIRIUSEC_SSM_KEY_ARN=${LocalKeyARN}
             EOF
 
             # Generate config and start proxy service
-            /usr/local/bin/teleport-generate-config
-            systemctl enable teleport-proxy.service teleport-check-cert.service teleport-check-cert.timer
-            systemctl start --no-block teleport-proxy.service teleport-check-cert.timer
+            /usr/local/bin/siriusec-generate-config
+            systemctl enable siriusec-proxy.service siriusec-check-cert.service siriusec-check-cert.timer
+            systemctl start --no-block siriusec-proxy.service siriusec-check-cert.timer
 
             # Write out healthcheck script
-            cat >> /usr/local/bin/teleport-cfn-signal-done <<EOF
+            cat >> /usr/local/bin/siriusec-cfn-signal-done <<EOF
             #!/bin/bash
-            for i in {1..40}; do systemctl status teleport-proxy && break || sleep 30; done
-            systemctl status teleport-proxy
+            for i in {1..40}; do systemctl status siriusec-proxy && break || sleep 30; done
+            systemctl status siriusec-proxy
             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ProxyASG --region ${AWS::Region}
             EOF
 
             # Make healthcheck script executable
-            chmod +x /usr/local/bin/teleport-cfn-signal-done
+            chmod +x /usr/local/bin/siriusec-cfn-signal-done
 
             # Write out healthcheck systemd unit file
             cat >> /etc/systemd/system/cfn-signal-done.service <<EOF
@@ -490,7 +490,7 @@ Resources:
             User=root
             Group=adm
             Type=oneshot
-            ExecStart=/usr/local/bin/teleport-cfn-signal-done
+            ExecStart=/usr/local/bin/siriusec-cfn-signal-done
             EOF
 
             # Make systemd healthcheck unit run
@@ -555,23 +555,23 @@ Resources:
             #!/bin/bash -xe
 
             # Indicate that this ami is node for all systemd units
-            echo "node" >> /etc/teleport.d/role.node
+            echo "node" >> /etc/siriusec.d/role.node
 
             # Set some instance specific environment variables configurations for systemd configuration file
-            cat >> /etc/teleport.d/conf <<EOF
+            cat >> /etc/siriusec.d/conf <<EOF
             EC2_REGION=${AWS::Region}
-            TELEPORT_AUTH_SERVER_LB=${LocalAuthServerLB}
-            TELEPORT_CLUSTER_NAME=${DomainName}
-            TELEPORT_DOMAIN_NAME=${DomainName}
-            TELEPORT_ROLE=node
-            TELEPORT_S3_BUCKET=${LocalBucketName}
-            TELEPORT_SSM_KEY_ARN=${LocalKeyARN}
+            SIRIUSEC_AUTH_SERVER_LB=${LocalAuthServerLB}
+            SIRIUSEC_CLUSTER_NAME=${DomainName}
+            SIRIUSEC_DOMAIN_NAME=${DomainName}
+            SIRIUSEC_ROLE=node
+            SIRIUSEC_S3_BUCKET=${LocalBucketName}
+            SIRIUSEC_SSM_KEY_ARN=${LocalKeyARN}
             EOF
 
             # Generate config and start proxy service
-            /usr/local/bin/teleport-generate-config
-            systemctl enable teleport-node.service
-            systemctl start --no-block teleport-node.service
+            /usr/local/bin/siriusec-generate-config
+            systemctl enable siriusec-node.service
+            systemctl start --no-block siriusec-node.service
           - {
             LocalAuthServerLB: !GetAtt AuthLB.DNSName,
             LocalKeyARN: !GetAtt Key.Arn,
@@ -634,7 +634,7 @@ Resources:
           # Allow auth server to publish join tokens to SSM parameter store
           -
             Effect: "Allow"
-            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/teleport/", !Ref DomainName, "/*"]]
+            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/siriusec/", !Ref DomainName, "/*"]]
             Action:
             - "ssm:DescribeParameters"
             - "ssm:GetParameters"
@@ -795,7 +795,7 @@ Resources:
           # Allow proxy to read tokens and CA from SSM parameter store
           -
             Effect: "Allow"
-            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/teleport/", !Ref DomainName, "/tokens/proxy"]]
+            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/siriusec/", !Ref DomainName, "/tokens/proxy"]]
             Action:
             - "ssm:GetParameters"
             - "ssm:GetParametersByPath"
@@ -804,7 +804,7 @@ Resources:
           # Allow proxy to read tokens and CA from SSM parameter store
           -
             Effect: "Allow"
-            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/teleport/", !Ref DomainName, "/ca-pin-hash"]]
+            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/siriusec/", !Ref DomainName, "/ca-pin-hash"]]
             Action:
             - "ssm:GetParameters"
             - "ssm:GetParametersByPath"
@@ -866,7 +866,7 @@ Resources:
           # Allow node to read tokens and CA from SSM parameter store
           -
             Effect: "Allow"
-            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/teleport/", !Ref DomainName, "/tokens/node"]]
+            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/siriusec/", !Ref DomainName, "/tokens/node"]]
             Action:
             - "ssm:GetParameters"
             - "ssm:GetParametersByPath"
@@ -875,7 +875,7 @@ Resources:
           # Allow node to read tokens and CA from SSM parameter store
           -
             Effect: "Allow"
-            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/teleport/", !Ref DomainName, "/ca-pin-hash"]]
+            Resource: !Join ["", ["arn:aws:ssm:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/siriusec/", !Ref DomainName, "/ca-pin-hash"]]
             Action:
             - "ssm:GetParameters"
             - "ssm:GetParametersByPath"
@@ -953,7 +953,7 @@ Resources:
 
 
   # MainTable is a main dynamodb table
-  # where teleport stores all relevant state
+  # where siriusec stores all relevant state
   MainTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -988,7 +988,7 @@ Resources:
       TimeToLiveSpecification: {AttributeName: "Expires", Enabled: true}
 
   # EventsTable is a dynamodb table that is
-  # used to store teleport audit log events
+  # used to store siriusec audit log events
   EventsTable:
     Type: AWS::DynamoDB::Table
     Properties:

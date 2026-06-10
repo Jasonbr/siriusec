@@ -24,7 +24,7 @@ import (
 	"github.com/gravitational/trace"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 
 	_ "embed"
 )
@@ -35,7 +35,7 @@ var networkBPF []byte
 var (
 	lostNetworkEvents = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: teleport.MetricLostNetworkEvents,
+			Name: siriusec.MetricLostNetworkEvents,
 			Help: "Number of lost network events.",
 		},
 	)

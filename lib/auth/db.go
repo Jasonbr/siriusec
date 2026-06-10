@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/siriusec/siriusec/api/client/proto"
 	apidefaults "github.com/siriusec/siriusec/api/defaults"
 	"github.com/siriusec/siriusec/api/types"
@@ -120,7 +120,7 @@ func (s *Server) SignDatabaseCSR(ctx context.Context, req *proto.DatabaseCSRRequ
 
 	// Update "accepted usage" field to indicate that the certificate can
 	// only be used for database proxy server and re-encode the identity.
-	id.Usage = []string{teleport.UsageDatabaseOnly}
+	id.Usage = []string{siriusec.UsageDatabaseOnly}
 	subject, err := id.Subject()
 	if err != nil {
 		return nil, trace.Wrap(err)

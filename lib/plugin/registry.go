@@ -18,7 +18,7 @@ package plugin
 
 import "github.com/gravitational/trace"
 
-// Plugin describes interfaces of the teleport core plugin
+// Plugin describes interfaces of the siriusec core plugin
 type Plugin interface {
 	// GetName returns plugin name
 	GetName() string

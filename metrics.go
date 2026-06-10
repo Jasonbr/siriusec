@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package teleport
+package siriusec
 
 const (
 	// MetricGenerateRequests counts how many generate server keys requests
@@ -171,7 +171,7 @@ const (
 	// MetricLostRestrictedEvents measures the number of restricted events that were lost
 	MetricLostRestrictedEvents = "bpf_lost_restricted_events"
 
-	// MetricState tracks the state of the teleport process.
+	// MetricState tracks the state of the siriusec process.
 	MetricState = "process_state"
 
 	// TagRange is a tag specifying backend requests

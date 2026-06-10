@@ -53,7 +53,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/siriusec/siriusec"
+	siriusec "github.com/siriusec/siriusec"
 	"github.com/gravitational/trace"
 
 	"github.com/sirupsen/logrus"
@@ -83,7 +83,7 @@ func init() {
 	//   get re-scheduled to a different thread.
 	//
 	// > Why does pam.Open run on the main goroutine?
-	//   This is an assumption. As of today, this is true because teleport
+	//   This is an assumption. As of today, this is true because siriusec
 	//   re-executes itself and calls pam.Open synchronously. If we change this
 	//   later, loginuid can become flaky again.
 	//
@@ -98,7 +98,7 @@ func init() {
 }
 
 var log = logrus.WithFields(logrus.Fields{
-	trace.Component: teleport.ComponentPAM,
+	trace.Component: siriusec.ComponentPAM,
 })
 
 const (

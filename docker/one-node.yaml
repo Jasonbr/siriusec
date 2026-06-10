@@ -2,7 +2,7 @@ siriusec:
   auth_servers: ["one"]
   auth_token: foo
   log:
-    output: /var/lib/siriusec/teleport.log
+    output: /var/lib/siriusec/siriusec.log
     severity: INFO
 
   data_dir: /var/lib/siriusec

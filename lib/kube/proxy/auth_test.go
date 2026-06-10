@@ -128,9 +128,9 @@ func failsForCluster(clusterName string) ImpersonationPermissionsChecker {
 
 func TestGetKubeCreds(t *testing.T) {
 	ctx := context.TODO()
-	const teleClusterName = "teleport-cluster"
+	const siriusecClusterName = "siriusec-cluster"
 
-	tmpFile, err := ioutil.TempFile("", "teleport")
+	tmpFile, err := ioutil.TempFile("", "siriusec")
 	require.NoError(t, err)
 	defer os.Remove(tmpFile.Name())
 	kubeconfigPath := tmpFile.Name()
@@ -223,7 +223,7 @@ current-context: foo
 			serviceType:        LegacyProxyService,
 			impersonationCheck: alwaysSucceeds,
 			want: map[string]*kubeCreds{
-				teleClusterName: {
+				siriusecClusterName: {
 					targetAddr:      "example.com:3026",
 					transportConfig: &transport.Config{},
 					kubeClient:      &kubernetes.Clientset{},
@@ -257,7 +257,7 @@ current-context: foo
 	}
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, err := getKubeCreds(ctx, testlog.FailureOnly(t), teleClusterName, "", tt.kubeconfigPath, tt.serviceType, tt.impersonationCheck)
+			got, err := getKubeCreds(ctx, testlog.FailureOnly(t), siriusecClusterName, "", tt.kubeconfigPath, tt.serviceType, tt.impersonationCheck)
 			tt.assertErr(t, err)
 			if err != nil {
 				return

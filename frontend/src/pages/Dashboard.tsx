@@ -219,8 +219,9 @@ export const Dashboard = () => {
                       ))
                     ) : (
                       <>
-                        {user.userAcl.users.edit && <Tag color="red" style={{ borderRadius: 4 }}>管理员</Tag>}
-                        {user.userAcl.sessions.read && <Tag color="blue" style={{ borderRadius: 4 }}>审计员</Tag>}
+                        {user.userAcl.users.edit ? <Tag color="red" style={{ borderRadius: 4 }}>管理员</Tag> : 
+                         user.userAcl.sessions.read ? <Tag color="blue" style={{ borderRadius: 4 }}>审计员</Tag> : 
+                         <Tag style={{ borderRadius: 4 }}>普通用户</Tag>}
                       </>
                     )}
                   </div>

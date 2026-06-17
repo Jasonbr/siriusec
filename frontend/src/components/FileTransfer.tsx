@@ -37,6 +37,7 @@ export const FileTransfer = ({ node, login, clusterName = '-current-', namespace
   const [isDownloading, setIsDownloading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleDownload = async () => {
     if (!node || !downloadPath) {
@@ -46,12 +47,14 @@ export const FileTransfer = ({ node, login, clusterName = '-current-', namespace
 
     setIsDownloading(true);
     try {
+      const filename = downloadPath.split('/').pop() || 'download';
       const blob = await scpApi.downloadFile(
         clusterName,
         namespace,
         node.id,
         login,
-        downloadPath
+        downloadPath,
+        filename
       );
 
       // 创建下载链接
@@ -74,30 +77,25 @@ export const FileTransfer = ({ node, login, clusterName = '-current-', namespace
   };
 
   const handleUpload = async () => {
-    if (!node || fileList.length === 0) {
+    if (!node || !selectedFile) {
       message.error('请选择要上传的文件');
       return;
     }
 
     setIsUploading(true);
     try {
-      const file = fileList[0].originFileObj;
-      if (!file) {
-        message.error('文件读取失败');
-        return;
-      }
-
       await scpApi.uploadFile(
         clusterName,
         namespace,
         node.id,
         login,
         uploadPath,
-        file
+        selectedFile
       );
 
       message.success('文件上传成功');
       setFileList([]);
+      setSelectedFile(null);
     } catch (error: any) {
       console.error('Upload failed:', error);
       message.error(error.message || '文件上传失败');
@@ -107,12 +105,21 @@ export const FileTransfer = ({ node, login, clusterName = '-current-', namespace
   };
 
   const uploadProps = {
+    autoUpload: false,
     onRemove: () => {
       setFileList([]);
+      setSelectedFile(null);
     },
-    beforeUpload: (file: UploadFile) => {
-      setFileList([file]);
-      return false; // 阻止自动上传
+    beforeUpload: (file: File) => {
+      const uploadFile: UploadFile = {
+        uid: `-${Date.now()}`,
+        name: file.name,
+        status: 'done',
+        originFileObj: file as any,
+      };
+      setFileList([uploadFile]);
+      setSelectedFile(file);
+      return false;
     },
     fileList,
     maxCount: 1,
@@ -214,7 +221,7 @@ export const FileTransfer = ({ node, login, clusterName = '-current-', namespace
                   icon={<UploadOutlined />}
                   onClick={handleUpload}
                   loading={isUploading}
-                  disabled={fileList.length === 0}
+                  disabled={!selectedFile}
                   block
                 >
                   上传到服务器

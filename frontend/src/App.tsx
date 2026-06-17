@@ -86,7 +86,7 @@ function App() {
           },
         }}
       >
-        <BrowserRouter>
+        <BrowserRouter basename="/web">
           <Routes>
             <Route
               path="/login"
@@ -96,8 +96,8 @@ function App() {
                 </PublicRoute>
               }
             />
-            <Route path="/web/invite/:token" element={<InviteRedirect />} />
-            <Route path="/web/reset/:token" element={<InviteRedirect />} />
+            <Route path="/invite/:token" element={<InviteRedirect />} />
+            <Route path="/reset/:token" element={<InviteRedirect />} />
             <Route
               path="/reset-password"
               element={

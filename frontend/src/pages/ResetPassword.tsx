@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Card, Typography, message, Spin, Alert } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usersApi } from '../api/client';
+import { usersApi, authApi } from '../api/client';
 import type { ResetPasswordToken } from '../types/api';
 
 const { Title, Text } = Typography;
@@ -76,6 +76,10 @@ const ResetPassword: React.FC = () => {
 
     setSubmitting(true);
     try {
+      // 先获取 CSRF token（密码重置页面未登录，需要手动获取）
+      const csrfToken = await authApi.getCsrfToken();
+      localStorage.setItem('csrf_token', csrfToken);
+
       // 将密码转换为 base64
       const passwordBase64 = btoa(unescape(encodeURIComponent(values.password)));
 

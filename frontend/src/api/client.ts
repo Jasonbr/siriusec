@@ -42,12 +42,17 @@ import type {
 
 const API_BASE_URL = '/v1';
 
-// 在内存中保存 bearer token（不存储到 localStorage，防止 XSS 攻击）
-let bearerToken: string | null = null;
+// 从 sessionStorage 恢复 bearer token（页面刷新后保留，关闭标签页后清除）
+let bearerToken: string | null = sessionStorage.getItem('bearer_token');
 
 // 设置 bearer token（登录时调用）
 export const setBearerToken = (token: string | null) => {
   bearerToken = token;
+  if (token) {
+    sessionStorage.setItem('bearer_token', token);
+  } else {
+    sessionStorage.removeItem('bearer_token');
+  }
 };
 
 // 获取 bearer token
@@ -518,6 +523,25 @@ export const auditApi = {
     );
     return response.data;
   },
+
+  // 获取会话录屏字节流
+  async getSessionChunk(
+    clusterName: string,
+    namespace: string,
+    sessionId: string,
+    offset: number,
+    bytes: number
+  ): Promise<ArrayBuffer> {
+    const queryParams = new URLSearchParams();
+    queryParams.set('offset', offset.toString());
+    queryParams.set('bytes', bytes.toString());
+
+    const response = await apiClient.get(
+      `/webapi/sites/${clusterName}/namespaces/${namespace}/sessions/${sessionId}/stream?${queryParams.toString()}`,
+      { responseType: 'arraybuffer' }
+    );
+    return response.data as ArrayBuffer;
+  },
 };
 
 // 文件传输 API
@@ -532,7 +556,7 @@ export const scpApi = {
     filename?: string
   ): Promise<Blob> {
     const queryParams = new URLSearchParams();
-    queryParams.set('path', remotePath);
+    queryParams.set('location', remotePath);
     if (filename) queryParams.set('filename', filename);
 
     const response = await apiClient.get(
@@ -543,6 +567,9 @@ export const scpApi = {
   },
 
   // 上传文件
+  // 后端 scp.CreateHTTPUpload 直接使用 httpReq.Body 作为文件内容，
+  // Content-Length 作为文件大小，不解析 multipart form data。
+  // 因此必须发送原始文件内容，不能用 FormData 包装。
   async uploadFile(
     clusterName: string,
     namespace: string,
@@ -551,18 +578,16 @@ export const scpApi = {
     remotePath: string,
     file: File
   ): Promise<unknown> {
-    const formData = new FormData();
-    formData.append('file', file);
-
     const queryParams = new URLSearchParams();
-    queryParams.set('path', remotePath);
+    queryParams.set('location', remotePath);
+    queryParams.set('filename', file.name);
 
     const response = await apiClient.post(
       `/webapi/sites/${clusterName}/namespaces/${namespace}/nodes/${serverId}/${login}/scp?${queryParams.toString()}`,
-      formData,
+      file,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/octet-stream',
         },
       }
     );

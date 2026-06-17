@@ -4,6 +4,7 @@ import type { AuthState } from '../types/api';
 import { authApi, setBearerToken } from '../api/client';
 
 interface AuthStore extends AuthState {
+  clusterName: string | null;
   // Actions
   login: (username: string, password: string, secondFactorToken?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -18,6 +19,7 @@ export const useAuthStore = create<AuthStore>()(
       bearerToken: null,
       csrfToken: null,
       user: null,
+      clusterName: null,
 
       login: async (username: string, password: string, secondFactorToken?: string) => {
         const response = await authApi.login({
@@ -35,6 +37,7 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: true,
           bearerToken: response.token, // 仅用于 store 状态，不再存储到 localStorage
           csrfToken: csrfToken,
+          clusterName: response.clusterName || null,
         });
 
         // 获取用户上下文
@@ -62,6 +65,7 @@ export const useAuthStore = create<AuthStore>()(
           bearerToken: null,
           csrfToken: null,
           user: null,
+          clusterName: null,
         });
       },
     }),
@@ -72,6 +76,7 @@ export const useAuthStore = create<AuthStore>()(
         csrfToken: state.csrfToken,
         isAuthenticated: state.isAuthenticated,
         user: state.user,
+        clusterName: state.clusterName,
       }),
       onRehydrateStorage: () => {
         return (state) => {

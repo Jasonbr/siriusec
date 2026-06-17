@@ -10,6 +10,7 @@ import {
   Select,
   Spin,
   message,
+  Badge,
 } from 'antd';
 import {
   DesktopOutlined,
@@ -36,6 +37,7 @@ export const Nodes = () => {
   const [fileTransferVisible, setFileTransferVisible] = useState(false);
   const [selectedLogins, setSelectedLogins] = useState<Record<string, string>>({});
   const [creatingSession, setCreatingSession] = useState(false);
+  const [createdSessionId, setCreatedSessionId] = useState<string | null>(null);
   const { user } = useAuthStore();
   const { clusterName } = useCluster();
 
@@ -49,8 +51,12 @@ export const Nodes = () => {
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setCreatingSession(false);
+      const sessionId = data?.session?.id;
+      if (sessionId) {
+        setCreatedSessionId(sessionId);
+      }
       setTerminalVisible(true);
     },
     onError: (error: any) => {
@@ -97,6 +103,21 @@ export const Nodes = () => {
           {record.tunnel && <Tag color="orange">隧道</Tag>}
         </Space>
       ),
+    },
+    {
+      title: '状态',
+      key: 'status',
+      width: 100,
+      render: (_: unknown, record: Node) => {
+        const connectionType = record.tunnel ? '隧道连接' : '直连';
+        
+        return (
+          <Space direction="vertical" size={0}>
+            <Badge status="success" text="在线" />
+            <span style={{ fontSize: 12, color: '#8c8c8c' }}>{connectionType}</span>
+          </Space>
+        );
+      },
     },
     {
       title: '地址',
@@ -195,6 +216,7 @@ export const Nodes = () => {
   const handleCloseTerminal = () => {
     setTerminalVisible(false);
     setSelectedNode(null);
+    setCreatedSessionId(null);
   };
 
   const handleCloseFileTransfer = () => {
@@ -252,6 +274,7 @@ export const Nodes = () => {
           serverId={selectedNode.id}
           login={selectedLogins[selectedNode.id] || availableLogins[0] || 'root'}
           serverHostname={selectedNode.hostname}
+          sessionId={createdSessionId || undefined}
           visible={terminalVisible}
           onClose={handleCloseTerminal}
         />
@@ -261,6 +284,7 @@ export const Nodes = () => {
       <FileTransfer
         node={selectedNode}
         login={selectedLogins[selectedNode?.id || ''] || availableLogins[0] || 'root'}
+        clusterName={clusterName}
         visible={fileTransferVisible}
         onClose={handleCloseFileTransfer}
       />

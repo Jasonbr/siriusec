@@ -20,12 +20,14 @@ import {
   LogoutOutlined,
   PlayCircleOutlined,
   StopOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { auditApi } from '../api/client';
 import { AuditEvent } from '../types/api';
 import { useCluster } from '../hooks/useCluster';
+import { SessionPlayer } from '../components/SessionPlayer';
 
 const { RangePicker } = DatePicker;
 
@@ -46,6 +48,9 @@ export const Audit = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<AuditEvent | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [playerVisible, setPlayerVisible] = useState(false);
+  const [playerSessionId, setPlayerSessionId] = useState<string>('');
+  const [playerNamespace, setPlayerNamespace] = useState<string>('default');
 
   const from = dateRange?.[0]?.toISOString();
   const to = dateRange?.[1]?.toISOString();
@@ -132,15 +137,26 @@ export const Audit = () => {
     {
       title: '操作',
       key: 'action',
-      width: 100,
+      width: 150,
       render: (_: any, record: AuditEvent) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewDetail(record)}
-        >
-          详情
-        </Button>
+        <Space>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetail(record)}
+          >
+            详情
+          </Button>
+          {record.event === 'session.end' && record.sid && (
+            <Button
+              type="text"
+              icon={<VideoCameraOutlined />}
+              onClick={() => handlePlayRecording(record)}
+            >
+              回放
+            </Button>
+          )}
+        </Space>
       ),
     },
   ];
@@ -148,6 +164,19 @@ export const Audit = () => {
   const handleViewDetail = (event: AuditEvent) => {
     setSelectedEvent(event);
     setDrawerVisible(true);
+  };
+
+  const handlePlayRecording = (event: AuditEvent) => {
+    if (event.sid) {
+      setPlayerSessionId(event.sid);
+      setPlayerNamespace(event.namespace || 'default');
+      setPlayerVisible(true);
+    }
+  };
+
+  const handleClosePlayer = () => {
+    setPlayerVisible(false);
+    setPlayerSessionId('');
   };
 
   const eventTypeOptions = [
@@ -268,6 +297,17 @@ export const Audit = () => {
           </div>
         )}
       </Drawer>
+
+      {/* 录屏播放器 */}
+      {playerSessionId && (
+        <SessionPlayer
+          clusterName={clusterName}
+          namespace={playerNamespace}
+          sessionId={playerSessionId}
+          visible={playerVisible}
+          onClose={handleClosePlayer}
+        />
+      )}
     </div>
   );
 };

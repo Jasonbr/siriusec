@@ -54,7 +54,7 @@ export default defineConfig({
     proxy: {
       // 代理 API 请求到后端（v7 老平台）
       '/v1': {
-        target: 'https://localhost:3080',
+        target: 'https://192.168.110.166:3080',
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -101,7 +101,7 @@ export default defineConfig({
         },
       },
       '/web': {
-        target: 'https://localhost:3080',
+        target: 'https://192.168.110.166:3080',
         changeOrigin: true,
         secure: false,
         configure: (proxy) => {
@@ -145,22 +145,22 @@ export default defineConfig({
         },
       },
       '/.well-known': {
-        target: 'https://localhost:3080',
+        target: 'https://192.168.110.166:3080',
         changeOrigin: true,
         secure: false,
       },
       '/webapi/oidc': {
-        target: 'https://localhost:3080',
+        target: 'https://192.168.110.166:3080',
         changeOrigin: true,
         secure: false,
       },
       '/webapi/saml': {
-        target: 'https://localhost:3080',
+        target: 'https://192.168.110.166:3080',
         changeOrigin: true,
         secure: false,
       },
       '/webapi/github': {
-        target: 'https://localhost:3080',
+        target: 'https://192.168.110.166:3080',
         changeOrigin: true,
         secure: false,
       },

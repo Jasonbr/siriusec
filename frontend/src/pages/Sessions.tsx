@@ -19,20 +19,17 @@ import {
   EyeOutlined,
   VideoCameraOutlined,
   CodeOutlined,
-  StopOutlined,
 } from '@ant-design/icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { sessionsApi } from '../api/client';
-import apiClient from '../api/client';
 import type { Session } from '../types/api';
 import { SessionPlayer } from '../components/SessionPlayer';
 import { Terminal } from '../components/Terminal';
 import { useCluster } from '../hooks/useCluster';
-import { message, Popconfirm, Spin } from 'antd';
+import { Spin } from 'antd';
 
 export const Sessions = () => {
-  const queryClient = useQueryClient();
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [playerVisible, setPlayerVisible] = useState(false);
@@ -40,20 +37,6 @@ export const Sessions = () => {
   const [joinTerminalVisible, setJoinTerminalVisible] = useState(false);
   const [joiningLoading, setJoiningLoading] = useState(false);
   const { clusterName } = useCluster();
-
-  // 终止会话 mutation
-  const terminateMutation = useMutation({
-    mutationFn: async (session: Session) => {
-      await apiClient.delete(`/webapi/sites/${clusterName}/namespaces/${session.namespace}/sessions/${session.id}`);
-    },
-    onSuccess: () => {
-      message.success('会话已终止');
-      queryClient.invalidateQueries({ queryKey: ['sessions', clusterName] });
-    },
-    onError: (error: any) => {
-      message.error(error.message || '终止会话失败');
-    },
-  });
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['sessions', clusterName],
@@ -160,24 +143,6 @@ export const Sessions = () => {
           >
             回放
           </Button>
-          <Popconfirm
-            title="终止会话"
-            description={`确定要终止会话 ${record.id.slice(0, 8)}... 吗？`}
-            onConfirm={() => terminateMutation.mutate(record)}
-            okText="终止"
-            cancelText="取消"
-            okButtonProps={{ danger: true, loading: terminateMutation.isPending }}
-          >
-            <Button
-              type="primary"
-              danger
-              icon={<StopOutlined />}
-              size="small"
-              loading={terminateMutation.isPending}
-            >
-              终止
-            </Button>
-          </Popconfirm>
         </Space>
       ),
     },

@@ -575,22 +575,22 @@ var ErrLimitReached = &trace.LimitExceededError{Message: "the read limit is reac
 
 const (
 	// CertSiriusecUser specifies siriusec user
-	CertSiriusecUser = "x-siriusec-user"
+	CertSiriusecUser = "x-teleport-user"
 	// CertSiriusecUserCA specifies siriusec certificate authority
-	CertSiriusecUserCA = "x-siriusec-user-ca"
+	CertSiriusecUserCA = "x-teleport-user-ca"
 	// CertExtensionRole specifies siriusec role
-	CertExtensionRole = "x-siriusec-role"
+	CertExtensionRole = "x-teleport-role"
 	// CertExtensionAuthority specifies siriusec authority's name
 	// that signed this domain
-	CertExtensionAuthority = "x-siriusec-authority"
+	CertExtensionAuthority = "x-teleport-authority"
 	// HostUUIDFile is the file name where the host UUID file is stored
 	HostUUIDFile = "host_uuid"
 	// CertSiriusecClusterName is a name of the siriusec cluster
-	CertSiriusecClusterName = "x-siriusec-cluster-name"
+	CertSiriusecClusterName = "x-teleport-cluster-name"
 	// CertSiriusecUserCertificate is the certificate of the authenticated in user.
-	CertSiriusecUserCertificate = "x-siriusec-certificate"
+	CertSiriusecUserCertificate = "x-teleport-certificate"
 	// ExtIntCertType is an internal extension used to propagate cert type.
-	ExtIntCertType = "certtype@siriusec"
+	ExtIntCertType = "certtype@teleport"
 	// ExtIntCertTypeHost indicates a host-type certificate.
 	ExtIntCertTypeHost = "host"
 	// ExtIntCertTypeUser indicates a user-type certificate.

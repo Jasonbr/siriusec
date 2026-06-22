@@ -1963,8 +1963,98 @@ func (s *WebSuite) TestSearchClusterEvents(c *C) {
 	}
 }
 
+func (s *WebSuite) TestSearchClusterEventsV2(c *C) {
+	clock := clockwork.NewRealClock()
+
+	sessionEvents := events.GenerateTestSession(events.SessionParams{
+		PrintEvents: 3,
+		Clock:       clock,
+		ServerID:    s.proxy.ID(),
+	})
+
+	for _, e := range sessionEvents {
+		c.Assert(s.proxyClient.EmitAuditEvent(context.TODO(), e), IsNil)
+	}
+
+	sort.Sort(sort.Reverse(byTimeAndIndex(sessionEvents)))
+
+	fromTime := []string{clock.Now().AddDate(0, -1, 0).UTC().Format(time.RFC3339)}
+	toTime := []string{clock.Now().AddDate(0, 1, 0).UTC().Format(time.RFC3339)}
+
+	pack := s.authPack(c, "foo")
+
+	result := s.searchEventsV2(c, pack.clt, url.Values{
+		"from": fromTime,
+		"to":   toTime,
+	})
+	c.Assert(len(result.Events) >= len(sessionEvents), Equals, true)
+
+	resultWithType := s.searchEventsV2(c, pack.clt, url.Values{
+		"from":    fromTime,
+		"to":      toTime,
+		"include": []string{sessionEvents[0].GetType()},
+	})
+	c.Assert(len(resultWithType.Events), Equals, 1)
+
+	resultOrdered := s.searchEventsV2(c, pack.clt, url.Values{
+		"from":  fromTime,
+		"to":    toTime,
+		"order": []string{"asc"},
+	})
+	c.Assert(len(resultOrdered.Events) >= len(sessionEvents), Equals, true)
+}
+
+func (s *WebSuite) TestSearchClusterSessionEvents(c *C) {
+	clock := clockwork.NewRealClock()
+
+	sessionEvents := events.GenerateTestSession(events.SessionParams{
+		PrintEvents: 1,
+		Clock:       clock,
+		ServerID:    s.proxy.ID(),
+	})
+
+	for _, e := range sessionEvents {
+		c.Assert(s.proxyClient.EmitAuditEvent(context.TODO(), e), IsNil)
+	}
+
+	fromTime := []string{clock.Now().AddDate(0, -1, 0).UTC().Format(time.RFC3339)}
+	toTime := []string{clock.Now().AddDate(0, 1, 0).UTC().Format(time.RFC3339)}
+
+	pack := s.authPack(c, "foo")
+
+	result := s.searchSessionEvents(c, pack.clt, url.Values{
+		"from": fromTime,
+		"to":   toTime,
+	})
+
+	var hasSessionEvent bool
+	for _, e := range result.Events {
+		if e.GetType() == events.SessionStartEvent || e.GetType() == events.SessionEndEvent {
+			hasSessionEvent = true
+			break
+		}
+	}
+	c.Assert(hasSessionEvent, Equals, true)
+}
+
 func (s *WebSuite) searchEvents(c *C, clt *client.WebClient, query url.Values, filter []string) eventsListGetResponse {
 	response, err := clt.Get(context.Background(), clt.Endpoint("webapi", "sites", s.server.ClusterName(), "events", "search"), query)
+	c.Assert(err, IsNil)
+	var out eventsListGetResponse
+	c.Assert(json.Unmarshal(response.Bytes(), &out), IsNil)
+	return out
+}
+
+func (s *WebSuite) searchEventsV2(c *C, clt *client.WebClient, query url.Values) eventsListGetResponse {
+	response, err := clt.Get(context.Background(), clt.Endpoint("v2", "webapi", "sites", s.server.ClusterName(), "events", "search"), query)
+	c.Assert(err, IsNil)
+	var out eventsListGetResponse
+	c.Assert(json.Unmarshal(response.Bytes(), &out), IsNil)
+	return out
+}
+
+func (s *WebSuite) searchSessionEvents(c *C, clt *client.WebClient, query url.Values) eventsListGetResponse {
+	response, err := clt.Get(context.Background(), clt.Endpoint("v2", "webapi", "sites", s.server.ClusterName(), "events", "search", "sessions"), query)
 	c.Assert(err, IsNil)
 	var out eventsListGetResponse
 	c.Assert(json.Unmarshal(response.Bytes(), &out), IsNil)

@@ -69,3 +69,6 @@ ssh.config
 
 # Code signing certificate for Windows binaries
 /windows-signing-cert.pfx
+/siriusec
+/tctl
+/tsh

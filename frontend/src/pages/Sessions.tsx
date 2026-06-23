@@ -9,6 +9,7 @@ import {
   Modal,
   Descriptions,
   Timeline,
+  Tooltip,
 } from 'antd';
 import {
   ClusterOutlined,
@@ -135,14 +136,16 @@ export const Sessions = () => {
           >
             加入
           </Button>
-          <Button
-            type="default"
-            icon={<VideoCameraOutlined />}
-            size="small"
-            onClick={() => handlePlayRecording(record)}
-          >
-            回放
-          </Button>
+          <Tooltip title="会话结束后才能回放，请在审计日志中查看">
+            <Button
+              type="default"
+              icon={<VideoCameraOutlined />}
+              size="small"
+              disabled
+            >
+              回放
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },

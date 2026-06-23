@@ -621,10 +621,13 @@ func (l *AuditLog) createOrGetDownload(path string) (context.Context, context.Ca
 }
 
 func (l *AuditLog) downloadSession(namespace string, sid session.ID) error {
+	l.log.Debugf("[PLAYBACK] downloadSession called: namespace=%q, sid=%s, playbackDir=%s", namespace, sid, l.playbackDir)
+	
 	checker, ok := l.UploadHandler.(UnpackChecker)
 	if ok {
 		unpacked, err := checker.IsUnpacked(l.ctx, sid)
 		if err != nil {
+			l.log.Errorf("[PLAYBACK] IsUnpacked check failed: sid=%s, error=%v", sid, err)
 			return trace.Wrap(err)
 		}
 		if unpacked {
@@ -634,6 +637,13 @@ func (l *AuditLog) downloadSession(namespace string, sid session.ID) error {
 	}
 
 	tarballPath := filepath.Join(l.playbackDir, string(sid)+".tar")
+	l.log.Debugf("[PLAYBACK] Tarball path: %s", tarballPath)
+	
+	if info, err := os.Stat(l.playbackDir); err != nil {
+		l.log.Errorf("[PLAYBACK] playbackDir check failed: path=%s, error=%v", l.playbackDir, err)
+	} else {
+		l.log.Debugf("[PLAYBACK] playbackDir exists: isDir=%v, mode=%o", info.IsDir(), info.Mode().Perm())
+	}
 
 	ctx, cancel := l.createOrGetDownload(tarballPath)
 	// means that another download is in progress, so simply wait until
@@ -658,9 +668,10 @@ func (l *AuditLog) downloadSession(namespace string, sid session.ID) error {
 		return trace.Wrap(err)
 	}
 	start := time.Now()
-	l.log.Debugf("Starting download of %v.", sid)
+	l.log.Debugf("[PLAYBACK] Starting download of %v to %v", sid, tarballPath)
 	tarball, err := os.OpenFile(tarballPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0640)
 	if err != nil {
+		l.log.Errorf("[PLAYBACK] Failed to create tarball file: path=%s, error=%v", tarballPath, err)
 		return trace.ConvertSystemError(err)
 	}
 	defer func() {
@@ -668,46 +679,58 @@ func (l *AuditLog) downloadSession(namespace string, sid session.ID) error {
 			l.log.WithError(err).Errorf("Failed to close file %q.", tarballPath)
 		}
 	}()
+	l.log.Debugf("[PLAYBACK] Calling UploadHandler.Download: sid=%s", sid)
 	if err := l.UploadHandler.Download(l.ctx, sid, tarball); err != nil {
+		l.log.Errorf("[PLAYBACK] UploadHandler.Download failed: sid=%s, error=%v, errorType=%T", sid, err, err)
 		// remove partially downloaded tarball
 		if rmErr := os.Remove(tarballPath); rmErr != nil {
 			l.log.WithError(rmErr).Warningf("Failed to remove file %v.", tarballPath)
 		}
 		return trace.Wrap(err)
 	}
-	l.log.WithField("duration", time.Since(start)).Debugf("Downloaded %v to %v.", sid, tarballPath)
+	l.log.WithField("duration", time.Since(start)).Debugf("[PLAYBACK] Downloaded %v to %v.", sid, tarballPath)
 
 	_, err = tarball.Seek(0, 0)
 	if err != nil {
+		l.log.Errorf("[PLAYBACK] Failed to seek tarball: path=%s, error=%v", tarballPath, err)
 		return trace.ConvertSystemError(err)
 	}
+	l.log.Debugf("[PLAYBACK] Detecting format: tarballPath=%s", tarballPath)
 	format, err := DetectFormat(tarball)
 	if err != nil {
+		l.log.Errorf("[PLAYBACK] DetectFormat failed: tarballPath=%s, error=%v", tarballPath, err)
 		l.log.WithError(err).Debugf("Failed to detect playback %v format.", tarballPath)
 		return trace.Wrap(err)
 	}
+	l.log.Debugf("[PLAYBACK] Format detected: Proto=%v, Tar=%v", format.Proto, format.Tar)
 	_, err = tarball.Seek(0, 0)
 	if err != nil {
+		l.log.Errorf("[PLAYBACK] Failed to seek tarball after format detection: path=%s, error=%v", tarballPath, err)
 		return trace.ConvertSystemError(err)
 	}
 	switch {
 	case format.Proto == true:
 		start = time.Now()
-		l.log.Debugf("Converting %v to playback format.", tarballPath)
+		l.log.Debugf("[PLAYBACK] Converting %v to playback format.", tarballPath)
 		protoReader := NewProtoReader(tarball)
 		_, err = WriteForPlayback(l.Context, sid, protoReader, l.playbackDir)
 		if err != nil {
+			l.log.Errorf("[PLAYBACK] WriteForPlayback failed: sid=%s, playbackDir=%s, error=%v", sid, l.playbackDir, err)
 			l.log.WithError(err).Error("Failed to convert.")
 			return trace.Wrap(err)
 		}
 		stats := protoReader.GetStats().ToFields()
 		stats["duration"] = time.Since(start)
-		l.log.WithFields(stats).Debugf("Converted %v to %v.", tarballPath, l.playbackDir)
+		l.log.WithFields(stats).Debugf("[PLAYBACK] Converted %v to %v.", tarballPath, l.playbackDir)
 	case format.Tar == true:
+		l.log.Debugf("[PLAYBACK] Extracting tar format: tarballPath=%s, playbackDir=%s", tarballPath, l.playbackDir)
 		if err := utils.Extract(tarball, l.playbackDir); err != nil {
+			l.log.Errorf("[PLAYBACK] utils.Extract failed: tarballPath=%s, playbackDir=%s, error=%v", tarballPath, l.playbackDir, err)
 			return trace.Wrap(err)
 		}
+		l.log.Debugf("[PLAYBACK] Tar extraction completed successfully")
 	default:
+		l.log.Errorf("[PLAYBACK] Unexpected format: Proto=%v, Tar=%v", format.Proto, format.Tar)
 		return trace.BadParameter("Unexpected format %v.", format)
 	}
 

@@ -19,11 +19,13 @@ package scp
 import (
 	"io"
 	"os"
+	"os/user"
 	"path/filepath"
 	"time"
 
 	"github.com/siriusec/siriusec/lib/utils"
 	"github.com/gravitational/trace"
+	log "github.com/sirupsen/logrus"
 )
 
 // localFileSystem provides API for accessing the files on
@@ -84,11 +86,32 @@ func (l *localFileSystem) GetFileInfo(filePath string) (FileInfo, error) {
 
 // CreateFile creates a new file and returns a Writer
 func (l *localFileSystem) CreateFile(filePath string, length uint64) (io.WriteCloser, error) {
+	log.Debugf("[SCP] CreateFile called: filePath=%q, length=%d", filePath, length)
+	
+	if cwd, err := os.Getwd(); err == nil {
+		log.Debugf("[SCP] Current working directory: %s", cwd)
+	}
+	
+	if u, err := user.Current(); err == nil {
+		log.Debugf("[SCP] Current user: uid=%s, gid=%s, username=%s", u.Uid, u.Gid, u.Username)
+	}
+	
+	parentDir := filepath.Dir(filePath)
+	if info, err := os.Stat(parentDir); err != nil {
+		log.Errorf("[SCP] Parent directory check failed: path=%q, error=%v", parentDir, err)
+	} else {
+		log.Debugf("[SCP] Parent directory exists: path=%q, isDir=%v, mode=%o", 
+			parentDir, info.IsDir(), info.Mode().Perm())
+	}
+	
 	f, err := os.Create(filePath)
 	if err != nil {
+		log.Errorf("[SCP] os.Create failed: filePath=%q, error=%v, errorType=%T", 
+			filePath, err, err)
 		return nil, trace.Wrap(err)
 	}
 
+	log.Debugf("[SCP] File created successfully: filePath=%q", filePath)
 	return f, nil
 }
 

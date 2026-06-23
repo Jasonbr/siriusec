@@ -127,6 +127,7 @@ func Export(ctx context.Context, rs io.ReadSeeker, w io.Writer, exportFormat str
 // WriteForPlayback reads events from audit reader and writes them to the format optimized for playback
 // this function returns *PlaybackWriter and error
 func WriteForPlayback(ctx context.Context, sid session.ID, reader AuditReader, dir string) (*PlaybackWriter, error) {
+	log.Debugf("[PLAYBACK] WriteForPlayback called: sid=%s, dir=%s", sid, dir)
 	w := &PlaybackWriter{
 		sid:        sid,
 		reader:     reader,
@@ -138,7 +139,14 @@ func WriteForPlayback(ctx context.Context, sid session.ID, reader AuditReader, d
 			log.WithError(err).Warningf("Failed to close writer.")
 		}
 	}()
-	return w, w.Write(ctx)
+	log.Debugf("[PLAYBACK] Calling PlaybackWriter.Write")
+	err := w.Write(ctx)
+	if err != nil {
+		log.Errorf("[PLAYBACK] PlaybackWriter.Write failed: sid=%s, error=%v", sid, err)
+		return nil, err
+	}
+	log.Debugf("[PLAYBACK] PlaybackWriter.Write completed successfully: sid=%s", sid)
+	return w, nil
 }
 
 // SessionEvents returns slice of event fields from gzipped events file.
@@ -327,12 +335,24 @@ func (w *PlaybackWriter) openIndexFile() error {
 	if w.indexFile != nil {
 		return nil
 	}
+	indexFilePath := filepath.Join(w.dir, fmt.Sprintf("%v.index", w.sid.String()))
+	log.Debugf("[PLAYBACK] openIndexFile called: sid=%s, dir=%s, indexPath=%s", w.sid, w.dir, indexFilePath)
+	
+	if info, err := os.Stat(w.dir); err != nil {
+		log.Errorf("[PLAYBACK] Directory check failed: path=%s, error=%v", w.dir, err)
+		return trace.Wrap(err)
+	} else {
+		log.Debugf("[PLAYBACK] Directory exists: isDir=%v, mode=%o", info.IsDir(), info.Mode().Perm())
+	}
+	
 	var err error
 	w.indexFile, err = os.OpenFile(
-		filepath.Join(w.dir, fmt.Sprintf("%v.index", w.sid.String())), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+		indexFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 	if err != nil {
+		log.Errorf("[PLAYBACK] Failed to create index file: path=%s, error=%v, errorType=%T", indexFilePath, err, err)
 		return trace.Wrap(err)
 	}
+	log.Debugf("[PLAYBACK] Index file created successfully: path=%s", indexFilePath)
 	return nil
 }
 

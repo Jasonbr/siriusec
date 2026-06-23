@@ -190,6 +190,7 @@ export const Terminal = ({
         fontFamily: 'Menlo, Monaco, Courier New, monospace',
         cursorBlink: true,
         cursorStyle: 'block',
+        convertEol: true,
         theme: {
           background: '#1e1e1e',
           foreground: '#d4d4d4',

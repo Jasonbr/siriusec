@@ -126,8 +126,12 @@ export const SessionPlayer = ({
 
   useEffect(() => {
     if (!visible) return;
+    loadAndPreparePlayback();
+  }, [visible, loadAndPreparePlayback]);
 
-    // Delay to allow DOM ref to be populated after destroyOnClose
+  useEffect(() => {
+    if (!visible) return;
+
     const initTimer = setTimeout(() => {
       if (!terminalRef.current) return;
 
@@ -168,8 +172,6 @@ export const SessionPlayer = ({
       xterm.open(terminalRef.current);
       fitAddon.fit();
 
-      loadAndPreparePlayback();
-
       const handleResize = () => fitAddon.fit();
       window.addEventListener('resize', handleResize);
     }, 100);
@@ -185,7 +187,7 @@ export const SessionPlayer = ({
         xtermRef.current = null;
       }
     };
-  }, [visible, loadAndPreparePlayback]);
+  }, [visible]);
 
   const applyResizeAtMs = useCallback(
     (ms: number) => {
